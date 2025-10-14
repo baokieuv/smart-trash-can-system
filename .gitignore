@@ -1,3 +1,11 @@
 /venv
 /temp
 /__pycache__
+build/
+sdkconfig
+*.bin
+*.elf
+*.map
+*.pyc
+*.log
+__pycache__/
