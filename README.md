@@ -1,65 +1,72 @@
-# 📦 Counting fasteners project with YOLOv11
+# Smart Trash Classification System
 
-## 🧠 Mục tiêu dự án
+## I. Mục tiêu dự án
 
-Dự án này sử dụng **YOLOv11** để phát hiện và đếm các **phụ kiện công nghiệp** từ hình ảnh. Hệ thống được chia làm ba phần:
+Dự án này phát triển một **hệ thống phân loại rác thông minh** sử dụng **YOLOv11n-cls** (đã được convert sang định dạng **ONNX**) để nhận diện **10 loại rác**, được chia thành **3 nhóm chính**:
 
-- 🧠 **Model**: Sử dụng YOLOv11 để huấn luyện và phát hiện phụ kiện, sử dụng ONNX giúp việc xử lý nhanh hơn.
-- 🌐 **Web**: Ứng dụng web xây dựng bằng **Next.js** (frontend) và **NestJS** (backend) để tải ảnh và hiển thị kết quả.
-- **ESP32**: Sử dụng esp32-cam để chụp ảnh và gửi lên server để đếm và hiển thị kết quả lên màn hình
+- **Tái chế (Recyclable)** — ví dụ: cardboard, paper, plastic,...
+- **Hữu cơ (Organic)** — ví dụ: clothes, shoes, foods,...
+- **Không tái chế (Non-recyclable)** — ví dụ: pin, trash,...
+
+Hệ thống bao gồm 3 phần chính:
+- **Model (Python + FastAPI)**: sử dụng YOLOv11n-cls để phân loại ảnh và trả về kết quả (Loại rác, Độ tin cậy, Phân nhóm).
+- **Web (Next.js + NestJS)**: giao diện web trực quan giúp tải ảnh, hiển thị kết quả nhận diện và quản lý dữ liệu.
+- **ESP32-CAM**: chụp ảnh và gửi lên server để xử lý; sau khi nhận diện, **actuator** điều khiển **mở nắp đúng thùng rác** tương ứng với loại rác được nhận dạng.
 
 ---
-
-## 📁 Cấu trúc thư mục
+## II. Cấu trúc thư mục
 
 ```
-├── model/ # YOLOv11 model, training and inference scripts
-│ ├── train/ # train mô hình với google colab
-│ └── detect/ # sử dụng mô hình đã được train
 ├── esp32/ # code firmware cho esp32
 ├── web/
 │ ├── frontend/ # Next.js frontend
 │ └── backend/ # NestJS backend API
+| └── model/ # Python + FastAPI
 └── README.md
 ```
 
 ---
+## III. Tính năng chính
 
-## 🚀 Tính năng chính
-
-- Phát hiện và đếm các phụ kiện công nghiệp từ ảnh
-- Giao diện web trực quan, dễ sử dụng
-- Hệ thống backend hỗ trợ phân tích ảnh và quản lý dữ liệu
-- Có thể mở rộng với nhiều loại phụ kiện khác nhau
-- Xử lý request nhanh chóng với ONNX
-- Có triển khai trên thiết bị với bộ nhớ và tốc độ hạn chế là esp32
+- Phân loại 10 loại rác thành 3 nhóm khác nhau
+- Hỗ trợ inference nhanh với mô hình **YOLOv11n-cls (ONNX)**
+- Web app hiện đại với **Next.js** (frontend) và **NestJS** (backend)
+- FastAPI phục vụ model dưới dạng REST API cho backend gọi
+- Hiển thị kết quả chi tiết: **Label**, **Confident**, **Group**
+- ESP32-CAM gửi ảnh trực tiếp lên server để nhận diện
+- **Actuator (servo motor)** tự động **mở nắp đúng thùng rác**
+  - Ví dụ:
+    - Rác tái chế → mở thùng 
+    - Rác hữu cơ → mở thùng 
+    - Rác không tái chế → mở thùng 
 
 ---
-
-## 🔧 Cài đặt
+## IV. Cài đặt
 
 ### 1. Yêu cầu hệ thống
 
 - Python 3.8+
 - Node.js 20+
+- ESP32-CAM (AI Thinker hoặc tương đương)
+- Servo hoặc motor điều khiển nắp thùng rác
 
----
 ### 2. Clone project
 
 ```bash
-git clone https://github.com/baokieuv/counting_fasteners_project.git
+git clone https://github.com/baokieuv/smart-trash-can-system.git
+cd smart-trash-can-system
 ```
----
 
 ### 3. Cài đặt YOLOv11 (Model) 
 - Có thể up ảnh và chạy đơn lẻ trực tiếp trên máy cá nhân
 
 ```bash
-cd model
+cd web/model
 pip install -r requirements.txt
-# Chạy thử nghiệm
-python detect/model.py --input test.jpg --type washer
+python server.py
+# Model API sẽ chạy tại http://localhost:8000
 ```
+
 ### 4. Cài đặt Web frontend (Next.js)
 
 ```bash
@@ -69,30 +76,34 @@ npm run build
 npm run dev
 # Ứng dụng frontend sẽ chạy tại http://localhost:3001
 ```
+
 ### 5.  Cài đặt backend API (NestJS)
 
 ```bash
 cd web/backend
 npm install
 npm run build
-npm run start:prod
+npm run start
 # API sẽ chạy tại http://localhost:3000
 ```
-### 6.  Cài đặt và chạy socket python
+
+### 6.  ESP32-CAM (Firmware)
 
 ```bash
-cd web/backend/model
-pip install -r requirements.txt
-python socket_server.py
-# code sẽ mở 1 socket TCP lắng nghe tại cổng 8888
+idf.py set-target esp32
+idf.py build
+idf.py -p <COM port> flash monitor
 ```
-## Demo
 
-Web đã được triển khai tại: https://kvbhust.site
+---
+## V. Kết quả và đánh giá
+- Top-1 Accuracy: 0.9723440408706665
+- Top-5 Accuracy: 0.9986509084701538
+  <img width="2240" height="931" alt="image" src="https://github.com/user-attachments/assets/7b69ae24-3f71-44ea-af35-e34f48f27133" />
 
-![Giao diện web](https://github.com/user-attachments/assets/b09d710a-592b-4fbf-a917-5e21b96efb83)
-![Web khi detect object](https://github.com/user-attachments/assets/59787d8d-23fb-4cf0-950f-0c8d4cf0e9c7)
-![ESP32](https://github.com/user-attachments/assets/32bf701c-3caf-42ea-8a3c-ea23bbf4d5bb)
+- Confusion Matrix:
+  <img width="3000" height="2250" alt="confusion_matrix_normalized" src="https://github.com/user-attachments/assets/ca442157-73a1-4fa8-b041-277e4b19eba6" />
 
-
-
+---
+## VI. Demo
+<img width="2877" height="1613" alt="image" src="https://github.com/user-attachments/assets/4d042356-82a6-4221-a834-6da6d32cedd2" />
