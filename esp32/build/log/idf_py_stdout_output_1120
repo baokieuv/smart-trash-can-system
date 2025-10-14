@@ -1,0 +1,25 @@
+[1/1569] Generating project_elf_src_esp32.c
+[2/1569] Generating D:/HUST/soict/project3/esp32/smart_trash_can/build/esp-idf/esp_system/ld/memory.ld linker script...
+[3/1569] Generating D:/HUST/soict/project3/esp32/smart_trash_can/build/esp-idf/esp_system/ld/sections.ld.in linker script...
+[4/1569] Generating ../../partition_table/partition-table.bin
+FAILED: partition_table/partition-table.bin D:/HUST/soict/project3/esp32/smart_trash_can/build/partition_table/partition-table.bin 
+cmd.exe /C "cd /D D:\HUST\soict\project3\esp32\smart_trash_can\build\esp-idf\partition_table && D:\Embedded\ESP\Espressif\python_env\idf5.3_py3.11_env\Scripts\python.exe D:/Embedded/ESP/esp/v5.3/esp-idf/components/partition_table/gen_esp32part.py -q --offset 0x8000 --flash-size 8MB -- D:/HUST/soict/project3/esp32/smart_trash_can/partitions.csv D:/HUST/soict/project3/esp32/smart_trash_can/build/partition_table/partition-table.bin && D:\Embedded\ESP\Espressif\tools\cmake\3.24.0\bin\cmake.exe -E echo "Partition table binary generated. Contents:" && D:\Embedded\ESP\Espressif\tools\cmake\3.24.0\bin\cmake.exe -E echo ******************************************************************************* && D:\Embedded\ESP\Espressif\python_env\idf5.3_py3.11_env\Scripts\python.exe D:/Embedded/ESP/esp/v5.3/esp-idf/components/partition_table/gen_esp32part.py -q --offset 0x8000 --flash-size 8MB -- D:/HUST/soict/project3/esp32/smart_trash_can/build/partition_table/partition-table.bin && D:\Embedded\ESP\Espressif\tools\cmake\3.24.0\bin\cmake.exe -E echo *******************************************************************************"
+CSV Error at line 5: Partitions overlap. Partition sets offset 0x10000. Previous partition ends 0x11000
+[5/1569] Building C object esp-idf/mbedtls/mbedtls/3rdparty/everest/CMakeFiles/everest.dir/library/Hacl_Curve25519_joined.c.obj
+[6/1569] Building C object esp-idf/mbedtls/mbedtls/3rdparty/everest/CMakeFiles/everest.dir/library/x25519.c.obj
+[7/1569] Building C object esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedcrypto.dir/bignum_mod.c.obj
+[8/1569] Building C object esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedcrypto.dir/bignum_mod_raw.c.obj
+[9/1569] Building C object esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedcrypto.dir/aesce.c.obj
+[10/1569] Building C object esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedcrypto.dir/aesni.c.obj
+[11/1569] Building C object esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedcrypto.dir/block_cipher.c.obj
+[12/1569] Building C object esp-idf/mbedtls/mbedtls/3rdparty/everest/CMakeFiles/everest.dir/library/everest.c.obj
+[13/1569] Building C object esp-idf/mbedtls/mbedtls/3rdparty/p256-m/CMakeFiles/p256m.dir/p256-m/p256-m.c.obj
+[14/1569] Building C object esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedcrypto.dir/asn1parse.c.obj
+[15/1569] Building C object esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedcrypto.dir/aes.c.obj
+[16/1569] Building C object esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedcrypto.dir/asn1write.c.obj
+[17/1569] Building C object esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedcrypto.dir/base64.c.obj
+[18/1569] Building C object esp-idf/mbedtls/mbedtls/3rdparty/p256-m/CMakeFiles/p256m.dir/p256-m_driver_entrypoints.c.obj
+[19/1569] Building C object esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedcrypto.dir/aria.c.obj
+[20/1569] Building C object esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedcrypto.dir/bignum_core.c.obj
+[21/1569] Building C object esp-idf/mbedtls/mbedtls/library/CMakeFiles/mbedcrypto.dir/bignum.c.obj
+ninja: build stopped: subcommand failed.
