@@ -9,6 +9,7 @@ export const config = {
 interface Result {
     label: string;
     conf: number;
+    category: string;
     error?: string | null;
 }
 

@@ -3,6 +3,7 @@
 #include "esp_timer.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
+#include "esp_camera.h"
 
 #include "esp_mac.h"
 #include "esp_wifi.h"
@@ -11,113 +12,94 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "freertos/queue.h"
 #include "freertos/event_groups.h"
+#include "freertos/semphr.h"
+#include "freertos/queue.h"
 
-#include "esp_lvgl_port.h"
-#include "esp_lcd_panel_io.h"
-#include "esp_lcd_panel_vendor.h"
-#include "esp_lcd_panel_ops.h"
-#include "driver/spi_master.h"
-
-// #include <sys/socket.h>
-// #include <arpa/inet.h>
-// #include <sys/types.h>
-
-// #include "driver/i2c.h"
-#include "image_data.h"
-#include "img_converters.h"
 #include "cJSON.h"
 
-#define LCD_H_RES       240
-#define LCD_W_RES       320
+#define TAG             "IOT"
+#define WIFI_SSID       "TP-Link_E276"
+#define WIFI_PASS       "56445466"
+#define SERVER_URL      "http://192.168.56.1:3001/api/detect"
+#define MAXIMUM_RETRY   5
 
-#define LCD_HOST        SPI3_HOST
-#define PIN_NUM_MOSI    GPIO_NUM_23
-#define PIN_NUM_CLK     GPIO_NUM_18
-#define PIN_NUM_CS      GPIO_NUM_5
-#define PIN_NUM_DC      GPIO_NUM_2
-#define PIN_NUM_RST     GPIO_NUM_4
-
+#define CAM_TASK_STACK_SIZE         (4 * 1024)
+#define HTTP_TASK_STACK_SIZE        (4 * 1024)
 #define IMAGE_CAPTURE_INTERVAL_MS   1000 
 #define IMAGE_QUEUE_LENGTH          1
 #define BTN_QUEUE_LENGTH            1
 
-#define BUTTON_PIN          GPIO_NUM_25
-#define RECYCLABLE_LED      GPIO_NUM_22
-#define COMPOSTABLE_LED     GPIO_NUM_21
-#define NONRECYCLABLE_LED   GPIO_NUM_19
+#define BUTTON_PIN          GPIO_NUM_12
+#define RECYCLABLE_LED      GPIO_NUM_13
+#define COMPOSTABLE_LED     GPIO_NUM_14
+#define NONRECYCLABLE_LED   GPIO_NUM_15
 
-#define TAG             "IOT"
-#define WIFI_SSID       "VIETTEL_PHUONG MAI"
-#define WIFI_PASS       "18051976"
-#define SERVER_URL      "http://192.168.1.5:3001/api/detect"
-#define MAXIMUM_RETRY   5
+#define CAM_PIN_PWDN     32
+#define CAM_PIN_RESET    -1 //software reset will be performed
+#define CAM_PIN_XCLK     0
+#define CAM_PIN_SIOD     26
+#define CAM_PIN_SIOC     27
+#define CAM_PIN_D7       35
+#define CAM_PIN_D6       34
+#define CAM_PIN_D5       39
+#define CAM_PIN_D4       36
+#define CAM_PIN_D3       21
+#define CAM_PIN_D2       19
+#define CAM_PIN_D1       18
+#define CAM_PIN_D0       5
+#define CAM_PIN_VSYNC    25
+#define CAM_PIN_HREF     23
+#define CAM_PIN_PCLK     22
 
 #define WIFI_CONNECTED_BIT  BIT0
 #define WIFI_FAIL_BIT       BIT1
-
-static esp_lcd_panel_handle_t panel_handle = NULL;
-static esp_lcd_panel_io_handle_t io_handle = NULL;
 
 static EventGroupHandle_t event_group;
 static int s_retry_num = 0;
 static QueueHandle_t s_image_queue;
 static QueueHandle_t btn_queue;
 
-esp_err_t init_st7789(void){
-    esp_err_t err;
-    spi_bus_config_t bus_cfg = {
-        .sclk_io_num = PIN_NUM_CLK,
-        .mosi_io_num = PIN_NUM_MOSI,
-        .miso_io_num = -1,
-        .quadhd_io_num = -1,
-        .quadwp_io_num = -1,
-        .max_transfer_sz = 20 * LCD_H_RES * sizeof(uint16_t),
-    };
-    err = spi_bus_initialize(LCD_HOST, &bus_cfg, SPI_DMA_CH_AUTO);
-    if(err != ESP_OK){
-        ESP_LOGE(TAG, "Error %s", esp_err_to_name(err));
-        return err;
-    }
+esp_err_t init_cam(void){
+    camera_config_t camera_cfg = {
+        .pin_pwdn = CAM_PIN_PWDN,
+        .pin_reset = CAM_PIN_RESET,
+        .pin_xclk = CAM_PIN_XCLK,
+        .pin_sccb_sda = CAM_PIN_SIOD,
+        .pin_sccb_scl = CAM_PIN_SIOC,
 
-    esp_lcd_panel_io_spi_config_t io_cfg = {
-        .cs_gpio_num = PIN_NUM_CS,
-        .dc_gpio_num = PIN_NUM_DC,
-        .spi_mode = 0,
-        .pclk_hz = 20000000,
-        .trans_queue_depth = 10,
-        .lcd_cmd_bits = 8,
-        .lcd_param_bits = 8,
-    };
-    err = esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)LCD_HOST, &io_cfg, &io_handle);
-    if(err != ESP_OK){
-        ESP_LOGE(TAG, "Error %s", esp_err_to_name(err));
-        return err;
-    }
-    esp_lcd_panel_dev_config_t panel_cfg = {
-        .reset_gpio_num = PIN_NUM_RST,
-        .rgb_ele_order = LCD_RGB_ELEMENT_ORDER_RGB,
-        .bits_per_pixel = 16,
-        .data_endian = LCD_RGB_DATA_ENDIAN_BIG,
-    };
-    err = esp_lcd_new_panel_st7789(io_handle, &panel_cfg, &panel_handle);
-    if(err != ESP_OK){
-        ESP_LOGE(TAG, "Error %s", esp_err_to_name(err));
-        return err;
-    }
-    ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
-    if(esp_lcd_panel_init(panel_handle) != ESP_OK){
-        ESP_LOGE(TAG, "Error %s", esp_err_to_name(err));
-        return err;
-    };
-    esp_lcd_panel_swap_xy(panel_handle, true);
-    esp_lcd_panel_mirror(panel_handle, true, false);
-    ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
+        .pin_d7 = CAM_PIN_D7,
+        .pin_d6 = CAM_PIN_D6,
+        .pin_d5 = CAM_PIN_D5,
+        .pin_d4 = CAM_PIN_D4,
+        .pin_d3 = CAM_PIN_D3,
+        .pin_d2 = CAM_PIN_D2,
+        .pin_d1 = CAM_PIN_D1,
+        .pin_d0 = CAM_PIN_D0,
+        .pin_vsync = CAM_PIN_VSYNC,
+        .pin_href = CAM_PIN_HREF,
+        .pin_pclk = CAM_PIN_PCLK,
 
-    const uint8_t cmd_invoff = 0x21;
-    ESP_ERROR_CHECK(esp_lcd_panel_io_tx_param(io_handle, cmd_invoff, NULL, 0));
-    return ESP_OK;
+        .xclk_freq_hz = 20000000,
+        .ledc_timer = LEDC_TIMER_0,
+        .ledc_channel = LEDC_CHANNEL_0,
+
+        .pixel_format = PIXFORMAT_JPEG, //YUV422,GRAYSCALE,RGB565,JPEG
+        .frame_size = FRAMESIZE_QVGA,     //QQVGA-UXGA, For ESP32, do not use sizes above QVGA when not JPEG. The performance of the ESP32-S series has improved a lot, but JPEG mode always gives better frame rates.
+
+        .jpeg_quality = 10, //0-63, for OV series camera sensors, lower number means higher quality
+        .fb_count = 2,      //When jpeg mode is used, if fb_count more than one, the driver will work in continuous mode.
+        .fb_location = CAMERA_FB_IN_PSRAM,
+        .grab_mode = CAMERA_GRAB_LATEST,
+    };
+
+    esp_err_t err = esp_camera_init(&camera_cfg);
+    if(err != ESP_OK){
+        ESP_LOGE(TAG, "Camera init failed");
+    }else{
+        ESP_LOGI(TAG, "Init camera done");
+    }
+    return err;
 }
 
 static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
@@ -178,8 +160,6 @@ void led_task(void *param){
     const cJSON *category = cJSON_GetObjectItem(root, "category");
     const cJSON *conf  = cJSON_GetObjectItem(root, "conf");
 
-    ESP_LOGI(TAG, "Category: %s", category->valuestring);
-
     char led = 'n';
     if(cJSON_IsNumber(conf) && conf->valuedouble > 50.0){
         if(strcmp(category->valuestring, "recyclable") == 0){
@@ -228,6 +208,7 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt){
 }
 
 void http_send_task(void *param){
+    camera_fb_t *pic = NULL;
     const char *boundary = "----myboundary";
 
     esp_http_client_config_t config = {
@@ -239,27 +220,20 @@ void http_send_task(void *param){
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
     
-    char content_type[64], pic = 'x';
+    char content_type[64];
     snprintf(content_type, sizeof(content_type), "multipart/form-data; boundary=%s", boundary);
     esp_http_client_set_header(client, "Content-Type", content_type);
 
     ESP_LOGI(TAG, "HTTP Send Task started. Waiting for images...");
 
-    uint8_t *jpg_buf = NULL;
-    size_t jpg_len = 0;
-    ESP_LOGI("HEAP", "Largest free block (8-bit): %d bytes",
-             heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
-    
-    if (!fmt2jpg((uint8_t*)image_data, sizeof(image_data), LCD_W_RES, LCD_H_RES, PIXFORMAT_RGB565, 80, &jpg_buf, &jpg_len) || jpg_len == 0) {
-        ESP_LOGE(TAG, "JPEG conversion failed or empty JPEG buffer");
-        free(jpg_buf);
-        vTaskDelete(NULL);
-        return;
-    }
-
     while(1){
         if(xQueueReceive(s_image_queue, &pic, portMAX_DELAY)){
-            char header[128];
+            if(!pic){
+                ESP_LOGE(TAG, "Received NULL frame from queue.");
+                continue;
+            }
+
+            char header[256];
             int header_len = snprintf(header, sizeof(header),
                 "--%s\r\n"
                 "Content-Disposition: form-data; name=\"image\"; filename=\"image.jpg\"\r\n"
@@ -269,14 +243,14 @@ void http_send_task(void *param){
             char footer[64];
             int footer_len = snprintf(footer, sizeof(footer), "\r\n--%s--\r\n", boundary);
 
-            int total_len = header_len + jpg_len + footer_len;
+            int total_len = header_len + pic->len + footer_len;
 
             esp_err_t err = esp_http_client_open(client, total_len);
             if(err != ESP_OK){
                 ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
             }else{
                 esp_http_client_write(client, header, header_len);
-                esp_http_client_write(client, (const char *)jpg_buf, jpg_len);
+                esp_http_client_write(client, (const char *)pic->buf, pic->len);
                 esp_http_client_write(client, footer, footer_len);
             
                 err = esp_http_client_perform(client);
@@ -288,24 +262,39 @@ void http_send_task(void *param){
             }
 
             esp_http_client_close(client); 
+            esp_camera_fb_return(pic);
+            pic = NULL;
         }
     }
+
     esp_http_client_cleanup(client);
-    free(jpg_buf);
     vTaskDelete(NULL);
 }
 
 void camera_task(void *param){
+    camera_fb_t *pic = NULL;
     while(1){
         char c = 'x';
         if(xQueueReceive(btn_queue, &c, portMAX_DELAY)){
-            //vẽ ảnh
-            for(int y = 0; y < LCD_H_RES; y += 40){
-                esp_lcd_panel_draw_bitmap(panel_handle, 0, y, LCD_W_RES, y + 40, image_data + y * LCD_W_RES);
+            for(int i = 0; i < 5; i++){
+                pic = esp_camera_fb_get();
+                esp_camera_fb_return(pic);
+                pic = NULL;
+                vTaskDelay(pdMS_TO_TICKS(100));
             }
 
-            if(xQueueSend(s_image_queue, &c, (TickType_t)0) != pdPASS){
+            pic = esp_camera_fb_get();
+
+            if(!pic){
+                ESP_LOGE(TAG, "Camera capture failed");
+                vTaskDelay(pdMS_TO_TICKS(1000));
+                continue;
+            }
+
+            if(xQueueSend(s_image_queue, &pic, (TickType_t)0) != pdPASS){
                 ESP_LOGW(TAG, "Image queue full. Discarding frame.");
+                esp_camera_fb_return(pic);
+                pic = NULL;
             }
         }
     }
@@ -313,7 +302,7 @@ void camera_task(void *param){
 
 void IRAM_ATTR btn_handler(void *param){
     static uint64_t last_time = 0;
-    char c = 'x';
+    char c = 'a';
     if(esp_timer_get_time() - last_time > 200000){
         last_time = esp_timer_get_time();
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
@@ -334,7 +323,6 @@ void init_gpio(void){
     };
 
     ESP_ERROR_CHECK(gpio_config(&io_cfg));
-    ESP_ERROR_CHECK(gpio_install_isr_service(0));
     ESP_ERROR_CHECK(gpio_isr_handler_add(BUTTON_PIN, btn_handler, NULL));
 
     gpio_config_t led_cfg = {
@@ -360,17 +348,16 @@ void app_main(void)
     }
     ESP_ERROR_CHECK(ret);
 
-    
     event_group = xEventGroupCreate();
 
     wifi_init_sta();
-
-    s_image_queue = xQueueCreate(IMAGE_QUEUE_LENGTH, sizeof(char));
-    btn_queue = xQueueCreate(BTN_QUEUE_LENGTH, sizeof(char));
-
-    if(init_st7789() == ESP_OK){
-        ESP_LOGI(TAG, "Successed to initialize st7789");
+    if(init_cam() != ESP_OK){
+        ESP_LOGE(TAG, "Failed to initalize camera");
+        return;
     }
+ 
+    s_image_queue = xQueueCreate(IMAGE_QUEUE_LENGTH, sizeof(camera_fb_t *));
+    btn_queue = xQueueCreate(BTN_QUEUE_LENGTH, sizeof(char));
 
     if (s_image_queue == NULL || btn_queue == NULL) {
         ESP_LOGE(TAG, "Failed to create queues");
@@ -387,8 +374,8 @@ void app_main(void)
 
     if (bits & WIFI_CONNECTED_BIT) {
         ESP_LOGI(TAG, "Connected to Wi-Fi successfully");
-        xTaskCreate(camera_task, "cam_task", 2048, NULL, 5, NULL);
-        xTaskCreate(http_send_task, "http_task", 4086, NULL, 5, NULL);
+        xTaskCreate(camera_task, "cam_task", CAM_TASK_STACK_SIZE, NULL, 5, NULL);
+        xTaskCreate(http_send_task, "http_task", HTTP_TASK_STACK_SIZE, NULL, 5, NULL);
     } else {
         ESP_LOGE(TAG, "Failed to connect to Wi-Fi");
     }
