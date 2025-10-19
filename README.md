@@ -106,4 +106,11 @@ idf.py -p <COM port> flash monitor
 
 ---
 ## VI. Demo
-<img width="2877" height="1613" alt="image" src="https://github.com/user-attachments/assets/4d042356-82a6-4221-a834-6da6d32cedd2" />
+- Web:
+  <img width="2877" height="1613" alt="image" src="https://github.com/user-attachments/assets/4d042356-82a6-4221-a834-6da6d32cedd2" />
+- ESP32:
+  ![3b076fa24b66c6389f77](https://github.com/user-attachments/assets/88d1a3be-1ad8-42e9-8e8c-fb4ef93fe019)
+- Logs:
+  <img width="2880" height="1800" alt="Screenshot 2025-10-19 151037" src="https://github.com/user-attachments/assets/48f7b1f5-814c-43b9-b733-375594179d5a" />
+
+
