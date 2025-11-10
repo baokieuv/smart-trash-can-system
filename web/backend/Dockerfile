@@ -1,35 +1,19 @@
-# Stage 1: Build
-FROM node:22-alpine AS builder
+# Stage 1: Base image
+FROM python:3.13-slim AS base
 
 WORKDIR /app
 
-# Copy file package.json và lock để tận dụng cache
-COPY package*.json ./
+# Copy requirements trước để tận dụng cache
+COPY requirements.txt .
 
-RUN npm install
+# Cài dependencies (và onnxruntime nếu cần)
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy toàn bộ mã nguồn
+# Copy toàn bộ code vào container
 COPY . .
 
-# Build project NestJS -> dist/
-RUN npm run build
+# Expose port 8000 cho FastAPI
+EXPOSE 8000
 
-
-# Stage 2: Runtime
-FROM node:22-alpine AS runner
-
-WORKDIR /app
-
-ENV NODE_ENV=production
-
-# Copy package info và dist từ stage build
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/dist ./dist
-
-# Cài dependency cho production
-RUN npm install --omit=dev
-
-EXPOSE 3000
-
-# Chạy app
-CMD ["node", "dist/main.js"]
+# Lệnh chạy app (dùng uvicorn)
+CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]

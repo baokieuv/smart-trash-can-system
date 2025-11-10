@@ -1,6 +1,6 @@
 import os
 import model
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, File, UploadFile
 from pydantic import BaseModel
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -22,14 +22,19 @@ except FileNotFoundError:
 
 app = FastAPI()
 
-class DetectReq(BaseModel):
-    image_path: str
 
-@app.post("/detect")
-async def classify(req: DetectReq):
+@app.post("/classify")
+async def classify(image: UploadFile = File(...)):
     try:
-        label, conf = model_cls.detect_and_save(req.image_path)
+        contents = await image.read()
+        temp_path = f"temp_{image.filename}"
+        with open(temp_path, "wb") as f:
+            f.write(contents)
+        
+        label, conf = model_cls.detect_and_save(temp_path)
 
+        os.remove(temp_path)
+        
         if label in recyclable:
             category = "recyclable"
         elif label in compostable:

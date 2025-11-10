@@ -11,6 +11,7 @@ idf_component_register(
         "../components/storage/nvs_storage.c"
         "../components/waste_manager/waste_manager.c"
         "../components/wifi/wifi_manager.c"
+        "../components/ota/ota.c"
     
     INCLUDE_DIRS 
         "."
@@ -23,4 +24,5 @@ idf_component_register(
         "../components/storage"
         "../components/waste_manager"
         "../components/wifi"
-)
+        "../components/ota"
+)   

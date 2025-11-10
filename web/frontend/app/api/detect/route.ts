@@ -14,7 +14,7 @@ interface Result {
 }
 
 export async function POST(req: NextRequest) {
-    const backendUrl = 'http://localhost:3000/detect';
+    const backendUrl = 'http://localhost:8000/classify';
 
     try{
 

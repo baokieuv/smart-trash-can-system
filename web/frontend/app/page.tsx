@@ -36,8 +36,8 @@ export default function Home() {
         throw new Error(data.error || 'Failed to detect image.');
       }
 
-      setLabel(data.label || 'Unknown');
-      setConf(data.conf ?? null);
+      setLabel(data.Label || 'Unknown');
+      setConf(data.Confident ?? null);
       setPreviewUrl(URL.createObjectURL(image));
     } catch (err) {
       if (err instanceof Error) {
