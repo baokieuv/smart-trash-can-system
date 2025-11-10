@@ -1,2 +1,26 @@
-idf_component_register(SRCS "main.c"
-                    INCLUDE_DIRS ".")
+idf_component_register(
+    SRCS 
+        "main.c"
+        "../components/camera/camera_handler.c"
+        "../components/gpio/gpio_handler.c"
+        "../components/http/http_client.c"
+        "../components/http/http_server.c"
+        "../components/mqtt/mqtt_client_tb.c"
+        "../components/sensors/pir_sensor.c"
+        "../components/sensors/ultrasonic_sensor.c"
+        "../components/storage/nvs_storage.c"
+        "../components/waste_manager/waste_manager.c"
+        "../components/wifi/wifi_manager.c"
+    
+    INCLUDE_DIRS 
+        "."
+        "../main"
+        "../components/camera"
+        "../components/gpio"
+        "../components/http"
+        "../components/mqtt"
+        "../components/sensors"
+        "../components/storage"
+        "../components/waste_manager"
+        "../components/wifi"
+)
