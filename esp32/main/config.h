@@ -26,9 +26,10 @@
 // ==================== MQTT Configuration ====================
 #define MQTT_BROKER             "mqtt://demo.thingsboard.io:1883"
 #define MQTT_TELEMETRY_TOPIC    "v1/devices/me/telemetry"
-#define MQTT_ACCESS_TOKEN       "YOUR_DEVICE_TOKEN"
+#define MQTT_ACCESS_TOKEN       "KOB9rV5CSP0GXJsYsDya"
 #define MQTT_RECONNECT_DELAY_MS 5000
 #define TELEMETRY_INTERVAL_MS   60000  // Send telemetry every 1 minute
+#define OTA_INTERVAL_MS         60000  // Send request OTA every 1 minute
 
 // ==================== GPIO Pins ====================
 // Button

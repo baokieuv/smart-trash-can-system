@@ -23,6 +23,7 @@
 #include "camera_handler.h"
 #include "pir_sensor.h"
 #include "ultrasonic_sensor.h"
+#include "ota.h"
 
 static const char *TAG = "SMART_BIN";
 
@@ -294,6 +295,41 @@ static void telemetry_task(void *param) {
     }
 }
 
+// ==================== OTA Task ====================
+static void ota_task(void *param){
+    ESP_LOGI(TAG, "OTA task started");
+    TickType_t last_send_time = xTaskGetTickCount();
+    
+    while(1){
+        // Wait for WiFi connection
+        EventBits_t bits = xEventGroupWaitBits(g_event_group,
+                                               WIFI_CONNECTED_BIT,
+                                               pdFALSE, pdTRUE,
+                                               pdMS_TO_TICKS(10000));
+
+        // 
+        if(bits & WIFI_CONNECTED_BIT){
+            // Check if it's time to send
+            TickType_t now = xTaskGetTickCount();
+            if ((now - last_send_time) >= pdMS_TO_TICKS(OTA_INTERVAL_MS)) {
+                
+ 
+                // Send via MQTT
+                if (ota_handle(NULL) == ESP_OK) {
+                    last_send_time = now;
+                    ESP_LOGI(TAG, "ESP_HTTPS_OTA upgrade successful. Rebooting ...");
+                    vTaskDelay(1000 / portTICK_PERIOD_MS);
+                    esp_restart();
+                } else {
+                    ESP_LOGW(TAG, "Failed to update firmware");
+                }
+                
+            }
+        }
+        vTaskDelay(pdMS_TO_TICKS(5000));
+    }
+}
+
 // ==================== Configuration Mode Handler ====================
 
 static void handle_config_mode(void) {
@@ -411,6 +447,7 @@ void app_main(void) {
             xTaskCreate(telemetry_task, "telemetry_task", 
                        TELEMETRY_TASK_STACK_SIZE, NULL, 4, &g_telemetry_task_handle);
             
+
             ESP_LOGI(TAG, "=== System Ready ===");
             
             // Monitor for config mode trigger

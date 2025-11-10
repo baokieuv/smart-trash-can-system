@@ -1,2 +1,3 @@
 component_embed_txtfiles:
   - ../main/index.html
+  - ../server_certs/cert.pem
