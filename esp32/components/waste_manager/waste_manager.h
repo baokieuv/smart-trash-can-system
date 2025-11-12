@@ -3,6 +3,8 @@
 
 #include "esp_err.h"
 #include "config.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/event_groups.h"
 
 // ==================== Waste Statistics ====================
 typedef struct {
@@ -25,7 +27,7 @@ typedef struct {
  * @brief Initialize waste management system
  * @return ESP_OK on success
  */
-esp_err_t waste_manager_init(void);
+esp_err_t waste_manager_init(EventGroupHandle_t g_event_group);
 
 /**
  * @brief Start waste management system
@@ -77,23 +79,5 @@ bool waste_manager_is_bin_full(void);
  * @return Fill level (0-100%)
  */
 float waste_manager_get_fill_level(void);
-
-/**
- * @brief Enter configuration mode
- * @return ESP_OK on success
- */
-esp_err_t waste_manager_enter_config_mode(void);
-
-/**
- * @brief Exit configuration mode
- * @return ESP_OK on success
- */
-esp_err_t waste_manager_exit_config_mode(void);
-
-/**
- * @brief Check if in configuration mode
- * @return true if in config mode
- */
-bool waste_manager_is_config_mode(void);
 
 #endif // WASTE_MANAGER_H

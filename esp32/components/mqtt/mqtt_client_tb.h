@@ -3,12 +3,14 @@
 
 #include "esp_err.h"
 #include "waste_manager.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/event_groups.h"
 
 /**
  * @brief Initialize MQTT client
  * @return ESP_OK on success
  */
-esp_err_t mqtt_client_init(void);
+esp_err_t mqtt_client_init(EventGroupHandle_t g_event_group);
 
 /**
  * @brief Start MQTT client

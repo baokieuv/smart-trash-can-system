@@ -9,7 +9,7 @@
 
 static const char *TAG = "MQTT";
 static esp_mqtt_client_handle_t g_mqtt_client = NULL;
-static bool g_mqtt_connected = false;
+EventGroupHandle_t s_event_group = NULL;
 static SemaphoreHandle_t g_mqtt_mutex = NULL;
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
@@ -19,12 +19,14 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
     switch ((esp_mqtt_event_id_t)event_id) {
         case MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "MQTT Connected to broker");
-            g_mqtt_connected = true;
+            // g_mqtt_connected = true;
+            xEventGroupSetBits(s_event_group, MQTT_CONNECTED_BIT);
             break;
 
         case MQTT_EVENT_DISCONNECTED:
             ESP_LOGW(TAG, "MQTT Disconnected from broker");
-            g_mqtt_connected = false;
+            // g_mqtt_connected = false;
+            xEventGroupClearBits(s_event_group, MQTT_CONNECTED_BIT);
             break;
 
         case MQTT_EVENT_PUBLISHED:
@@ -54,7 +56,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
     }
 }
 
-esp_err_t mqtt_client_init(void) {
+esp_err_t mqtt_client_init(EventGroupHandle_t g_event_group) {
     if (g_mqtt_client != NULL) {
         ESP_LOGW(TAG, "MQTT client already initialized");
         return ESP_OK;
@@ -62,6 +64,7 @@ esp_err_t mqtt_client_init(void) {
 
     ESP_LOGI(TAG, "Initializing MQTT client...");
 
+    s_event_group = g_event_group;
     // Create mutex
     g_mqtt_mutex = xSemaphoreCreateMutex();
     if (!g_mqtt_mutex) {
@@ -126,7 +129,7 @@ esp_err_t mqtt_send_telemetry(const waste_stats_t *stats) {
         return ESP_ERR_INVALID_STATE;
     }
 
-    if (!g_mqtt_connected) {
+    if((xEventGroupGetBits(s_event_group) & MQTT_CONNECTED_BIT) == 0) {
         ESP_LOGW(TAG, "MQTT not connected, skipping telemetry");
         return ESP_ERR_INVALID_STATE;
     }
@@ -186,7 +189,8 @@ esp_err_t mqtt_client_stop(void) {
     if (err == ESP_OK) {
         esp_mqtt_client_destroy(g_mqtt_client);
         g_mqtt_client = NULL;
-        g_mqtt_connected = false;
+        xEventGroupClearBits(s_event_group, MQTT_CONNECTED_BIT);
+        // g_mqtt_connected = false;
         
         if (g_mqtt_mutex) {
             vSemaphoreDelete(g_mqtt_mutex);
@@ -202,5 +206,7 @@ esp_err_t mqtt_client_stop(void) {
 }
 
 bool mqtt_is_connected(void) {
-    return g_mqtt_connected;
+    EventBits_t bits = xEventGroupGetBits(s_event_group);
+    if(bits & MQTT_CONNECTED_BIT) return true;
+    return false;
 }

@@ -7,6 +7,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 
+void wifi_reconnect_task(void *param);
+
 /**
  * @brief Initialize WiFi manager
  */

@@ -5,29 +5,29 @@
 #include "esp_log.h"
 #include <string.h>
 
+#define MAX_RECONNECT_DELAY_SEC 60
+
 static const char *TAG = "WIFI_MGR";
 static EventGroupHandle_t s_event_group = NULL;
 static int s_retry_num = 0;
 static esp_netif_t *s_sta_netif = NULL;
 static esp_netif_t *s_ap_netif = NULL;
 
+static int s_reconnect_delay_sec = 2;
+
 static void wifi_event_handler(void* arg, esp_event_base_t event_base, 
                                int32_t event_id, void* event_data) {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        if (s_retry_num < MAXIMUM_RETRY) {
-            esp_wifi_connect();
-            s_retry_num++;
-            ESP_LOGI(TAG, "Retry to connect (attempt %d/%d)", s_retry_num, MAXIMUM_RETRY);
-        } else {
-            xEventGroupSetBits(s_event_group, WIFI_FAIL_BIT);
-            ESP_LOGW(TAG, "Failed to connect to AP");
-        }
+        ESP_LOGW(TAG, "WiFi disconnected.");
+
+        xTaskCreate(wifi_reconnect_task, "reconnect wifi", 4096, NULL, 5, NULL);
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
         s_retry_num = 0;
+        s_reconnect_delay_sec = 10;
         xEventGroupSetBits(s_event_group, WIFI_CONNECTED_BIT);
     }
 }
@@ -173,4 +173,27 @@ bool wifi_is_connected(void) {
     if (!s_event_group) return false;
     EventBits_t bits = xEventGroupGetBits(s_event_group);
     return (bits & WIFI_CONNECTED_BIT) != 0;
+}
+
+void wifi_reconnect_task(void *param){
+    s_retry_num++;
+    if(s_retry_num > MAXIMUM_RETRY){
+        ESP_LOGW(TAG, "Max retry reached (%d). Stop reconnect attempts.", MAXIMUM_RETRY);
+        xEventGroupSetBits(s_event_group, WIFI_FAIL_BIT);
+        vTaskDelete(NULL);
+    }
+    ESP_LOGI(TAG, "Reconnecting WiFi in %d seconds... (attempt %d)", s_reconnect_delay_sec, s_retry_num);
+    vTaskDelay(pdMS_TO_TICKS(s_reconnect_delay_sec * 1000));
+
+    esp_err_t err = esp_wifi_connect();
+    if(err == ESP_OK){
+        ESP_LOGI(TAG, "Reconnection attempt sent.");
+    }else{
+        ESP_LOGE(TAG, "esp_wifi_connect() failed: %s", esp_err_to_name(err));
+    }
+
+    s_reconnect_delay_sec *= 2;
+    if(s_reconnect_delay_sec > MAX_RECONNECT_DELAY_SEC) s_reconnect_delay_sec = MAX_RECONNECT_DELAY_SEC;
+
+    vTaskDelete(NULL);
 }

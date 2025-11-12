@@ -5,7 +5,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
-#include "freertos/event_groups.h"
 #include <string.h>
 
 static const char *TAG = "WASTE_MGR";
@@ -13,7 +12,7 @@ static const char *TAG = "WASTE_MGR";
 // Global state
 static waste_stats_t g_stats = {0};
 static SemaphoreHandle_t g_stats_mutex = NULL;
-static EventGroupHandle_t g_event_group = NULL;
+static EventGroupHandle_t s_event_group = NULL;
 static bool g_initialized = false;
 
 // ==================== Private Functions ====================
@@ -47,20 +46,20 @@ static void update_bin_full_status(void) {
     
     if (g_stats.is_full && !was_full) {
         ESP_LOGW(TAG, "BIN IS FULL! Fill level: %.1f%%", g_stats.current_fill_level);
-        if (g_event_group) {
-            xEventGroupSetBits(g_event_group, BIN_FULL_BIT);
+        if (s_event_group) {
+            xEventGroupSetBits(s_event_group, BIN_FULL_BIT);
         }
     } else if (!g_stats.is_full && was_full) {
         ESP_LOGI(TAG, "Bin no longer full");
-        if (g_event_group) {
-            xEventGroupClearBits(g_event_group, BIN_FULL_BIT);
+        if (s_event_group) {
+            xEventGroupClearBits(s_event_group, BIN_FULL_BIT);
         }
     }
 }
 
 // ==================== Public Functions ====================
 
-esp_err_t waste_manager_init(void) {
+esp_err_t waste_manager_init(EventGroupHandle_t g_event_group) {
     if (g_initialized) {
         ESP_LOGW(TAG, "Already initialized");
         return ESP_OK;
@@ -76,8 +75,8 @@ esp_err_t waste_manager_init(void) {
     }
 
     // Create event group
-    g_event_group = xEventGroupCreate();
-    if (!g_event_group) {
+    s_event_group = g_event_group;
+    if (!s_event_group) {
         ESP_LOGE(TAG, "Failed to create event group");
         vSemaphoreDelete(g_stats_mutex);
         return ESP_ERR_NO_MEM;
@@ -99,10 +98,11 @@ esp_err_t waste_manager_start(void) {
     }
 
     ESP_LOGI(TAG, "Starting waste manager");
-    xEventGroupClearBits(g_event_group, CONFIG_MODE_BIT);
+    xEventGroupClearBits(s_event_group, CONFIG_MODE_BIT);
     return ESP_OK;
 }
 
+//chưa dùng 
 esp_err_t waste_manager_stop(void) {
     if (!g_initialized) {
         return ESP_OK;
@@ -127,6 +127,7 @@ esp_err_t waste_manager_get_stats(waste_stats_t *stats) {
     return ESP_ERR_TIMEOUT;
 }
 
+//Chưa dùng
 esp_err_t waste_manager_reset_stats(void) {
     if (!g_initialized) {
         return ESP_ERR_INVALID_STATE;
@@ -217,6 +218,7 @@ esp_err_t waste_manager_record_waste(waste_category_t category) {
     return ESP_ERR_TIMEOUT;
 }
 
+//chưa dùng
 bool waste_manager_is_bin_full(void) {
     if (!g_initialized) {
         return false;
@@ -230,6 +232,7 @@ bool waste_manager_is_bin_full(void) {
     return is_full;
 }
 
+//chưa dùng 
 float waste_manager_get_fill_level(void) {
     if (!g_initialized) {
         return 0.0f;
@@ -241,42 +244,4 @@ float waste_manager_get_fill_level(void) {
         xSemaphoreGive(g_stats_mutex);
     }
     return level;
-}
-
-esp_err_t waste_manager_enter_config_mode(void) {
-    if (!g_initialized) {
-        return ESP_ERR_INVALID_STATE;
-    }
-
-    ESP_LOGI(TAG, "Entering configuration mode");
-    if (g_event_group) {
-        xEventGroupSetBits(g_event_group, CONFIG_MODE_BIT);
-    }
-    return ESP_OK;
-}
-
-esp_err_t waste_manager_exit_config_mode(void) {
-    if (!g_initialized) {
-        return ESP_ERR_INVALID_STATE;
-    }
-
-    ESP_LOGI(TAG, "Exiting configuration mode");
-    if (g_event_group) {
-        xEventGroupClearBits(g_event_group, CONFIG_MODE_BIT);
-    }
-    return ESP_OK;
-}
-
-bool waste_manager_is_config_mode(void) {
-    if (!g_initialized || !g_event_group) {
-        return false;
-    }
-
-    EventBits_t bits = xEventGroupGetBits(g_event_group);
-    return (bits & CONFIG_MODE_BIT) != 0;
-}
-
-// Get event group handle (for other modules)
-EventGroupHandle_t waste_manager_get_event_group(void) {
-    return g_event_group;
 }

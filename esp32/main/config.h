@@ -28,28 +28,29 @@
 #define MQTT_TELEMETRY_TOPIC    "v1/devices/me/telemetry"
 #define MQTT_ACCESS_TOKEN       "KOB9rV5CSP0GXJsYsDya"
 #define MQTT_RECONNECT_DELAY_MS 5000
-#define TELEMETRY_INTERVAL_MS   60000  // Send telemetry every 1 minute
+#define TELEMETRY_INTERVAL_MS   5000  // Send telemetry every 1 minute
 #define OTA_INTERVAL_MS         60000  // Send request OTA every 1 minute
+#define HEARTBEAT_INTERVAL_MS   (20 * 60 * 1000) // 20 minutes
 
 // ==================== GPIO Pins ====================
 // Button
-#define BTN_CONFIG_PIN          GPIO_NUM_0   // Boot button for config mode
+#define BTN_CONFIG_PIN          GPIO_NUM_10   // Boot button for config mode
 
 // PIR Sensor
-#define PIR_SENSOR_PIN          GPIO_NUM_12
+#define PIR_SENSOR_PIN          GPIO_NUM_16
 
 // Ultrasonic Sensor
-#define ULTRASONIC_TRIG_PIN     GPIO_NUM_33
-#define ULTRASONIC_ECHO_PIN     GPIO_NUM_32
+#define ULTRASONIC_TRIG_PIN     GPIO_NUM_15
+#define ULTRASONIC_ECHO_PIN     GPIO_NUM_5
 
 // LED Indicators (3 waste types)
-#define LED_RECYCLABLE_PIN      GPIO_NUM_13  // Recyclable waste (blue)
-#define LED_COMPOSTABLE_PIN     GPIO_NUM_14  // Compostable waste (green)
-#define LED_HAZARDOUS_PIN       GPIO_NUM_15  // Hazardous waste (red)
-#define LED_STATUS_PIN          GPIO_NUM_2   // System status LED
+#define LED_RECYCLABLE_PIN      GPIO_NUM_6  // Recyclable waste (blue)
+#define LED_COMPOSTABLE_PIN     GPIO_NUM_7  // Compostable waste (green)
+#define LED_HAZARDOUS_PIN       GPIO_NUM_4  // Hazardous waste (red)
+#define LED_STATUS_PIN          GPIO_NUM_19  // System status LED
 
 // Buzzer
-#define BUZZER_PIN              GPIO_NUM_10
+#define BUZZER_PIN              GPIO_NUM_2
 
 // ==================== Sensor Configuration ====================
 #define DISTANCE_THRESHOLD_CM   15   // Waste detected if distance < 15cm
@@ -78,8 +79,7 @@
 #define CAMERA_TASK_STACK_SIZE      (4 * 1024)
 #define HTTP_TASK_STACK_SIZE        (4 * 1024)
 #define SENSOR_TASK_STACK_SIZE      (3 * 1024)
-#define TELEMETRY_TASK_STACK_SIZE   (3 * 1024)
-#define BUTTON_TASK_STACK_SIZE      (2 * 1024)
+#define HEARTBEAT_TASK_STACK_SIZE   (3 * 1024)
 
 #define IMAGE_QUEUE_LENGTH          2
 #define TRIGGER_QUEUE_LENGTH        5
@@ -90,7 +90,8 @@
 #define WIFI_FAIL_BIT           BIT1
 #define MQTT_CONNECTED_BIT      BIT2
 #define CONFIG_MODE_BIT         BIT3
-#define BIN_FULL_BIT            BIT4
+#define EXIT_CONFIG_MODE_BIT    BIT4
+#define BIN_FULL_BIT            BIT5
 
 // ==================== Timing Configuration ====================
 #define SENSOR_CHECK_INTERVAL_MS    200

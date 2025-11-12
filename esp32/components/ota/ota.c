@@ -2,6 +2,8 @@
 #include "esp_ota_ops.h"
 #include "esp_crt_bundle.h"
 #include "esp_log.h"
+#include "esp_https_ota.h"
+#include "esp_http_client.h"
 
 #define TAG         "OTA"
 #define OTA_URL_SIZE 256
@@ -56,6 +58,8 @@ esp_err_t ota_handle(void *param){
     ESP_LOGI(TAG, "Starting Advanced OTA example");
 
     // get title and version from thingsboard
+
+    ESP_ERROR_CHECK(esp_event_handler_register(ESP_HTTPS_OTA_EVENT, ESP_EVENT_ANY_ID, ota_event_handler, NULL));
 
     esp_err_t ota_finish_err = ESP_OK;
     esp_http_client_config_t config = {
