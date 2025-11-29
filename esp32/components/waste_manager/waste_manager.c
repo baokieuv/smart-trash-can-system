@@ -9,10 +9,12 @@
 
 static const char *TAG = "WASTE_MGR";
 
+extern EventGroupHandle_t g_event_group;
+
 // Global state
 static waste_stats_t g_stats = {0};
 static SemaphoreHandle_t g_stats_mutex = NULL;
-static EventGroupHandle_t s_event_group = NULL;
+// static EventGroupHandle_t g_event_group = NULL;
 static bool g_initialized = false;
 
 // ==================== Private Functions ====================
@@ -46,13 +48,13 @@ static void update_bin_full_status(void) {
     
     if (g_stats.is_full && !was_full) {
         ESP_LOGW(TAG, "BIN IS FULL! Fill level: %.1f%%", g_stats.current_fill_level);
-        if (s_event_group) {
-            xEventGroupSetBits(s_event_group, BIN_FULL_BIT);
+        if (g_event_group) {
+            xEventGroupSetBits(g_event_group, BIN_FULL_BIT);
         }
     } else if (!g_stats.is_full && was_full) {
         ESP_LOGI(TAG, "Bin no longer full");
-        if (s_event_group) {
-            xEventGroupClearBits(s_event_group, BIN_FULL_BIT);
+        if (g_event_group) {
+            xEventGroupClearBits(g_event_group, BIN_FULL_BIT);
         }
     }
 }
@@ -75,8 +77,8 @@ esp_err_t waste_manager_init(EventGroupHandle_t g_event_group) {
     }
 
     // Create event group
-    s_event_group = g_event_group;
-    if (!s_event_group) {
+    g_event_group = g_event_group;
+    if (!g_event_group) {
         ESP_LOGE(TAG, "Failed to create event group");
         vSemaphoreDelete(g_stats_mutex);
         return ESP_ERR_NO_MEM;
@@ -98,7 +100,7 @@ esp_err_t waste_manager_start(void) {
     }
 
     ESP_LOGI(TAG, "Starting waste manager");
-    xEventGroupClearBits(s_event_group, CONFIG_MODE_BIT);
+    xEventGroupClearBits(g_event_group, CONFIG_MODE_BIT);
     return ESP_OK;
 }
 

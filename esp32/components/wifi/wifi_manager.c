@@ -7,8 +7,10 @@
 
 #define MAX_RECONNECT_DELAY_SEC 60
 
+extern EventGroupHandle_t g_event_group;
+
 static const char *TAG = "WIFI_MGR";
-static EventGroupHandle_t s_event_group = NULL;
+// static EventGroupHandle_t g_event_group = NULL;
 static int s_retry_num = 0;
 static esp_netif_t *s_sta_netif = NULL;
 static esp_netif_t *s_ap_netif = NULL;
@@ -28,7 +30,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
         ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
         s_retry_num = 0;
         s_reconnect_delay_sec = 10;
-        xEventGroupSetBits(s_event_group, WIFI_CONNECTED_BIT);
+        xEventGroupSetBits(g_event_group, WIFI_CONNECTED_BIT);
     }
 }
 
@@ -38,7 +40,7 @@ esp_err_t wifi_manager_init(EventGroupHandle_t event_group) {
         return ESP_ERR_INVALID_ARG;
     }
 
-    s_event_group = event_group;
+    g_event_group = event_group;
 
     esp_err_t err = esp_event_handler_instance_register(
         WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL, NULL);
@@ -91,6 +93,7 @@ esp_err_t wifi_start_ap_mode(void) {
     }
 
     if (err == ESP_OK) {
+        xEventGroupClearBits(g_event_group, WIFI_CONNECTED_BIT);
         ESP_LOGI(TAG, "AP Mode started, SSID: %s", AP_SSID);
     } else {
         ESP_LOGE(TAG, "Failed to start AP mode: %s", esp_err_to_name(err));
@@ -138,14 +141,18 @@ bool wifi_start_station_mode(const char *ssid, const char *pass) {
 
     // Wait for connection or failure
     EventBits_t bits = xEventGroupWaitBits(
-        s_event_group,
-        WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
+        g_event_group,
+        WIFI_CONNECTED_BIT | WIFI_FAIL_BIT | CONFIG_MODE_BIT,
         pdTRUE,  // Clear bits after reading
         pdFALSE, // Wait for either bit
         pdMS_TO_TICKS(WIFI_CONNECT_TIMEOUT_MS)
     );
 
-    if (bits & WIFI_CONNECTED_BIT) {
+    if (bits & CONFIG_MODE_BIT){
+        ESP_LOGW(TAG, "Config mode requested, aborting connection attempt");
+        return false;
+    }
+    else if (bits & WIFI_CONNECTED_BIT) {
         ESP_LOGI(TAG, "Connected to WiFi successfully");
         return true;
     } else {
@@ -171,8 +178,8 @@ esp_err_t wifi_stop(void) {
 }
 
 bool wifi_is_connected(void) {
-    if (!s_event_group) return false;
-    EventBits_t bits = xEventGroupGetBits(s_event_group);
+    if (!g_event_group) return false;
+    EventBits_t bits = xEventGroupGetBits(g_event_group);
     return (bits & WIFI_CONNECTED_BIT) != 0;
 }
 
@@ -180,7 +187,7 @@ void wifi_reconnect_task(void *param){
     s_retry_num++;
     if(s_retry_num > MAXIMUM_RETRY){
         ESP_LOGW(TAG, "Max retry reached (%d). Stop reconnect attempts.", MAXIMUM_RETRY);
-        xEventGroupSetBits(s_event_group, WIFI_FAIL_BIT);
+        xEventGroupSetBits(g_event_group, WIFI_FAIL_BIT);
         vTaskDelete(NULL);
     }
     ESP_LOGI(TAG, "Reconnecting WiFi in %d seconds... (attempt %d)", s_reconnect_delay_sec, s_retry_num);

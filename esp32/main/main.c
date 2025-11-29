@@ -29,35 +29,36 @@
 static const char *TAG = "SMART_BIN";
 
 // Global handles
-static EventGroupHandle_t g_event_group = NULL;
+EventGroupHandle_t g_event_group = NULL;
 static QueueHandle_t g_image_queue = NULL;
 
 // ==================== Sensor Detection Task ====================
-
 static void sensor_detection_task(void *param) {
-    bool person_detected = false;
+    // bool person_detected = false;
     
     ESP_LOGI(TAG, "Sensor detection task started");
     
     while (1) {
         // Check if in config mode
+        // ESP_LOGI(TAG, "Sensor task");
         if (xEventGroupGetBits(g_event_group) & CONFIG_MODE_BIT) {
+            // ESP_LOGI(TAG, "In config mode");
             vTaskDelay(pdMS_TO_TICKS(1000));
             continue;
         }
         
         // Read PIR sensor
-        bool pir_state = pir_sensor_read();
-        if(pir_state){
+        // bool pir_state = pir_sensor_read();
+        if(wifi_is_connected()){
         // if (pir_state && !person_detected) {
         //     person_detected = true;
-            ESP_LOGI(TAG, "PIR: Person detected!");
+            // ESP_LOGI(TAG, "PIR: Person detected!");
             
             // Stabilization delay
             vTaskDelay(pdMS_TO_TICKS(500));
             
             // Read ultrasonic sensor
-            float distance = ultrasonic_sensor_read_distance();
+            float distance = ultrasonic_sensor_get_distance_for_detect();
             
             if (distance > 0 && distance < DISTANCE_THRESHOLD_CM) {
                 ESP_LOGI(TAG, "Ultrasonic: Waste detected at %.2f cm", distance);
@@ -76,13 +77,15 @@ static void sensor_detection_task(void *param) {
                     }
                 }
                 
+                // read distance in bin -> check fill level
+                // TODO
                 // Update fill level -> thay đổi -> khi nhận diện xong 
-                waste_manager_update_fill_level(distance);
+                waste_manager_update_fill_level(ultrasonic_sensor_get_distance_for_check_full());
                 
                 // Wait before next detection
                 vTaskDelay(pdMS_TO_TICKS(5000));
             }
-        } 
+        }
         // else if (!pir_state && person_detected) {
         //     person_detected = false;
         //     ESP_LOGI(TAG, "PIR: Person left");
@@ -111,7 +114,7 @@ static void classification_task(void *param) {
             ESP_LOGI(TAG, "Processing image for classification...");
             
             // Send to AI server
-            if (http_client_classify_waste(fb, &result) == ESP_OK) {
+            if (wifi_is_connected() && http_client_classify_waste(fb, &result) == ESP_OK) {
                 ESP_LOGI(TAG, "Classification result: %s (%.1f%% confidence)",
                          result.description, result.confidence);
                 
@@ -121,7 +124,7 @@ static void classification_task(void *param) {
                 // Show LED indication
                 indicate_waste_category(result.category);
 
-                if(wifi_is_connected() && mqtt_is_connected()){
+                if(mqtt_is_connected()){
                     if(waste_manager_get_stats(&stats) == ESP_OK){
                         mqtt_send_telemetry(&stats);
                         ESP_LOGI(TAG, "Telemetry sent after detection");
@@ -216,7 +219,7 @@ static void handle_config_mode(void) {
             
             // Wait for configuration (will restart after config)
             while (1) {
-                EventBits_t bits = xEventGroupWaitBits(g_event_group, CONFIG_MODE_BIT, pdTRUE, pdFAIL, portMAX_DELAY);
+                EventBits_t bits = xEventGroupWaitBits(g_event_group, EXIT_CONFIG_MODE_BIT, pdTRUE, pdFAIL, portMAX_DELAY);
 
                 if(bits & EXIT_CONFIG_MODE_BIT){
                     ESP_LOGI(TAG, "Exiting config mode...");
@@ -291,6 +294,7 @@ void app_main(void) {
         vTaskDelay(pdMS_TO_TICKS(100));
         // Connect to WiFi
         if (wifi_start_station_mode(ssid, password)) {
+            xEventGroupSetBits(g_event_group, WIFI_CONNECTED_BIT);
             ESP_LOGI(TAG, "Connected to WiFi successfully");
             gpio_set_level(LED_STATUS_PIN, 1);  // Status LED on
             

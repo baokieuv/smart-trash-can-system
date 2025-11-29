@@ -5,7 +5,9 @@
 #include <string.h>
 
 static const char *TAG = "GPIO";
-static EventGroupHandle_t s_event_group = NULL;
+
+extern EventGroupHandle_t g_event_group;
+// static EventGroupHandle_t g_event_group = NULL;
 static volatile int64_t g_button_press_time = 0;
 
 static void IRAM_ATTR button_isr_handler(void* arg) {
@@ -21,9 +23,9 @@ static void IRAM_ATTR button_isr_handler(void* arg) {
         if (press_duration >= BUTTON_LONG_PRESS_MS) {
             // Long press: enter config mode
             BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-            EventBits_t bits = xEventGroupGetBitsFromISR(s_event_group);
-            if(bits & CONFIG_MODE_BIT) xEventGroupSetBitsFromISR(s_event_group, EXIT_CONFIG_MODE_BIT, &xHigherPriorityTaskWoken);
-            else xEventGroupSetBitsFromISR(s_event_group, CONFIG_MODE_BIT, &xHigherPriorityTaskWoken);
+            EventBits_t bits = xEventGroupGetBitsFromISR(g_event_group);
+            if(bits & CONFIG_MODE_BIT) xEventGroupSetBitsFromISR(g_event_group, EXIT_CONFIG_MODE_BIT, &xHigherPriorityTaskWoken);
+            else xEventGroupSetBitsFromISR(g_event_group, CONFIG_MODE_BIT, &xHigherPriorityTaskWoken);
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
         
@@ -74,7 +76,7 @@ static void button_init(void) {
 esp_err_t gpio_handler_init(EventGroupHandle_t g_event_group) {
     ESP_LOGI(TAG, "Initializing GPIO...");
 
-    s_event_group = g_event_group;
+    g_event_group = g_event_group;
 
     led_buzzer_init();
     button_init();

@@ -4,6 +4,7 @@
 #include "esp_err.h"
 #include <stdbool.h>
 
+#define PIR_DEBOUNCE_MS     1000
 /**
  * @brief Initialize PIR sensor
  * @return ESP_OK on success

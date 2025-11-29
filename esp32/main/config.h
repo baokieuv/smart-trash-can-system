@@ -39,9 +39,13 @@
 // PIR Sensor
 #define PIR_SENSOR_PIN          GPIO_NUM_10
 
-// Ultrasonic Sensor
-#define ULTRASONIC_TRIG_PIN     GPIO_NUM_20
-#define ULTRASONIC_ECHO_PIN     GPIO_NUM_21
+// Ultrasonic Sensor -> for detect waste
+#define ULTRASONIC1_TRIG_PIN     GPIO_NUM_20
+#define ULTRASONIC1_ECHO_PIN     GPIO_NUM_21
+
+// for check full
+#define ULTRASONIC2_TRIG_PIN     GPIO_NUM_20
+#define ULTRASONIC2_ECHO_PIN     GPIO_NUM_21
 
 // LED Indicators (3 waste types)
 #define LED_RECYCLABLE_PIN      GPIO_NUM_39  // Recyclable waste (blue)
@@ -94,7 +98,7 @@
 #define BIN_FULL_BIT            BIT5
 
 // ==================== Timing Configuration ====================
-#define SENSOR_CHECK_INTERVAL_MS    200
+#define SENSOR_CHECK_INTERVAL_MS    2000
 #define DEBOUNCE_DELAY_MS           50
 #define BUTTON_LONG_PRESS_MS        3000
 #define LED_INDICATION_DURATION_MS  3000

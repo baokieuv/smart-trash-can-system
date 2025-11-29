@@ -8,8 +8,11 @@
 #include <string.h>
 
 static const char *TAG = "MQTT";
+
+extern EventGroupHandle_t g_event_group;
+
 static esp_mqtt_client_handle_t g_mqtt_client = NULL;
-EventGroupHandle_t s_event_group = NULL;
+// EventGroupHandle_t g_event_group = NULL;
 static SemaphoreHandle_t g_mqtt_mutex = NULL;
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
@@ -20,13 +23,13 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
         case MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "MQTT Connected to broker");
             // g_mqtt_connected = true;
-            xEventGroupSetBits(s_event_group, MQTT_CONNECTED_BIT);
+            xEventGroupSetBits(g_event_group, MQTT_CONNECTED_BIT);
             break;
 
         case MQTT_EVENT_DISCONNECTED:
             ESP_LOGW(TAG, "MQTT Disconnected from broker");
             // g_mqtt_connected = false;
-            xEventGroupClearBits(s_event_group, MQTT_CONNECTED_BIT);
+            xEventGroupClearBits(g_event_group, MQTT_CONNECTED_BIT);
             break;
 
         case MQTT_EVENT_PUBLISHED:
@@ -64,7 +67,7 @@ esp_err_t mqtt_client_init(EventGroupHandle_t g_event_group) {
 
     ESP_LOGI(TAG, "Initializing MQTT client...");
 
-    s_event_group = g_event_group;
+    g_event_group = g_event_group;
     // Create mutex
     g_mqtt_mutex = xSemaphoreCreateMutex();
     if (!g_mqtt_mutex) {
@@ -129,7 +132,7 @@ esp_err_t mqtt_send_telemetry(const waste_stats_t *stats) {
         return ESP_ERR_INVALID_STATE;
     }
 
-    if((xEventGroupGetBits(s_event_group) & MQTT_CONNECTED_BIT) == 0) {
+    if((xEventGroupGetBits(g_event_group) & MQTT_CONNECTED_BIT) == 0) {
         ESP_LOGW(TAG, "MQTT not connected, skipping telemetry");
         return ESP_ERR_INVALID_STATE;
     }
@@ -189,7 +192,7 @@ esp_err_t mqtt_client_stop(void) {
     if (err == ESP_OK) {
         esp_mqtt_client_destroy(g_mqtt_client);
         g_mqtt_client = NULL;
-        xEventGroupClearBits(s_event_group, MQTT_CONNECTED_BIT);
+        xEventGroupClearBits(g_event_group, MQTT_CONNECTED_BIT);
         // g_mqtt_connected = false;
         
         if (g_mqtt_mutex) {
@@ -206,7 +209,7 @@ esp_err_t mqtt_client_stop(void) {
 }
 
 bool mqtt_is_connected(void) {
-    EventBits_t bits = xEventGroupGetBits(s_event_group);
+    EventBits_t bits = xEventGroupGetBits(g_event_group);
     if(bits & MQTT_CONNECTED_BIT) return true;
     return false;
 }

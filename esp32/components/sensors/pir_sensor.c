@@ -2,8 +2,10 @@
 #include "config.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
+#include "esp_timer.h"
 
 static const char *TAG = "PIR_SENSOR";
+static int64_t last_trigger_time = 0;
 
 esp_err_t pir_sensor_init(void) {
     ESP_LOGI(TAG, "Initializing PIR sensor on GPIO%d", PIR_SENSOR_PIN);
@@ -27,5 +29,16 @@ esp_err_t pir_sensor_init(void) {
 }
 
 bool pir_sensor_read(void) {
-    return gpio_get_level(PIR_SENSOR_PIN) == 1;
+    int level = gpio_get_level(PIR_SENSOR_PIN);
+
+    if(level == 1){
+        int64_t current_time = esp_timer_get_time() / 1000;
+        if(current_time - last_trigger_time < PIR_DEBOUNCE_MS){
+            return false;
+        }
+
+        last_trigger_time = current_time;
+        return true;
+    }
+    return false;
 }
