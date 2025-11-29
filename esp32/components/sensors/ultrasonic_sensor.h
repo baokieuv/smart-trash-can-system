@@ -3,6 +3,9 @@
 
 #include "esp_err.h"
 
+#define SOUND_SPEED     343.0
+#define ECHO_TIMEOUT    300000
+
 /**
  * @brief Initialize ultrasonic sensor
  * @return ESP_OK on success

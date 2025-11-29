@@ -56,34 +56,41 @@ float ultrasonic_sensor_read_distance(void) {
     esp_rom_delay_us(10);
     gpio_set_level(ULTRASONIC_TRIG_PIN, 0);
 
+    int64_t start_time = esp_timer_get_time();
+    int64_t prev_time = start_time;
     // Wait for echo to go HIGH (with timeout)
-    int timeout = 0;
     while (gpio_get_level(ULTRASONIC_ECHO_PIN) == 0) {
-        esp_rom_delay_us(1);
-        if (++timeout > 10000) {
-            ESP_LOGW(TAG, "Timeout waiting for echo HIGH");
-            return -1.0f;
+        start_time = esp_timer_get_time();
+        if(start_time - prev_time > ECHO_TIMEOUT){
+            ESP_LOGW(TAG, "Timeout 1");
+            return ESP_ERR_TIMEOUT;
         }
     }
 
     // Measure echo HIGH duration
-    int64_t start_time = esp_timer_get_time();
-    timeout = 0;
+    int64_t end_time = start_time;
     while (gpio_get_level(ULTRASONIC_ECHO_PIN) == 1) {
-        esp_rom_delay_us(1);
-        if (++timeout > 30000) {
-            ESP_LOGW(TAG, "Timeout waiting for echo LOW");
-            return -1.0f;
+        end_time = esp_timer_get_time();
+        if(end_time - start_time > ECHO_TIMEOUT){
+            ESP_LOGW(TAG, "Timeout 2");
+            return ESP_ERR_TIMEOUT;
         }
     }
-    int64_t end_time = esp_timer_get_time();
 
-    // Calculate distance: distance = (duration * speed_of_sound) / 2
-    // Speed of sound = 343 m/s = 0.0343 cm/us
-    float duration_us = (float)(end_time - start_time);
-    float distance_cm = (duration_us * 0.0343f) / 2.0f;
+    gpio_set_level(ULTRASONIC_TRIG_PIN, 1);
+    int64_t duration = end_time - start_time;
+    float distance = (duration / 2.0) * (SOUND_SPEED / 10000.0);
 
-    ESP_LOGD(TAG, "Distance: %.2f cm (duration: %.2f us)", distance_cm, duration_us);
+    return distance;
 
-    return distance_cm;
+    // int64_t end_time = esp_timer_get_time();
+
+    // // Calculate distance: distance = (duration * speed_of_sound) / 2
+    // // Speed of sound = 343 m/s = 0.0343 cm/us
+    // float duration_us = (float)(end_time - start_time);
+    // float distance_cm = (duration_us * 0.0343f) / 2.0f;
+
+    // ESP_LOGD(TAG, "Distance: %.2f cm (duration: %.2f us)", distance_cm, duration_us);
+
+    // return distance_cm;
 }
