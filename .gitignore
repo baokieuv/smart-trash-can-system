@@ -1,7 +1,7 @@
 /venv
 /temp
 /__pycache__
-/result
+result/
 build/
 sdkconfig
 *.bin
