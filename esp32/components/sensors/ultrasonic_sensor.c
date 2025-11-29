@@ -90,8 +90,6 @@ static float ultrasonic_sensor_read(uint8_t trig_pin, uint8_t echo_pin){
 static float ultrasonic_sensor_read_distance(uint8_t trig_pin, uint8_t echo_pin) {
     float readings[5] = { 0 };
     int valid_count = 0;
-    
-    ESP_LOGI(TAG, "Read ultrasonic sensor");
 
     for(int i = 0; i < 5; i++){
         float distance = ultrasonic_sensor_read(trig_pin, echo_pin);
@@ -121,7 +119,7 @@ static float ultrasonic_sensor_read_distance(uint8_t trig_pin, uint8_t echo_pin)
     
     // Return median
     float median = readings[valid_count / 2];
-    ESP_LOGI(TAG, "Distance: %.2f cm (from %d valid readings)", median, valid_count);
+    ESP_LOGD(TAG, "Distance: %.2f cm (from %d valid readings)", median, valid_count);
     
     return median;
 }

@@ -206,6 +206,7 @@ static void handle_config_mode(void) {
     
     // Stop current WiFi
     wifi_stop();
+    mqtt_client_stop();
     
     // Start AP mode
     if (wifi_start_ap_mode() == ESP_OK) {
