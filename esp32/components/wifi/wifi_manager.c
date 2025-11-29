@@ -100,6 +100,7 @@ esp_err_t wifi_start_ap_mode(void) {
 }
 
 bool wifi_start_station_mode(const char *ssid, const char *pass) {
+    ESP_LOGI(TAG, "In wifi_start_station_mode");
     if (!ssid || !pass) {
         ESP_LOGE(TAG, "Invalid SSID or password");
         return false;

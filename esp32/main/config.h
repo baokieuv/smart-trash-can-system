@@ -20,7 +20,7 @@
 #define PASSWORD_MAX_LEN        64
 
 // ==================== HTTP Configuration ====================
-#define HTTP_SERVER_URL         "http://192.168.1.100:5000/classify"  // AI Server
+#define HTTP_SERVER_URL         "http://kvbhust.site/api/detect"  // AI Server
 #define HTTP_TIMEOUT_MS         10000
 
 // ==================== MQTT Configuration ====================
@@ -34,20 +34,20 @@
 
 // ==================== GPIO Pins ====================
 // Button
-#define BTN_CONFIG_PIN          GPIO_NUM_10   // Boot button for config mode
+#define BTN_CONFIG_PIN          GPIO_NUM_3  // Boot button for config mode
 
 // PIR Sensor
-#define PIR_SENSOR_PIN          GPIO_NUM_16
+#define PIR_SENSOR_PIN          GPIO_NUM_10
 
 // Ultrasonic Sensor
-#define ULTRASONIC_TRIG_PIN     GPIO_NUM_15
-#define ULTRASONIC_ECHO_PIN     GPIO_NUM_5
+#define ULTRASONIC_TRIG_PIN     GPIO_NUM_20
+#define ULTRASONIC_ECHO_PIN     GPIO_NUM_21
 
 // LED Indicators (3 waste types)
-#define LED_RECYCLABLE_PIN      GPIO_NUM_6  // Recyclable waste (blue)
-#define LED_COMPOSTABLE_PIN     GPIO_NUM_7  // Compostable waste (green)
-#define LED_HAZARDOUS_PIN       GPIO_NUM_4  // Hazardous waste (red)
-#define LED_STATUS_PIN          GPIO_NUM_19  // System status LED
+#define LED_RECYCLABLE_PIN      GPIO_NUM_39  // Recyclable waste (blue)
+#define LED_COMPOSTABLE_PIN     GPIO_NUM_40  // Compostable waste (green)
+#define LED_HAZARDOUS_PIN       GPIO_NUM_41  // Hazardous waste (red)
+#define LED_STATUS_PIN          GPIO_NUM_42  // System status LED
 
 // Buzzer
 #define BUZZER_PIN              GPIO_NUM_2
@@ -59,21 +59,21 @@
 
 // ==================== Camera Configuration ====================
 #define CAM_PIN_PWDN            -1
-#define CAM_PIN_RESET           9
-#define CAM_PIN_XCLK            40
-#define CAM_PIN_SIOD            17
-#define CAM_PIN_SIOC            18
-#define CAM_PIN_D7              39
-#define CAM_PIN_D6              41
-#define CAM_PIN_D5              42
+#define CAM_PIN_RESET           -1
+#define CAM_PIN_XCLK            15
+#define CAM_PIN_SIOD            4
+#define CAM_PIN_SIOC            5
+#define CAM_PIN_D7              16
+#define CAM_PIN_D6              17
+#define CAM_PIN_D5              18
 #define CAM_PIN_D4              12
-#define CAM_PIN_D3              3
-#define CAM_PIN_D2              14
-#define CAM_PIN_D1              47
-#define CAM_PIN_D0              13
-#define CAM_PIN_VSYNC           21
-#define CAM_PIN_HREF            38
-#define CAM_PIN_PCLK            11
+#define CAM_PIN_D3              10
+#define CAM_PIN_D2              8
+#define CAM_PIN_D1              9
+#define CAM_PIN_D0              11
+#define CAM_PIN_VSYNC           6
+#define CAM_PIN_HREF            7
+#define CAM_PIN_PCLK            13
 
 // ==================== Task Configuration ====================
 #define CAMERA_TASK_STACK_SIZE      (4 * 1024)

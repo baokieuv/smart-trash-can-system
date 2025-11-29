@@ -22,8 +22,8 @@ static void IRAM_ATTR button_isr_handler(void* arg) {
             // Long press: enter config mode
             BaseType_t xHigherPriorityTaskWoken = pdFALSE;
             EventBits_t bits = xEventGroupGetBitsFromISR(s_event_group);
-            if(bits & CONFIG_MODE_BIT) xEventGroupSetBitsFromISR(s_event_group, CONFIG_MODE_BIT, &xHigherPriorityTaskWoken);
-            else xEventGroupSetBitsFromISR(s_event_group, EXIT_CONFIG_MODE_BIT, &xHigherPriorityTaskWoken);
+            if(bits & CONFIG_MODE_BIT) xEventGroupSetBitsFromISR(s_event_group, EXIT_CONFIG_MODE_BIT, &xHigherPriorityTaskWoken);
+            else xEventGroupSetBitsFromISR(s_event_group, CONFIG_MODE_BIT, &xHigherPriorityTaskWoken);
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
         

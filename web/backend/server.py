@@ -33,7 +33,7 @@ async def classify(image: UploadFile = File(...)):
         
         label, conf = model_cls.detect_and_save(temp_path)
 
-        os.remove(temp_path)
+        # os.remove(temp_path)
         
         if label in recyclable:
             category = "recyclable"

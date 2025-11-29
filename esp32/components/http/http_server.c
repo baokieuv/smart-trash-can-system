@@ -73,6 +73,11 @@ static esp_err_t save_handler(httpd_req_t* req) {
         goto cleanup;
     }
 
+    const char *success_msg = "{\"status\":\"success\",\"message\":\"Configuration saved. Restarting...\"}";
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_send(req, success_msg, strlen(success_msg));
+    
+    ret = ESP_OK;
     // Schedule restart
     vTaskDelay(pdMS_TO_TICKS(1500));
     esp_restart();

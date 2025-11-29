@@ -48,9 +48,9 @@ static void sensor_detection_task(void *param) {
         
         // Read PIR sensor
         bool pir_state = pir_sensor_read();
-        
-        if (pir_state && !person_detected) {
-            person_detected = true;
+        if(pir_state){
+        // if (pir_state && !person_detected) {
+        //     person_detected = true;
             ESP_LOGI(TAG, "PIR: Person detected!");
             
             // Stabilization delay
@@ -82,10 +82,11 @@ static void sensor_detection_task(void *param) {
                 // Wait before next detection
                 vTaskDelay(pdMS_TO_TICKS(5000));
             }
-        } else if (!pir_state && person_detected) {
-            person_detected = false;
-            ESP_LOGI(TAG, "PIR: Person left");
-        }
+        } 
+        // else if (!pir_state && person_detected) {
+        //     person_detected = false;
+        //     ESP_LOGI(TAG, "PIR: Person left");
+        // }
         
         vTaskDelay(pdMS_TO_TICKS(SENSOR_CHECK_INTERVAL_MS));
     }
@@ -217,11 +218,12 @@ static void handle_config_mode(void) {
             while (1) {
                 EventBits_t bits = xEventGroupWaitBits(g_event_group, CONFIG_MODE_BIT, pdTRUE, pdFAIL, portMAX_DELAY);
 
-                if(bits & CONFIG_MODE_BIT){
+                if(bits & EXIT_CONFIG_MODE_BIT){
                     ESP_LOGI(TAG, "Exiting config mode...");
                     http_server_stop();
                     gpio_set_level(LED_STATUS_PIN, 0);
                     beep_pattern(3, 150); // Triple beep
+                    vTaskDelay(pdMS_TO_TICKS(1000));
                     esp_restart();
                 }
                 vTaskDelay(pdMS_TO_TICKS(1000));
@@ -268,6 +270,8 @@ void app_main(void) {
         return;
     }
     
+    vTaskDelay(pdMS_TO_TICKS(500));
+
     // Create queues
     g_image_queue = xQueueCreate(IMAGE_QUEUE_LENGTH, sizeof(camera_fb_t *));
     if (!g_image_queue) {
@@ -284,7 +288,7 @@ void app_main(void) {
     
     if (nvs_load_wifi_config(ssid, password)) {
         ESP_LOGI(TAG, "Found saved WiFi credentials");
-        
+        vTaskDelay(pdMS_TO_TICKS(100));
         // Connect to WiFi
         if (wifi_start_station_mode(ssid, password)) {
             ESP_LOGI(TAG, "Connected to WiFi successfully");
@@ -314,13 +318,14 @@ void app_main(void) {
             while (1) {
                 EventBits_t bits = xEventGroupWaitBits(g_event_group,
                                                        CONFIG_MODE_BIT,
-                                                       pdTRUE,  // Clear on exit
+                                                       pdFALSE,  // Don't clear on read
                                                        pdFALSE,
                                                        portMAX_DELAY);
                 
                 if (bits & CONFIG_MODE_BIT) {
                     handle_config_mode();
                 }
+                vTaskDelay(pdMS_TO_TICKS(100));
             }
         } else {
             ESP_LOGE(TAG, "Failed to connect to WiFi");
