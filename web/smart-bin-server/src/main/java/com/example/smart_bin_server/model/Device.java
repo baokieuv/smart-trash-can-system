@@ -19,4 +19,6 @@ public class Device {
     private String name;
 
     private boolean isOnline;
+
+    private String accessToken;
 }

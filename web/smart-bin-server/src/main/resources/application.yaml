@@ -3,3 +3,9 @@ spring:
     name: smart-bin-server
 server:
   port: 8888
+
+app:
+  thingsboard:
+    url: http://localhost:8080
+  ai-server:
+    url: http://localhost:8081
