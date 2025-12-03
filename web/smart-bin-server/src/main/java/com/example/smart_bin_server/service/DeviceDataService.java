@@ -1,5 +1,6 @@
 package com.example.smart_bin_server.service;
 
+import com.example.smart_bin_server.dto.GetDataResponse;
 import com.example.smart_bin_server.dto.SendDataRequest;
 import com.example.smart_bin_server.dto.SendDataResponse;
 import com.example.smart_bin_server.model.Device;
@@ -8,8 +9,6 @@ import okhttp3.*;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 public class DeviceDataService {
 
@@ -43,10 +42,16 @@ public class DeviceDataService {
                 .build();
 
         try {
-            Response resp = client.newCall(req).execute();
-            return new SendDataResponse(deviceId, resp.code(), resp.message());
+            try (Response resp = client.newCall(req).execute()) {
+                return new SendDataResponse(deviceId, resp.code(), resp.message());
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public GetDataResponse getData(String deviceId){
+        //TODO
+        return null;
     }
 }

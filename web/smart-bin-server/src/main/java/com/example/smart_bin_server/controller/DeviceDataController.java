@@ -1,5 +1,6 @@
 package com.example.smart_bin_server.controller;
 
+import com.example.smart_bin_server.dto.GetDataResponse;
 import com.example.smart_bin_server.dto.SendDataRequest;
 import com.example.smart_bin_server.dto.SendDataResponse;
 import com.example.smart_bin_server.service.DeviceDataService;
@@ -23,5 +24,10 @@ public class DeviceDataController {
             @Valid @RequestBody SendDataRequest request)
     {
         return ResponseEntity.ok().body(deviceDataService.sendData(deviceId, request));
+    }
+
+    @GetMapping("/{deviceId}/data")
+    public ResponseEntity<GetDataResponse> getData(@Valid @RequestParam String deviceId){
+        return ResponseEntity.ok().body(deviceDataService.getData(deviceId));
     }
 }
