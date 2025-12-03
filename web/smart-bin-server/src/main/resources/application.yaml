@@ -6,6 +6,9 @@ server:
 
 app:
   thingsboard:
-    url: http://localhost:8080
+    url: https://demo.thingsboard.io
+    provisioning:
+      provision-key: tcwdf3lza9hg2qf04yuv
+      provision-secret: c841x8r2a94fatb42jbp
   ai-server:
     url: http://localhost:8081
