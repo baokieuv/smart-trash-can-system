@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: smart-bin-server
+server:
+  port: 8888

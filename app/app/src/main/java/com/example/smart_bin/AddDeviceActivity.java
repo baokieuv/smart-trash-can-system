@@ -1,0 +1,305 @@
+package com.example.smart_bin;
+
+import android.Manifest;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.os.Bundle;
+import android.provider.Settings;
+import android.view.View;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.smart_bin.bluetooth.BluetoothManager;
+import com.example.smart_bin.databinding.ActivityAddDeviceBinding;
+import com.example.smart_bin.model.Device;
+import com.example.smart_bin.repository.DeviceManager;
+import com.example.smart_bin.wifi.WiFiConfiguration;
+import com.example.smart_bin.wifi.WiFiScanner;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+
+public class AddDeviceActivity extends AppCompatActivity {
+    private static final int REQUEST_BLUETOOTH_PERMISSIONS = 1;
+    private static final int REQUEST_ENABLE_BT = 2;
+
+    private ActivityAddDeviceBinding binding;
+    private BluetoothManager bluetoothManager;
+    private WiFiScanner wifiScanner;
+    private DeviceManager deviceManager;
+
+    private String receivedMacAddress;
+    private List<String> availableNetworks = new ArrayList<>();
+    private final List<BluetoothDevice> discoveredDevices = new ArrayList<>();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState){
+        super.onCreate(savedInstanceState);
+
+        binding = ActivityAddDeviceBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        bluetoothManager = new BluetoothManager(this);
+        wifiScanner = new WiFiScanner(this);
+        deviceManager = new DeviceManager(this);
+
+        setupViews();
+        checkPermissions();
+        setupToolbar();
+    }
+
+    private void setupViews() {
+        binding.btnScanBluetooth.setText("Select Paired Device");
+        binding.btnScanBluetooth.setOnClickListener(v -> showPairedDevicesDialog());
+        binding.btnScanWifi.setOnClickListener(v -> scanForWiFiNetworks());
+        binding.btnConnect.setOnClickListener(v -> sendWiFiConfig());
+    }
+
+    private void checkPermissions() {
+        List<String> permissions = new ArrayList<>();
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S){
+            if(checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED){
+                permissions.add(Manifest.permission.BLUETOOTH_SCAN);
+            }
+            if(checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED){
+                permissions.add(Manifest.permission.BLUETOOTH_CONNECT);
+            }
+        }
+
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+
+        if (!permissions.isEmpty()) {
+            requestPermissions(permissions.toArray(new String[0]), REQUEST_BLUETOOTH_PERMISSIONS);
+        }
+    }
+
+    private void showPairedDevicesDialog(){
+        if(!bluetoothManager.isBluetoothEnabled()){
+            Toast.makeText(this, "Enabling Bluetooth...", Toast.LENGTH_SHORT).show();
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            return;
+        }
+
+        Set<BluetoothDevice> pairedDevices = bluetoothManager.getPairedDevices();
+        discoveredDevices.clear();
+        List<String> deviceNames = new ArrayList<>();
+
+        if (!pairedDevices.isEmpty()) {
+            for (BluetoothDevice device : pairedDevices) {
+                // Kiểm tra quyền truy cập tên thiết bị (Android 12+)
+                try {
+                    String name = device.getName();
+                    String address = device.getAddress();
+                    if (name == null || name.isEmpty()) name = "Unknown Device";
+
+                    deviceNames.add(name + "\n" + address);
+                    discoveredDevices.add(device);
+                } catch (SecurityException e) {
+                    // Quyền chưa được cấp
+                }
+            }
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Select Device");
+
+        if (deviceNames.isEmpty()) {
+            builder.setMessage("No paired devices found. Please pair your device in Settings first.");
+        } else {
+            builder.setItems(deviceNames.toArray(new String[0]), (dialog, which) -> connectToDevice(discoveredDevices.get(which)));
+        }
+
+        builder.setNeutralButton("Pair New Device", (dialog, which) -> {
+            Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
+            startActivity(intent);
+        });
+
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
+    }
+
+    private void connectToDevice(BluetoothDevice device) {
+        binding.progressBar.setVisibility(View.VISIBLE);
+        binding.tvStatus.setText("Connecting to device...");
+
+        // Get MAC address from BluetoothDevice
+        receivedMacAddress = device.getAddress();
+
+        bluetoothManager.connectToDevice(device, new BluetoothManager.BluetoothCallback() {
+            @Override
+            public void onConnected() {
+                runOnUiThread(() -> {
+                    binding.tvMacAddress.setText("MAC: " + receivedMacAddress);
+                    binding.tvMacAddress.setVisibility(View.VISIBLE);
+                    binding.tvStatus.setText("Connected! Configure WiFi for this device.");
+                    binding.layoutWifiConfig.setVisibility(View.VISIBLE);
+                    binding.progressBar.setVisibility(View.GONE);
+                });
+            }
+
+            @Override
+            public void onDisconnected() {
+                runOnUiThread(() -> {
+                    binding.progressBar.setVisibility(View.GONE);
+                    binding.tvStatus.setText("Disconnected");
+                    Toast.makeText(AddDeviceActivity.this, "Device disconnected",
+                            Toast.LENGTH_SHORT).show();
+                });
+            }
+
+            @Override
+            public void onDataReceived(String data) {
+                runOnUiThread(() -> binding.tvStatus.setText("Received: " + data));
+            }
+
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
+                    binding.progressBar.setVisibility(View.GONE);
+                    binding.tvStatus.setText("Error: " + error);
+                    Toast.makeText(AddDeviceActivity.this, error, Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
+    }
+
+    private void scanForWiFiNetworks(){
+        binding.progressBar.setVisibility(View.VISIBLE);
+        binding.tvStatus.setText("Scanning for WiFi networks...");
+
+        wifiScanner.startScan(new WiFiScanner.ScanCallback() {
+            @Override
+            public void onScanCompleted(List<String> networks) {
+                runOnUiThread(() -> {
+                    availableNetworks = networks;
+                    binding.progressBar.setVisibility(View.GONE);
+                    binding.tvStatus.setText("Found " + networks.size() + " networks");
+                    showNetworkSelectionDialog();
+                });
+            }
+
+            @Override
+            public void onScanFailed(String error) {
+                runOnUiThread(() -> {
+                    binding.progressBar.setVisibility(View.GONE);
+                    binding.tvStatus.setText("WiFi scan failed");
+                    Toast.makeText(AddDeviceActivity.this, error, Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
+    }
+
+    private void showNetworkSelectionDialog(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Select WiFi Network")
+                .setItems(availableNetworks.toArray(new String[0]), (dialog, which) -> binding.etSsid.setText(availableNetworks.get(which)))
+                .show();
+    }
+
+    private void sendWiFiConfig() {
+        String ssid = Objects.requireNonNull(binding.etSsid.getText()).toString().trim();
+        String password = Objects.requireNonNull(binding.etPassword.getText()).toString().trim();
+
+        if (ssid.isEmpty()) {
+            Toast.makeText(this, "Please select a WiFi network", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (password.isEmpty()) {
+            Toast.makeText(this, "Please enter WiFi password", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        binding.progressBar.setVisibility(View.VISIBLE);
+        binding.tvStatus.setText("Sending WiFi configuration...");
+
+        WiFiConfiguration config = new WiFiConfiguration(ssid, password);
+        bluetoothManager.sendData(config.toJsonString(), new BluetoothManager.BluetoothCallback() {
+            @Override
+            public void onConnected() {
+
+            }
+
+            @Override
+            public void onDisconnected() {
+
+            }
+
+            @Override
+            public void onDataReceived(String data) {
+
+            }
+
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
+                    binding.progressBar.setVisibility(View.GONE);
+                    Toast.makeText(AddDeviceActivity.this, error, Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
+
+        // Simulate successful configuration after 2 seconds
+        binding.getRoot().postDelayed(() -> saveDevice(ssid), 2000);
+    }
+
+    private void saveDevice(String ssid){
+        Device device = new Device();
+        device.setName("Device " + (deviceManager.getAllDevices().size() + 1));
+        device.setMacAddress(receivedMacAddress);
+        device.setOnline(false);
+
+        deviceManager.saveDevice(device);
+
+        runOnUiThread(() -> {
+            binding.progressBar.setVisibility(View.GONE);
+            binding.tvStatus.setText("Device added successfully!");
+            Toast.makeText(this, "Device added!", Toast.LENGTH_SHORT).show();
+
+            binding.getRoot().postDelayed(() -> {
+                bluetoothManager.disconnect();
+                finish();
+            }, 1000);
+        });
+    }
+
+    private void setupToolbar() {
+        setSupportActionBar(binding.toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle("Add Device");
+        }
+
+        binding.toolbar.setNavigationOnClickListener(v -> finish());
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_ENABLE_BT) {
+            if (resultCode == RESULT_OK) {
+                Toast.makeText(this, "Bluetooth enabled", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Bluetooth is required", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        bluetoothManager.disconnect();
+    }
+}
