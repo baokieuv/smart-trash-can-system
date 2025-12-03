@@ -27,7 +27,10 @@ public class DeviceService {
     @Value("${app.thingsboard.url}")
     private String thingsboardUrl;
 
+    @Value("${app.thingsboard.provision-key}")
     private String provisionKey;
+
+    @Value("${app.thingsboard.provision-secret}")
     private String provisionSecret;
 
     public DeviceService(DeviceRepository repository, DeviceMapper deviceMapper){

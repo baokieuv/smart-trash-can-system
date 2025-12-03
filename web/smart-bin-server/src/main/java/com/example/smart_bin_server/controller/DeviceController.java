@@ -4,7 +4,6 @@ import com.example.smart_bin_server.dto.CreateDeviceRequest;
 import com.example.smart_bin_server.dto.DeviceDto;
 import com.example.smart_bin_server.dto.UpdateDeviceRequest;
 import com.example.smart_bin_server.service.DeviceService;
-import jakarta.websocket.OnClose;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
