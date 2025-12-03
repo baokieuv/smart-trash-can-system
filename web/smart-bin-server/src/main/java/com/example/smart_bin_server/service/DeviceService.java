@@ -22,7 +22,7 @@ public class DeviceService {
     private final DeviceRepository repository;
     private final DeviceMapper deviceMapper;
 
-    private OkHttpClient client = new OkHttpClient();
+    private final OkHttpClient client = new OkHttpClient();
 
     @Value("${app.thingsboard.url}")
     private String thingsboardUrl;

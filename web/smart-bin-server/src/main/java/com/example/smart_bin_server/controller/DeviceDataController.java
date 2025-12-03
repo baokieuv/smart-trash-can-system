@@ -19,7 +19,7 @@ public class DeviceDataController {
     }
 
     @PostMapping("/{deviceId}/data")
-    public ResponseEntity<SendDataResponse> sendData(
+    public ResponseEntity<Object> sendData(
             @Valid @RequestParam String deviceId,
             @Valid @RequestBody SendDataRequest request)
     {
@@ -27,7 +27,7 @@ public class DeviceDataController {
     }
 
     @GetMapping("/{deviceId}/data")
-    public ResponseEntity<GetDataResponse> getData(@Valid @RequestParam String deviceId){
+    public ResponseEntity<Object> getData(@Valid @RequestParam String deviceId){
         return ResponseEntity.ok().body(deviceDataService.getData(deviceId));
     }
 }

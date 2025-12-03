@@ -11,4 +11,4 @@ app:
       provision-key: tcwdf3lza9hg2qf04yuv
       provision-secret: c841x8r2a94fatb42jbp
   ai-server:
-    url: http://localhost:8081
+    url: http://localhost:8000

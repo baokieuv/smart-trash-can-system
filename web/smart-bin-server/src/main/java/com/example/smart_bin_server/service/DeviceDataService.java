@@ -7,9 +7,11 @@ import com.example.smart_bin_server.model.Device;
 import com.example.smart_bin_server.repository.DeviceRepository;
 import okhttp3.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 
+@Service
 public class DeviceDataService {
 
     @Value("${app.thingsboard.url}")
@@ -17,7 +19,7 @@ public class DeviceDataService {
 
     private final DeviceRepository repository;
 
-    private OkHttpClient client = new OkHttpClient();
+    private final OkHttpClient client = new OkHttpClient();
 
     public DeviceDataService(DeviceRepository repository){
         this.repository = repository;
