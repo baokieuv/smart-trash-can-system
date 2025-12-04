@@ -1,28 +1,27 @@
 package com.example.smart_bin_server.service;
 
-import com.example.smart_bin_server.dto.GetDataResponse;
+import com.example.smart_bin_server.dto.DeviceDataDTO;
 import com.example.smart_bin_server.dto.SendDataRequest;
 import com.example.smart_bin_server.dto.SendDataResponse;
+import com.example.smart_bin_server.mapper.DeviceDataMapper;
 import com.example.smart_bin_server.model.Device;
+import com.example.smart_bin_server.model.DeviceData;
+import com.example.smart_bin_server.repository.DeviceDataRepository;
 import com.example.smart_bin_server.repository.DeviceRepository;
-import okhttp3.*;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.io.IOException;
 
 @Service
 public class DeviceDataService {
-
-    @Value("${app.thingsboard.url}")
-    private String thingsboardServer;
-
     private final DeviceRepository repository;
 
-    private final OkHttpClient client = new OkHttpClient();
+    private final DeviceDataRepository dataRepository;
 
-    public DeviceDataService(DeviceRepository repository){
+    private final DeviceDataMapper dataMapper;
+
+    public DeviceDataService(DeviceRepository repository, DeviceDataRepository dataRepository, DeviceDataMapper mapper){
         this.repository = repository;
+        this.dataRepository = dataRepository;
+        this.dataMapper = mapper;
     }
 
     public SendDataResponse sendData(String deviceId, SendDataRequest request) {
@@ -32,28 +31,29 @@ public class DeviceDataService {
             throw new RuntimeException("Device not found");
         }
 
-        String endpoint = String.format("%s/api/v1/%s/telemetry", thingsboardServer, device.getAccessToken());
+        device.setOnline("on");
+        repository.save(device);
 
-        MediaType JSON = MediaType.get("application/json; charset=utf-8");
+        DeviceData data = new DeviceData();
+        data.setDeviceId(deviceId);
+        data.setRecycledWasteCount(request.recycledWasteCount());
+        data.setNonRecycledWasteCount(request.nonRecycledWasteCount());
+        data.setCompostableWasteCount(request.compostableWasteCount());
+        data.setFillLevel(request.fillLevel());
+        data.setFull(request.isFull());
+        data.setTimestamp(System.currentTimeMillis());
 
-        RequestBody body = RequestBody.create(request.toString(), JSON);
+        dataRepository.save(data);
 
-        Request req = new Request.Builder()
-                .url(endpoint)
-                .post(body)
-                .build();
-
-        try {
-            try (Response resp = client.newCall(req).execute()) {
-                return new SendDataResponse(deviceId, resp.code(), resp.message());
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return new SendDataResponse(deviceId, 200, "Successfully", data.getTimestamp());
     }
 
-    public GetDataResponse getData(String deviceId){
-        //TODO
-        return null;
+    public DeviceDataDTO getData(String deviceId){
+        DeviceData data = dataRepository.findById(deviceId).orElse(null);
+        if(data == null){
+            throw new RuntimeException("Device not found");
+        }
+
+        return dataMapper.toDto(data);
     }
 }

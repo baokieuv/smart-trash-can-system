@@ -1,8 +1,6 @@
 package com.example.smart_bin_server.controller;
 
-import com.example.smart_bin_server.dto.GetDataResponse;
 import com.example.smart_bin_server.dto.SendDataRequest;
-import com.example.smart_bin_server.dto.SendDataResponse;
 import com.example.smart_bin_server.service.DeviceDataService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -20,14 +18,14 @@ public class DeviceDataController {
 
     @PostMapping("/{deviceId}/data")
     public ResponseEntity<Object> sendData(
-            @Valid @RequestParam String deviceId,
+            @PathVariable String deviceId,
             @Valid @RequestBody SendDataRequest request)
     {
         return ResponseEntity.ok().body(deviceDataService.sendData(deviceId, request));
     }
 
     @GetMapping("/{deviceId}/data")
-    public ResponseEntity<Object> getData(@Valid @RequestParam String deviceId){
+    public ResponseEntity<Object> getData(@PathVariable String deviceId){
         return ResponseEntity.ok().body(deviceDataService.getData(deviceId));
     }
 }

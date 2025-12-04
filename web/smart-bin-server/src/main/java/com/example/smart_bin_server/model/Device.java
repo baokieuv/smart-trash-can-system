@@ -11,16 +11,13 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-@Table(name = "device")
 public class Device {
     @Id
     private String id;
 
     private String name;
 
-    private boolean isOnline;
-
-    private String accessToken;
+    private String isOnline;
 
     public String getId() {
         return id;
@@ -38,19 +35,11 @@ public class Device {
         this.name = name;
     }
 
-    public boolean isOnline() {
+    public String isOnline() {
         return isOnline;
     }
 
-    public void setOnline(boolean online) {
+    public void setOnline(String online) {
         isOnline = online;
-    }
-
-    public String getAccessToken() {
-        return accessToken;
-    }
-
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
     }
 }

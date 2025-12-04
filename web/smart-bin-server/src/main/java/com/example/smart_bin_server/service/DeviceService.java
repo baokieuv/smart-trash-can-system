@@ -5,88 +5,63 @@ import com.example.smart_bin_server.dto.DeviceDto;
 import com.example.smart_bin_server.dto.UpdateDeviceRequest;
 import com.example.smart_bin_server.mapper.DeviceMapper;
 import com.example.smart_bin_server.model.Device;
+import com.example.smart_bin_server.model.DeviceData;
+import com.example.smart_bin_server.repository.DeviceDataRepository;
 import com.example.smart_bin_server.repository.DeviceRepository;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import okhttp3.*;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
-import java.util.Objects;
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Service
 public class DeviceService {
     private final DeviceRepository repository;
     private final DeviceMapper deviceMapper;
+    private final DeviceDataRepository dataRepository;
 
     private final OkHttpClient client = new OkHttpClient();
 
-    @Value("${app.thingsboard.url}")
-    private String thingsboardUrl;
-
-    @Value("${app.thingsboard.provision-key}")
-    private String provisionKey;
-
-    @Value("${app.thingsboard.provision-secret}")
-    private String provisionSecret;
-
-    public DeviceService(DeviceRepository repository, DeviceMapper deviceMapper){
+    public DeviceService(DeviceRepository repository, DeviceMapper deviceMapper, DeviceDataRepository dataRepository){
         this.repository = repository;
         this.deviceMapper = deviceMapper;
+        this.dataRepository = dataRepository;
     }
 
     @Transactional
     public DeviceDto createDevice(CreateDeviceRequest request){
         Device device = new Device();
-        device.setId(request.macAddress());
+        device.setId(request.macAddress().replace(":", "_"));
         device.setName(Optional.ofNullable(request.name())
                 .filter(n -> !n.isBlank())
                 .orElse("Device" + request.macAddress()));
-        device.setOnline(false);
+        device.setOnline("off");
 
-        try {
-            device.setAccessToken(createDeviceOnThingsboard(device.getId()));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        DeviceData data = new DeviceData();
+        data.setDeviceId(device.getId());
+        data.setFull(false);
+        data.setFillLevel(0);
+        data.setCompostableWasteCount(0);
+        data.setRecycledWasteCount(0);
+        data.setNonRecycledWasteCount(0);
+        data.setTimestamp(System.currentTimeMillis());
+
+        dataRepository.save(data);
 
         return deviceMapper.toDto(repository.save(device));
     }
 
-    private String createDeviceOnThingsboard(String name) throws IOException {
-        String endpoint = String.format("%s/api/v1/provision", thingsboardUrl);
+    public List<DeviceDto> getDevices(){
+        List<Device> devices = repository.findAll();
 
-        MediaType jsonType = MediaType.get("application/json; charset=utf-8");
-
-        String json = String.format("""
-        {
-          "deviceName": "%s",
-          "provisionDeviceKey": "%s",
-          "provisionDeviceSecret": "%s"
-        }
-        """, name, provisionKey, provisionSecret);
-
-        RequestBody body = RequestBody.create(json, jsonType);
-
-        Request request = new Request.Builder()
-                .url(endpoint)
-                .post(body)
-                .build();
-
-        String respBody;
-        try (Response response = client.newCall(request).execute()) {
-            respBody = Objects.requireNonNull(response.body()).string();
-        }
-
-        JsonObject jsonObj = JsonParser.parseString(respBody).getAsJsonObject();
-
-        return jsonObj.get("credentialsValue").getAsString();
+        return devices.stream()
+                .map(deviceMapper::toDto)
+                .toList();
     }
 
-    public DeviceDto getDevice(String deviceId) {
+    public DeviceDto getDeviceById(String deviceId) {
         Device device = repository.findById(deviceId).orElse(null);
 
         if(device == null){
@@ -99,8 +74,13 @@ public class DeviceService {
         Device device = repository.findById(deviceId).orElse(null);
 
         if(device != null){
-            device.setName(request.name());
-            device.setOnline(request.isOnline());
+            device.setName(Optional.ofNullable(request.name())
+                    .filter(n -> !n.isBlank())
+                    .orElse(device.getName()));
+
+            device.setOnline(Optional.ofNullable(request.isOnline())
+                    .filter(n -> !n.isBlank())
+                    .orElse(device.isOnline()));
         } else{
             throw new RuntimeException("Device not found");
         }
@@ -111,14 +91,12 @@ public class DeviceService {
     public String deleteDevice(String deviceId) {
         Device device = repository.findById(deviceId).orElse(null);
 
-        if(device != null){
+        if (device != null) {
             repository.deleteById(deviceId);
-        } else{
+            dataRepository.deleteById(deviceId);
+        } else {
             throw new RuntimeException("Device not found");
         }
-
-        // Delete device on thingsboard
-        //TODO
 
         return deviceId;
     }
