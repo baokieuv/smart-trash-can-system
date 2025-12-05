@@ -37,6 +37,11 @@ public class ApiService {
         void onError(String error);
     }
 
+    public interface DeviceCallback{
+        void onSuccess(Device device);
+        void onError(String error);
+    }
+
     private ApiService(){
         executorService = Executors.newFixedThreadPool(3);
         mainHandler = new Handler(Looper.getMainLooper());
@@ -123,6 +128,99 @@ public class ApiService {
         });
     }
 
+    public void createDevice(Device device, DeviceCallback callback){
+        executorService.execute(() -> {
+            try{
+                URL url = new URL(Constants.DEVICES_ENDPOINT);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("POST");
+                connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
+                connection.setReadTimeout(Constants.READ_TIMEOUT);
+                connection.setRequestProperty("Content-Type", "application/json");
+
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("macAddress", device.getMacAddress());
+                jsonObject.put(Constants.KEY_NAME, device.getName());
+
+                connection.setDoOutput(true);
+                connection.getOutputStream().write(jsonObject.toString().getBytes());
+
+                int responseCode = connection.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    Log.i(TAG, "createDevice: Device created successfully");
+                    mainHandler.post(() -> callback.onSuccess(device));
+                } else {
+                    Log.i(TAG, "createDevice: Failed to create device " + responseCode);
+                    mainHandler.post(() -> callback.onError("Failed to create device " + responseCode));
+                }
+
+                connection.disconnect();
+            }catch (Exception e){
+                Log.e(TAG, "Failed to create device", e);
+                mainHandler.post(() -> callback.onError("Failed to create device" + e.getMessage()));
+            }
+        });
+    }
+
+    public void updateDevice(Device device, DeviceCallback callback){
+        executorService.execute(() -> {
+            try {
+                URL url = new URL(Constants.DEVICES_ENDPOINT + "/" + device.getId());
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("PUT");
+                connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
+                connection.setReadTimeout(Constants.READ_TIMEOUT);
+                connection.setRequestProperty("Content-Type", "application/json");
+
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put(Constants.KEY_NAME, device.getName());
+
+                connection.setDoOutput(true);
+                connection.getOutputStream().write(jsonObject.toString().getBytes());
+
+                int responseCode = connection.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    Log.i(TAG, "updateDevice: Device updated successfully");
+                    mainHandler.post(() -> callback.onSuccess(device));
+                } else {
+                    Log.i(TAG, "updateDevice: Failed to update device " + responseCode);
+                    mainHandler.post(() -> callback.onError("Failed to update device " + responseCode));
+                }
+
+                connection.disconnect();
+            }catch (Exception e){
+                Log.e(TAG, "Failed to update device", e);
+                mainHandler.post(() -> callback.onError("Failed to update device " + e.getMessage()));
+            }
+        });
+    }
+
+    public void deleteDevice(String deviceId, DeviceCallback callback) {
+        executorService.execute(() -> {
+            try{
+                URL url = new URL(Constants.DEVICES_ENDPOINT + "/" + deviceId);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("DELETE");
+                connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
+                connection.setReadTimeout(Constants.READ_TIMEOUT);
+
+                int responseCode = connection.getResponseCode();
+                if(responseCode == HttpURLConnection.HTTP_OK){
+                    Log.i(TAG, "deleteDevice: Device deleted successfully");
+                    mainHandler.post(() -> callback.onSuccess(null));
+                }else{
+                    Log.i(TAG, "deleteDevice: Failed to delete device " + responseCode);
+                    mainHandler.post(() -> callback.onError("Failed to delete device " + responseCode));
+                }
+
+                connection.disconnect();
+            }catch (Exception e){
+                Log.e(TAG, "Failed to delete device", e);
+                mainHandler.post(() -> callback.onError("Failed to delete device " + e.getMessage()));
+            }
+        });
+
+    }
     private List<Device> parseDevices(String string) throws Exception {
         List<Device> devices = new ArrayList<>();
         JSONArray jsonArray = new JSONArray(string);

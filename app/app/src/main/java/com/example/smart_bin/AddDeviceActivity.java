@@ -14,6 +14,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.smart_bin.api.ApiService;
 import com.example.smart_bin.bluetooth.BluetoothManager;
 import com.example.smart_bin.databinding.ActivityAddDeviceBinding;
 import com.example.smart_bin.model.Device;
@@ -36,6 +37,7 @@ public class AddDeviceActivity extends AppCompatActivity {
     private DeviceManager deviceManager;
 
     private String receivedMacAddress;
+    private String receivedDeviceName;
     private List<String> availableNetworks = new ArrayList<>();
     private final List<BluetoothDevice> discoveredDevices = new ArrayList<>();
 
@@ -135,6 +137,7 @@ public class AddDeviceActivity extends AppCompatActivity {
 
         // Get MAC address from BluetoothDevice
         receivedMacAddress = device.getAddress();
+        receivedDeviceName = device.getName();
 
         bluetoothManager.connectToDevice(device, new BluetoothManager.BluetoothCallback() {
             @Override
@@ -256,12 +259,21 @@ public class AddDeviceActivity extends AppCompatActivity {
 
     private void saveDevice(String ssid){
         Device device = new Device();
-        device.setName("Device " + (deviceManager.getAllDevices().size() + 1));
+        device.setName(receivedDeviceName);
         device.setMacAddress(receivedMacAddress);
         device.setOnline(false);
 
-        deviceManager.saveDevice(device);
+        ApiService.getInstance().createDevice(device, new ApiService.DeviceCallback() {
+            @Override
+            public void onSuccess(Device device) {
+                Toast.makeText(AddDeviceActivity.this, "Device added!", Toast.LENGTH_SHORT).show();
+            }
 
+            @Override
+            public void onError(String error) {
+                Toast.makeText(AddDeviceActivity.this, "Error: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
         runOnUiThread(() -> {
             binding.progressBar.setVisibility(View.GONE);
             binding.tvStatus.setText("Device added successfully!");

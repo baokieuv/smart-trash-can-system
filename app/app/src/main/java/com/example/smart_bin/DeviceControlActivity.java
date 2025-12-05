@@ -74,8 +74,8 @@ public class DeviceControlActivity extends AppCompatActivity {
             public void onError(String error) {
                 binding.progressBar.setVisibility(View.GONE);
                 binding.swipeRefresh.setRefreshing(false);
-                Toast.makeText(DeviceControlActivity.this, "Error: " + error, Toast.LENGTH_SHORT);
-                Log.e("My bluetooth", "Error loading device data: " + error);
+                Toast.makeText(DeviceControlActivity.this, "Error: " + error, Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Error loading device data: " + error);
             }
         });
     }

@@ -167,6 +167,21 @@ public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnD
                     if (!newName.isEmpty()){
                         device.setName(newName);
 //                        viewModel.updateDevice(device);
+                        ApiService.getInstance().updateDevice(device, new ApiService.DeviceCallback() {
+                            @Override
+                            public void onSuccess(Device device) {
+                                Toast.makeText(MainActivity.this, "Device renamed", Toast.LENGTH_SHORT).show();
+                                deviceList.set(deviceList.indexOf(device), device);
+                                adapter.notifyItemChanged(deviceList.indexOf(device));
+                                Log.i(TAG, "Device renamed successfully");
+                            }
+
+                            @Override
+                            public void onError(String error) {
+                                Toast.makeText(MainActivity.this, "Error: " + error, Toast.LENGTH_SHORT).show();
+                                Log.e(TAG, "Error renaming device:" + error);
+                            }
+                        });
                         Toast.makeText(this, "Device renamed", Toast.LENGTH_SHORT).show();
                     }
                 })
@@ -180,6 +195,21 @@ public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnD
                 .setMessage("Are you sure you want to delete " + device.getName() + "?")
                 .setPositiveButton("Delete", (dialog, which) -> {
 //                    viewModel.deleteDevice(device.getId());
+                    ApiService.getInstance().deleteDevice(device.getId(), new ApiService.DeviceCallback() {
+                        @Override
+                        public void onSuccess(Device device) {
+                            Toast.makeText(MainActivity.this, "Device deleted", Toast.LENGTH_SHORT).show();
+                            deviceList.remove(device);
+                            adapter.notifyDataSetChanged();
+                            Log.i(TAG, "Device deleted successfully");
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            Toast.makeText(MainActivity.this, "Error: " + error, Toast.LENGTH_SHORT).show();
+                            Log.e(TAG, "Error deleting device: " + error);
+                        }
+                    });
                     Toast.makeText(this, "Device deleted", Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("Cancel", null)
