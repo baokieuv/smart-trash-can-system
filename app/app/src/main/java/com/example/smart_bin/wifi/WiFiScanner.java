@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +25,8 @@ public class WiFiScanner {
         @Override
         public void onReceive(Context context, Intent intent) {
             boolean success = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false);
+            Log.i("My bluetooth", "Wifi scan receiver: " + success);
+
             if(success){
                 scanSuccess();
             }else{
@@ -44,6 +47,8 @@ public class WiFiScanner {
         context.registerReceiver(wifiScanReceiver, intentFilter);
 
         boolean success = wifiManager.startScan();
+
+        Log.i("My bluetooth", "Wifi scan started: " + success);
         if(!success){
             scanFailed();
         }

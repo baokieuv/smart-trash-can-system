@@ -1,5 +1,6 @@
 package com.example.smart_bin;
 
+import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -12,16 +13,19 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.smart_bin.api.ApiService;
 import com.example.smart_bin.databinding.ActivityDeviceControlBinding;
+import com.example.smart_bin.model.Device;
 import com.example.smart_bin.model.DeviceData;
 import com.example.smart_bin.utils.Constants;
 import com.example.smart_bin.utils.NetworkUtils;
 
+@SuppressLint("SetTextI18n")
 public class DeviceControlActivity extends AppCompatActivity {
     private static final String TAG = "DeviceControl";
 
     private ActivityDeviceControlBinding binding;
     private String deviceId;
     private String deviceName;
+    private boolean isOnline;
     private Handler handler;
     private Runnable runnable;
 
@@ -31,8 +35,10 @@ public class DeviceControlActivity extends AppCompatActivity {
         binding = ActivityDeviceControlBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        deviceId = getIntent().getStringExtra("DEVICE_ID");
-        deviceName = getIntent().getStringExtra("DEVICE_NAME");
+        deviceId = getIntent().getStringExtra(Constants.EXTRA_DEVICE_ID);
+        deviceName = getIntent().getStringExtra(Constants.EXTRA_DEVICE_NAME);
+        isOnline = getIntent().getBooleanExtra(Constants.EXTRA_DEVICE_IS_ONLINE, false);
+
         Log.i(TAG, "Device ID: " + deviceId);
         if (deviceId != null && deviceName != null) {
             setupToolbar();
@@ -78,6 +84,18 @@ public class DeviceControlActivity extends AppCompatActivity {
                 Log.e(TAG, "Error loading device data: " + error);
             }
         });
+
+        ApiService.getInstance().getDevice(deviceId, new ApiService.DeviceCallback() {
+            @Override
+            public void onSuccess(Device device) {
+                isOnline = device.isOnline();
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.i("My bluetooth", "Error getting device: " + error);
+            }
+        });
     }
 
     private void setupToolbar() {
@@ -110,6 +128,7 @@ public class DeviceControlActivity extends AppCompatActivity {
         // Device Name
         binding.tvDeviceName.setText(deviceName);
         binding.tvMacAddress.setText(deviceId);
+        binding.tvIsOnline.setText(isOnline ? "ONLINE" : "OFFLINE");
 
         // Fill Level
         int fillLevel = data.getFillLevel();
@@ -146,8 +165,8 @@ public class DeviceControlActivity extends AppCompatActivity {
         binding.tvTotalWaste.setText(String.valueOf(data.getTotalWaste()));
 
         // Status
-        binding.tvStatus.setText(data.getStatus());
-        binding.tvStatusSubtitle.setText("Connected");
+        binding.tvStatus.setText(isOnline ? "Active" : "Inactive");
+        binding.tvStatusSubtitle.setText(isOnline ? "Connected" : "Disconnected");
 
         // Waste Breakdown
         binding.tvRecycledCount.setText(String.valueOf(data.getRecycledCount()));

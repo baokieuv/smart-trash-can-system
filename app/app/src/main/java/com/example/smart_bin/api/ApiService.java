@@ -14,7 +14,6 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -162,6 +161,41 @@ public class ApiService {
         });
     }
 
+    public void getDevice(String deviceId, DeviceCallback callback){
+        executorService.execute(() -> {
+            try{
+                URL url = new URL(Constants.DEVICES_ENDPOINT + "/" + deviceId);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
+                connection.setReadTimeout(Constants.READ_TIMEOUT);
+
+                int responseCode = connection.getResponseCode();
+                if(responseCode == HttpURLConnection.HTTP_OK){
+                    BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(connection.getInputStream())
+                    );
+                    StringBuilder response = new StringBuilder();
+                    String line;
+
+                    while((line = reader.readLine()) != null){
+                        response.append(line);
+                    }
+                    reader.close();
+
+                    Device device = parseDevice(response.toString());
+
+                    mainHandler.post(() -> callback.onSuccess(device));
+                }else{
+                    mainHandler.post(() -> callback.onError("Failed to get device " + responseCode));
+                }
+            }catch (Exception e){
+                mainHandler.post(() -> callback.onError("Failed to get device " + e.getMessage()));
+            }
+
+        });
+    }
+
     public void updateDevice(Device device, DeviceCallback callback){
         executorService.execute(() -> {
             try {
@@ -244,15 +278,24 @@ public class ApiService {
 
         data.setFillLevel(obj.optInt(Constants.KEY_FILL_LEVEL, 0));
         data.setBattery(obj.optInt(Constants.KEY_BATTERY, 50));
-        data.setTotalWaste(obj.optInt(Constants.KEY_TOTAL_WASTE, 0));
         data.setRecycledCount(obj.optInt(Constants.KEY_RECYCLED_COUNT, 0));
         data.setNonRecycledCount(obj.optInt(Constants.KEY_NON_RECYCLED_COUNT, 0));
         data.setComposableCount(obj.optInt(Constants.KEY_COMPOSABLE_COUNT, 0));
+        data.setTotalWaste(data.getRecycledCount() + data.getNonRecycledCount() + data.getComposableCount());
         data.setStatus(obj.optString(Constants.KEY_STATUS, "Active"));
 
         return data;
     }
 
+    private Device parseDevice(String string) throws Exception{
+        JSONObject obj = new JSONObject(string);
+        Device device = new Device();
+        device.setId(obj.optString(Constants.KEY_ID, null));
+        device.setName(obj.optString(Constants.KEY_NAME, null));
+        device.setOnline(obj.getString(Constants.KEY_IS_ONLINE).equalsIgnoreCase("on"));
+
+        return device;
+    }
     public void shutdown() {
         executorService.shutdown();
     }

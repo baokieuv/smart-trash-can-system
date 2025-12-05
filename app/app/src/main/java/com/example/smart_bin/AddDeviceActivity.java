@@ -1,6 +1,8 @@
 package com.example.smart_bin;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
@@ -8,17 +10,19 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import com.example.smart_bin.api.ApiService;
 import com.example.smart_bin.bluetooth.BluetoothManager;
 import com.example.smart_bin.databinding.ActivityAddDeviceBinding;
 import com.example.smart_bin.model.Device;
-import com.example.smart_bin.repository.DeviceManager;
+import com.example.smart_bin.utils.Constants;
 import com.example.smart_bin.wifi.WiFiConfiguration;
 import com.example.smart_bin.wifi.WiFiScanner;
 
@@ -27,14 +31,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+@SuppressLint("SetTextI18n")
 public class AddDeviceActivity extends AppCompatActivity {
-    private static final int REQUEST_BLUETOOTH_PERMISSIONS = 1;
-    private static final int REQUEST_ENABLE_BT = 2;
-
     private ActivityAddDeviceBinding binding;
     private BluetoothManager bluetoothManager;
     private WiFiScanner wifiScanner;
-    private DeviceManager deviceManager;
 
     private String receivedMacAddress;
     private String receivedDeviceName;
@@ -50,8 +51,6 @@ public class AddDeviceActivity extends AppCompatActivity {
 
         bluetoothManager = new BluetoothManager(this);
         wifiScanner = new WiFiScanner(this);
-        deviceManager = new DeviceManager(this);
-
         setupViews();
         checkPermissions();
         setupToolbar();
@@ -81,7 +80,7 @@ public class AddDeviceActivity extends AppCompatActivity {
         }
 
         if (!permissions.isEmpty()) {
-            requestPermissions(permissions.toArray(new String[0]), REQUEST_BLUETOOTH_PERMISSIONS);
+            requestPermissions(permissions.toArray(new String[0]), Constants.REQUEST_BLUETOOTH_PERMISSIONS);
         }
     }
 
@@ -89,10 +88,11 @@ public class AddDeviceActivity extends AppCompatActivity {
         if(!bluetoothManager.isBluetoothEnabled()){
             Toast.makeText(this, "Enabling Bluetooth...", Toast.LENGTH_SHORT).show();
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            startActivityForResult(enableBtIntent, Constants.REQUEST_ENABLE_BT);
             return;
         }
 
+        Log.i("My bluetooth", "Getting paired devices");
         Set<BluetoothDevice> pairedDevices = bluetoothManager.getPairedDevices();
         discoveredDevices.clear();
         List<String> deviceNames = new ArrayList<>();
@@ -119,6 +119,7 @@ public class AddDeviceActivity extends AppCompatActivity {
         if (deviceNames.isEmpty()) {
             builder.setMessage("No paired devices found. Please pair your device in Settings first.");
         } else {
+            Log.i("My bluetooth", "Showing paired devices dialog");
             builder.setItems(deviceNames.toArray(new String[0]), (dialog, which) -> connectToDevice(discoveredDevices.get(which)));
         }
 
@@ -139,6 +140,7 @@ public class AddDeviceActivity extends AppCompatActivity {
         receivedMacAddress = device.getAddress();
         receivedDeviceName = device.getName();
 
+        Log.i("My bluetooth", "Connecting to device: " + receivedDeviceName + " - " + receivedMacAddress);
         bluetoothManager.connectToDevice(device, new BluetoothManager.BluetoothCallback() {
             @Override
             public void onConnected() {
@@ -180,6 +182,7 @@ public class AddDeviceActivity extends AppCompatActivity {
     private void scanForWiFiNetworks(){
         binding.progressBar.setVisibility(View.VISIBLE);
         binding.tvStatus.setText("Scanning for WiFi networks...");
+        Log.i("My bluetooth", "Scanning for WiFi networks...");
 
         wifiScanner.startScan(new WiFiScanner.ScanCallback() {
             @Override
@@ -188,6 +191,7 @@ public class AddDeviceActivity extends AppCompatActivity {
                     availableNetworks = networks;
                     binding.progressBar.setVisibility(View.GONE);
                     binding.tvStatus.setText("Found " + networks.size() + " networks");
+                    Log.i("My bluetooth", "Found " + networks.size() + " networks");
                     showNetworkSelectionDialog();
                 });
             }
@@ -300,7 +304,7 @@ public class AddDeviceActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == REQUEST_ENABLE_BT) {
+        if (requestCode == Constants.REQUEST_ENABLE_BT) {
             if (resultCode == RESULT_OK) {
                 Toast.makeText(this, "Bluetooth enabled", Toast.LENGTH_SHORT).show();
             } else {

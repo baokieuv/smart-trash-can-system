@@ -133,10 +133,11 @@ public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnD
 
     @Override
     public void onDeviceClick(Device device) {
-        Log.i("My bluetooth", "Device clicked: " + device.getName());
+        Log.i(TAG, "Device clicked: " + device.getName());
         Intent intent = new Intent(this, DeviceControlActivity.class);
-        intent.putExtra("DEVICE_ID", device.getId());
-        intent.putExtra("DEVICE_NAME", device.getName());
+        intent.putExtra(Constants.EXTRA_DEVICE_ID, device.getId());
+        intent.putExtra(Constants.EXTRA_DEVICE_NAME, device.getName());
+        intent.putExtra(Constants.EXTRA_DEVICE_IS_ONLINE, device.isOnline());
         startActivity(intent);
     }
 

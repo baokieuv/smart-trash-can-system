@@ -3,7 +3,7 @@ package com.example.smart_bin.utils;
 public class Constants {
     // API Configuration
     // TODO: Replace with your actual IP address
-    public static final String BASE_URL = "http://192.168.202.90:8888";
+    public static final String BASE_URL = "http://kvbhust.site";
     public static final String API_VERSION = "/api/v1";
     public static final String DEVICES_ENDPOINT = BASE_URL + API_VERSION + "/devices";
 
@@ -15,11 +15,8 @@ public class Constants {
     // Intent Keys
     public static final String EXTRA_DEVICE_ID = "DEVICE_ID";
     public static final String EXTRA_DEVICE_NAME = "DEVICE_NAME";
+    public static final String EXTRA_DEVICE_IS_ONLINE = "DEVICE_IS_ONLINE";
 
-    // Shared Preferences Keys
-    public static final String PREF_NAME = "DevicePrefs";
-    public static final String KEY_DEVICES = "devices";
-    public static final String KEY_LAST_SYNC = "last_sync";
 
     // API Response Keys
     public static final String KEY_ID = "id";
@@ -27,10 +24,9 @@ public class Constants {
     public static final String KEY_IS_ONLINE = "isOnline";
     public static final String KEY_FILL_LEVEL = "fillLevel";
     public static final String KEY_BATTERY = "battery";
-    public static final String KEY_TOTAL_WASTE = "totalWaste";
-    public static final String KEY_RECYCLED_COUNT = "recycledCount";
-    public static final String KEY_NON_RECYCLED_COUNT = "nonRecycledCount";
-    public static final String KEY_COMPOSABLE_COUNT = "composableCount";
+    public static final String KEY_RECYCLED_COUNT = "recycledWasteCount";
+    public static final String KEY_NON_RECYCLED_COUNT = "nonRecycledWasteCount";
+    public static final String KEY_COMPOSABLE_COUNT = "compostableWasteCount";
     public static final String KEY_STATUS = "status";
 
     // Status Values

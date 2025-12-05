@@ -1,12 +1,19 @@
 package com.example.smart_bin.bluetooth;
 
+import android.Manifest;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+
+import androidx.core.app.ActivityCompat;
+
+import com.example.smart_bin.utils.Constants;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,7 +68,6 @@ public class BluetoothManager {
                    Log.i("My bluetooth", "Cancelling discovery");
                    bluetoothAdapter.cancelDiscovery();
                }
-
                socket = device.createRfcommSocketToServiceRecord(MY_UUID);
                socket.connect();
                outputStream = socket.getOutputStream();
