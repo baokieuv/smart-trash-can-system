@@ -1,35 +1,82 @@
 import { NextResponse } from 'next/server';
 import { Device } from '@/types';
 
-const devices: Device[] = [
-  {
-    id: 1, name: 'Living Room Bin', mac: '00:1A:2B:3C:4D:5E', status: 'online',
-    fillLevel: 45, battery: 85, recycled: 23, nonRecycled: 15, composable: 8, total: 46
-  },
-  {
-    id: 2, name: 'Kitchen Master', mac: 'A1:B2:C3:D4:E5:F6', status: 'online',
-    fillLevel: 92, battery: 60, recycled: 45, nonRecycled: 38, composable: 12, total: 95
-  },
-  {
-    id: 3, name: 'Office Paper', mac: '11:22:33:44:55:66', status: 'offline',
-    fillLevel: 15, battery: 20, recycled: 8, nonRecycled: 2, composable: 0, total: 10
-  },
-  {
-    id: 4, name: 'Garden Waste', mac: 'AA:BB:CC:DD:EE:FF', status: 'offline',
-    fillLevel: 0, battery: 0, recycled: 0, nonRecycled: 0, composable: 0, total: 0
-  },
-  {
-    id: 5, name: 'Bedroom Bin', mac: 'BB:CC:DD:EE:FF:11', status: 'online',
-    fillLevel: 28, battery: 95, recycled: 12, nonRecycled: 8, composable: 3, total: 23
-  },
-  {
-    id: 6, name: 'Garage Setup', mac: 'CC:DD:EE:FF:11:22', status: 'online',
-    fillLevel: 67, battery: 75, recycled: 34, nonRecycled: 28, composable: 6, total: 68
-  }
-];
+interface DeviceBasic {
+  id: string;
+  name: string;
+  isOnline: string;
+}
+
+interface DeviceData{
+  fillLevel: number;
+  recycledWasteCount: number;
+  nonRecycledWasteCount: number;
+  compostableWasteCount: number;
+}
 
 export async function GET() {
-  // Giả lập delay mạng 500ms
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  return NextResponse.json(devices);
+
+  const BASE_URL = "http://localhost:8888/api/v1/devices";
+
+  try{
+    const devicesRes = await fetch(BASE_URL, { cache: 'no-store' });
+
+    if(!devicesRes.ok){
+      throw new Error(`Failed to fetch device list: ${devicesRes.status}`);
+    }
+
+    const basicDevices: DeviceBasic[] = await devicesRes.json();
+
+    const fullDevicesData = await Promise.all(
+      basicDevices.map(async (device) => {
+        try{
+          const dataRes = await fetch(`${BASE_URL}/${device.id}/data`, {
+            cache: 'no-store',
+          });
+
+          const detailData: DeviceData = dataRes.ok
+            ? await dataRes.json()
+            : { fillLevel: 0, battery: 0, recycled: 0, nonRecycled: 0, composable: 0 };
+
+            const totalWaste = (detailData.recycledWasteCount || 0) + 
+                             (detailData.nonRecycledWasteCount || 0) + 
+                             (detailData.compostableWasteCount || 0);
+
+            const mappedDevice: Device = {
+            id: device.id as any, 
+            name: device.name,
+            mac: device.id,
+            status: (device.isOnline === "on" ? 'online' : 'offline'),
+            
+            fillLevel: detailData.fillLevel,
+            battery: 50,
+            recycled: detailData.recycledWasteCount,
+            nonRecycled: detailData.nonRecycledWasteCount,
+            composable: detailData.compostableWasteCount,
+         
+            total: totalWaste
+          };
+
+          return mappedDevice;
+        }catch(error){
+          console.error(`Error fetching data for device MAC ${device.id}`, error);
+          return {
+            id: device.id as any,
+            name: device.name,
+            mac: device.id,
+            status: 'offline',
+            fillLevel: 0, battery: 0, recycled: 0, nonRecycled: 0, composable: 0, total: 0
+          } as Device;
+        }
+      })
+    );
+
+    return NextResponse.json(fullDevicesData);
+  }catch(error){
+    console.error('Error in GET /devices:', error);
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
+  }
 }

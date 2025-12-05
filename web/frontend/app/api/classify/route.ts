@@ -14,7 +14,7 @@ interface Result {
 }
 
 export async function POST(req: NextRequest) {
-    const backendUrl = 'http://localhost:8000/classify';
+    const backendUrl = 'http://localhost:8888/api/v1/classify-image';
 
     try{
 

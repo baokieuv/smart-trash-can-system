@@ -1,5 +1,5 @@
 export type Device = {
-  id: number;
+  id: string;
   name: string;
   mac: string;
   status: 'online' | 'offline';
