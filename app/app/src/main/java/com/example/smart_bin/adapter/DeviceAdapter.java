@@ -1,6 +1,8 @@
 package com.example.smart_bin.adapter;
 
+import android.graphics.Color;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -73,6 +75,46 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
 
         public void bind(Device device){
             binding.setDevice(device);
+
+            // Update status badge styling
+            boolean isOnline = "ONLINE".equalsIgnoreCase(device.getStatus()) ||
+                    "on".equalsIgnoreCase(device.getStatus());
+
+            if (isOnline) {
+                // Online styling - green
+                binding.iconContainer.setBackgroundColor(Color.parseColor("#DBEAFE")); // blue-100
+                binding.iconContainer.getChildAt(0).setBackgroundTintList(
+                        android.content.res.ColorStateList.valueOf(Color.parseColor("#2563EB"))
+                );
+
+                binding.statusBadge.setBackgroundColor(Color.parseColor("#D1FAE5")); // green-100
+                binding.statusIcon.setImageResource(android.R.drawable.presence_online);
+                binding.statusIcon.setImageTintList(
+                        android.content.res.ColorStateList.valueOf(Color.parseColor("#10B981"))
+                );
+                binding.statusText.setText("ONLINE");
+                binding.statusText.setTextColor(Color.parseColor("#10B981"));
+            } else {
+                // Offline styling - gray
+                binding.iconContainer.setBackgroundColor(Color.parseColor("#E2E8F0")); // slate-200
+                binding.iconContainer.getChildAt(0).setBackgroundTintList(
+                        android.content.res.ColorStateList.valueOf(Color.parseColor("#94A3B8"))
+                );
+
+                binding.statusBadge.setBackgroundColor(Color.parseColor("#F1F5F9")); // slate-100
+                binding.statusIcon.setImageResource(android.R.drawable.presence_offline);
+                binding.statusIcon.setImageTintList(
+                        android.content.res.ColorStateList.valueOf(Color.parseColor("#94A3B8"))
+                );
+                binding.statusText.setText("OFFLINE");
+                binding.statusText.setTextColor(Color.parseColor("#94A3B8"));
+            }
+
+            // Show warning badge if fill level >= 80% and online
+            // Note: You'll need to fetch device data to show fill level
+            // For now, hiding the warning badge
+            binding.warningBadge.setVisibility(View.GONE);
+
             binding.executePendingBindings();
         }
     }

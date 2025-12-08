@@ -5,19 +5,20 @@
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#F5F5F5">
+        android:background="#F8FAFC">
 
-        <!-- AppBar with gradient -->
+        <!-- Modern Header with gradient -->
         <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="#2563EB"
             android:elevation="4dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@android:color/holo_blue_dark">
+                android:background="#2563EB">
 
                 <com.google.android.material.appbar.MaterialToolbar
                     android:id="@+id/toolbar"
@@ -31,59 +32,77 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
+                    android:orientation="horizontal"
+                    android:padding="20dp"
+                    android:gravity="center_vertical">
 
+                    <!-- Device Icon with backdrop -->
                     <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:background="#3B82F6"
+                        android:gravity="center"
+                        android:elevation="2dp">
 
                         <ImageView
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:src="@drawable/baseline_devices_other_24"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@android:drawable/ic_menu_delete"
                             app:tint="@android:color/white" />
 
-                        <LinearLayout
-                            android:layout_width="0dp"
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvDeviceName"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="16dp"
-                            android:orientation="vertical">
+                            android:text="Device Name"
+                            android:textColor="@android:color/white"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
 
-                            <TextView
-                                android:id="@+id/tvDeviceName"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Device Name"
-                                android:textColor="@android:color/white"
-                                android:textSize="22sp"
-                                android:textStyle="bold" />
+                        <TextView
+                            android:id="@+id/tvMacAddress"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="00:00:00:00:00:00"
+                            android:textColor="#93C5FD"
+                            android:textSize="12sp"
+                            android:fontFamily="monospace" />
 
-                            <TextView
-                                android:id="@+id/tvMacAddress"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:text="00:00:00:00:00:00"
-                                android:textColor="#B3FFFFFF"
-                                android:textSize="13sp" />
+                    </LinearLayout>
 
-                        </LinearLayout>
+                    <!-- Status Badge -->
+                    <LinearLayout
+                        android:id="@+id/statusBadgeHeader"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp">
+
+                        <ImageView
+                            android:id="@+id/statusIconHeader"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:layout_marginEnd="6dp" />
 
                         <TextView
                             android:id="@+id/tvIsOnline"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:background="@android:color/white"
-                            android:paddingStart="12dp"
-                            android:paddingTop="6dp"
-                            android:paddingEnd="12dp"
-                            android:paddingBottom="6dp"
                             android:text="ONLINE"
-                            android:textColor="#2E7D32"
                             android:textSize="12sp"
                             android:textStyle="bold" />
 
@@ -119,255 +138,219 @@
                         android:layout_marginTop="32dp"
                         android:visibility="gone" />
 
-                    <!-- Stats Grid - Row 1 -->
-                    <LinearLayout
+                    <!-- Stats Grid -->
+                    <com.google.android.material.card.MaterialCardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:weightSum="2">
+                        android:layout_marginBottom="16dp"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="2dp"
+                        app:cardBackgroundColor="@android:color/white">
 
-                        <!-- Fill Level Card -->
-                        <com.google.android.material.card.MaterialCardView
-                            android:layout_width="0dp"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="8dp"
-                            app:cardCornerRadius="16dp"
-                            app:cardElevation="4dp"
-                            app:cardBackgroundColor="@android:color/white">
+                            android:orientation="vertical"
+                            android:padding="20dp">
 
+                            <!-- Row 1: Fill Level & Battery -->
                             <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:padding="20dp">
+                                android:orientation="horizontal"
+                                android:weightSum="2">
 
+                                <!-- Fill Level -->
                                 <LinearLayout
-                                    android:layout_width="match_parent"
+                                    android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:orientation="horizontal"
-                                    android:gravity="center_vertical">
-
-                                    <ImageView
-                                        android:layout_width="24dp"
-                                        android:layout_height="24dp"
-                                        android:src="@android:drawable/ic_dialog_info"
-                                        app:tint="#FFA726" />
+                                    android:layout_weight="1"
+                                    android:layout_marginEnd="8dp"
+                                    android:orientation="vertical"
+                                    android:background="#F8FAFC"
+                                    android:padding="16dp">
 
                                     <TextView
-                                        android:layout_width="0dp"
+                                        android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:layout_weight="1"
-                                        android:layout_marginStart="8dp"
                                         android:text="Fill Level"
-                                        android:textColor="#757575"
-                                        android:textSize="13sp"
-                                        android:textStyle="bold" />
-
-                                </LinearLayout>
-
-                                <TextView
-                                    android:id="@+id/tvFillLevel"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="12dp"
-                                    android:text="0%"
-                                    android:textColor="#FFA726"
-                                    android:textSize="36sp"
-                                    android:textStyle="bold" />
-
-                                <ProgressBar
-                                    android:id="@+id/progressFillLevel"
-                                    style="?android:attr/progressBarStyleHorizontal"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="10dp"
-                                    android:layout_marginTop="12dp"
-                                    android:progress="0"
-                                    android:progressTint="#FFA726"
-                                    android:progressBackgroundTint="#E0E0E0" />
-
-                            </LinearLayout>
-
-                        </com.google.android.material.card.MaterialCardView>
-
-                        <!-- Battery Card -->
-                        <com.google.android.material.card.MaterialCardView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="8dp"
-                            app:cardCornerRadius="16dp"
-                            app:cardElevation="4dp"
-                            app:cardBackgroundColor="@android:color/white">
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:padding="20dp">
-
-                                <LinearLayout
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:orientation="horizontal"
-                                    android:gravity="center_vertical">
-
-                                    <ImageView
-                                        android:layout_width="24dp"
-                                        android:layout_height="24dp"
-                                        android:src="@android:drawable/ic_lock_power_off"
-                                        app:tint="#4CAF50" />
+                                        android:textColor="#64748B"
+                                        android:textSize="13sp" />
 
                                     <TextView
-                                        android:layout_width="0dp"
+                                        android:id="@+id/tvFillLevel"
+                                        android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:layout_weight="1"
-                                        android:layout_marginStart="8dp"
-                                        android:text="Battery"
-                                        android:textColor="#757575"
-                                        android:textSize="13sp"
+                                        android:layout_marginTop="8dp"
+                                        android:text="0%"
+                                        android:textColor="#1E293B"
+                                        android:textSize="32sp"
                                         android:textStyle="bold" />
+
+                                    <ProgressBar
+                                        android:id="@+id/progressFillLevel"
+                                        style="?android:attr/progressBarStyleHorizontal"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="8dp"
+                                        android:layout_marginTop="12dp"
+                                        android:progress="0"
+                                        android:progressBackgroundTint="#E2E8F0" />
 
                                 </LinearLayout>
 
-                                <TextView
-                                    android:id="@+id/tvBattery"
-                                    android:layout_width="wrap_content"
+                                <!-- Battery -->
+                                <LinearLayout
+                                    android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginTop="12dp"
-                                    android:text="0%"
-                                    android:textColor="#4CAF50"
-                                    android:textSize="36sp"
-                                    android:textStyle="bold" />
+                                    android:layout_weight="1"
+                                    android:layout_marginStart="8dp"
+                                    android:orientation="vertical"
+                                    android:background="#F8FAFC"
+                                    android:padding="16dp">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Battery"
+                                        android:textColor="#64748B"
+                                        android:textSize="13sp" />
+
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="8dp"
+                                        android:orientation="horizontal"
+                                        android:gravity="center_vertical">
+
+                                        <ImageView
+                                            android:layout_width="24dp"
+                                            android:layout_height="24dp"
+                                            android:src="@android:drawable/ic_lock_power_off" />
+
+                                        <TextView
+                                            android:id="@+id/tvBattery"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginStart="8dp"
+                                            android:text="0%"
+                                            android:textColor="#1E293B"
+                                            android:textSize="32sp"
+                                            android:textStyle="bold" />
+
+                                    </LinearLayout>
+
+                                </LinearLayout>
 
                             </LinearLayout>
 
-                        </com.google.android.material.card.MaterialCardView>
-
-                    </LinearLayout>
-
-                    <!-- Stats Grid - Row 2 -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:orientation="horizontal"
-                        android:weightSum="2">
-
-                        <!-- Total Waste Card -->
-                        <com.google.android.material.card.MaterialCardView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="8dp"
-                            app:cardCornerRadius="16dp"
-                            app:cardElevation="4dp"
-                            app:cardBackgroundColor="@android:color/white">
-
+                            <!-- Row 2: Total Waste & Status -->
                             <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:padding="20dp">
+                                android:layout_marginTop="16dp"
+                                android:orientation="horizontal"
+                                android:weightSum="2">
 
-                                <TextView
-                                    android:layout_width="wrap_content"
+                                <!-- Total Waste -->
+                                <LinearLayout
+                                    android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:text="Total Waste"
-                                    android:textColor="#757575"
-                                    android:textSize="13sp"
-                                    android:textStyle="bold" />
+                                    android:layout_weight="1"
+                                    android:layout_marginEnd="8dp"
+                                    android:orientation="vertical"
+                                    android:background="#F8FAFC"
+                                    android:padding="16dp">
 
-                                <TextView
-                                    android:id="@+id/tvTotalWaste"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="8dp"
-                                    android:text="0"
-                                    android:textColor="#212121"
-                                    android:textSize="36sp"
-                                    android:textStyle="bold" />
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Total Waste"
+                                        android:textColor="#64748B"
+                                        android:textSize="13sp" />
 
-                                <TextView
-                                    android:layout_width="wrap_content"
+                                    <TextView
+                                        android:id="@+id/tvTotalWaste"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="8dp"
+                                        android:text="0"
+                                        android:textColor="#1E293B"
+                                        android:textSize="32sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:text="items"
+                                        android:textColor="#64748B"
+                                        android:textSize="11sp" />
+
+                                </LinearLayout>
+
+                                <!-- Status -->
+                                <LinearLayout
+                                    android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:text="items"
-                                    android:textColor="#9E9E9E"
-                                    android:textSize="12sp" />
+                                    android:layout_weight="1"
+                                    android:layout_marginStart="8dp"
+                                    android:orientation="vertical"
+                                    android:background="#F8FAFC"
+                                    android:padding="16dp">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Status"
+                                        android:textColor="#64748B"
+                                        android:textSize="13sp" />
+
+                                    <TextView
+                                        android:id="@+id/tvStatus"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="8dp"
+                                        android:text="Active"
+                                        android:textSize="24sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:id="@+id/tvStatusSubtitle"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:text="Connected"
+                                        android:textColor="#64748B"
+                                        android:textSize="11sp" />
+
+                                </LinearLayout>
 
                             </LinearLayout>
 
-                        </com.google.android.material.card.MaterialCardView>
+                        </LinearLayout>
 
-                        <!-- Status Card -->
-                        <com.google.android.material.card.MaterialCardView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="8dp"
-                            app:cardCornerRadius="16dp"
-                            app:cardElevation="4dp"
-                            app:cardBackgroundColor="@android:color/white">
+                    </com.google.android.material.card.MaterialCardView>
 
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:padding="20dp">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Status"
-                                    android:textColor="#757575"
-                                    android:textSize="13sp"
-                                    android:textStyle="bold" />
-
-                                <TextView
-                                    android:id="@+id/tvStatus"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="8dp"
-                                    android:text="Active"
-                                    android:textColor="#4CAF50"
-                                    android:textSize="24sp"
-                                    android:textStyle="bold" />
-
-                                <TextView
-                                    android:id="@+id/tvStatusSubtitle"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Connected"
-                                    android:textColor="#9E9E9E"
-                                    android:textSize="12sp" />
-
-                            </LinearLayout>
-
-                        </com.google.android.material.card.MaterialCardView>
-
-                    </LinearLayout>
-
-                    <!-- Waste Breakdown Section Title -->
+                    <!-- Waste Breakdown Section -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="24dp"
-                        android:layout_marginBottom="12dp"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
 
                         <View
                             android:layout_width="4dp"
-                            android:layout_height="24dp"
-                            android:background="@android:color/holo_blue_dark" />
+                            android:layout_height="20dp"
+                            android:background="#2563EB" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="12dp"
                             android:text="Waste Breakdown"
-                            android:textColor="#212121"
-                            android:textSize="20sp"
+                            android:textColor="#1E293B"
+                            android:textSize="18sp"
                             android:textStyle="bold" />
 
                     </LinearLayout>
@@ -377,73 +360,50 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="4dp"
-                        app:cardBackgroundColor="#E8F5E9">
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="1dp"
+                        app:strokeColor="#86EFAC"
+                        app:cardBackgroundColor="#F0FDF4">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
-                            android:padding="20dp"
+                            android:padding="16dp"
                             android:gravity="center_vertical">
 
-                            <ImageView
-                                android:layout_width="40dp"
-                                android:layout_height="40dp"
-                                android:src="@android:drawable/ic_menu_rotate"
-                                android:padding="8dp"
-                                android:background="@android:color/white"
-                                app:tint="#2E7D32" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/icon_recycled"
+                                android:textSize="24sp" />
 
                             <LinearLayout
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:layout_marginStart="16dp"
+                                android:layout_marginStart="12dp"
                                 android:orientation="vertical">
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="Recycled"
-                                    android:textColor="#2E7D32"
-                                    android:textSize="16sp"
+                                    android:textColor="#166534"
+                                    android:textSize="14sp"
                                     android:textStyle="bold" />
-
-                                <TextView
-                                    android:id="@+id/tvRecycledPercent"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="0%"
-                                    android:textColor="#66BB6A"
-                                    android:textSize="12sp" />
 
                             </LinearLayout>
 
-                            <LinearLayout
+                            <TextView
+                                android:id="@+id/tvRecycledCount"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:gravity="end">
-
-                                <TextView
-                                    android:id="@+id/tvRecycledCount"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="0"
-                                    android:textColor="#2E7D32"
-                                    android:textSize="32sp"
-                                    android:textStyle="bold" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="items"
-                                    android:textColor="#2E7D32"
-                                    android:textSize="11sp" />
-
-                            </LinearLayout>
+                                android:text="0"
+                                android:textColor="#166534"
+                                android:textSize="32sp"
+                                android:textStyle="bold" />
 
                         </LinearLayout>
 
@@ -454,73 +414,50 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="4dp"
-                        app:cardBackgroundColor="#FAFAFA">
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="1dp"
+                        app:strokeColor="#D1D5DB"
+                        app:cardBackgroundColor="#F9FAFB">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
-                            android:padding="20dp"
+                            android:padding="16dp"
                             android:gravity="center_vertical">
 
-                            <ImageView
-                                android:layout_width="40dp"
-                                android:layout_height="40dp"
-                                android:src="@android:drawable/ic_menu_delete"
-                                android:padding="8dp"
-                                android:background="@android:color/white"
-                                app:tint="#616161" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/icon_non_recycled"
+                                android:textSize="24sp" />
 
                             <LinearLayout
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:layout_marginStart="16dp"
+                                android:layout_marginStart="12dp"
                                 android:orientation="vertical">
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="Non-Recycled"
-                                    android:textColor="#616161"
-                                    android:textSize="16sp"
+                                    android:textColor="#374151"
+                                    android:textSize="14sp"
                                     android:textStyle="bold" />
-
-                                <TextView
-                                    android:id="@+id/tvNonRecycledPercent"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="0%"
-                                    android:textColor="#9E9E9E"
-                                    android:textSize="12sp" />
 
                             </LinearLayout>
 
-                            <LinearLayout
+                            <TextView
+                                android:id="@+id/tvNonRecycledCount"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:gravity="end">
-
-                                <TextView
-                                    android:id="@+id/tvNonRecycledCount"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="0"
-                                    android:textColor="#616161"
-                                    android:textSize="32sp"
-                                    android:textStyle="bold" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="items"
-                                    android:textColor="#616161"
-                                    android:textSize="11sp" />
-
-                            </LinearLayout>
+                                android:text="0"
+                                android:textColor="#374151"
+                                android:textSize="32sp"
+                                android:textStyle="bold" />
 
                         </LinearLayout>
 
@@ -531,73 +468,50 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="4dp"
-                        app:cardBackgroundColor="#FFF8E1">
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="1dp"
+                        app:strokeColor="#FCD34D"
+                        app:cardBackgroundColor="#FFFBEB">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
-                            android:padding="20dp"
+                            android:padding="16dp"
                             android:gravity="center_vertical">
 
-                            <ImageView
-                                android:layout_width="40dp"
-                                android:layout_height="40dp"
-                                android:src="@android:drawable/ic_menu_agenda"
-                                android:padding="8dp"
-                                android:background="@android:color/white"
-                                app:tint="#F57C00" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/icon_composable"
+                                android:textSize="24sp" />
 
                             <LinearLayout
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:layout_marginStart="16dp"
+                                android:layout_marginStart="12dp"
                                 android:orientation="vertical">
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="Composable"
-                                    android:textColor="#F57C00"
-                                    android:textSize="16sp"
+                                    android:textColor="#92400E"
+                                    android:textSize="14sp"
                                     android:textStyle="bold" />
-
-                                <TextView
-                                    android:id="@+id/tvComposablePercent"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="0%"
-                                    android:textColor="#FFA726"
-                                    android:textSize="12sp" />
 
                             </LinearLayout>
 
-                            <LinearLayout
+                            <TextView
+                                android:id="@+id/tvComposableCount"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:gravity="end">
-
-                                <TextView
-                                    android:id="@+id/tvComposableCount"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="0"
-                                    android:textColor="#F57C00"
-                                    android:textSize="32sp"
-                                    android:textStyle="bold" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="items"
-                                    android:textColor="#F57C00"
-                                    android:textSize="11sp" />
-
-                            </LinearLayout>
+                                android:text="0"
+                                android:textColor="#92400E"
+                                android:textSize="32sp"
+                                android:textStyle="bold" />
 
                         </LinearLayout>
 

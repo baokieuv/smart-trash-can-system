@@ -42,6 +42,7 @@ public class DeviceControlActivity extends AppCompatActivity {
         Log.i(TAG, "Device ID: " + deviceId);
         if (deviceId != null && deviceName != null) {
             setupToolbar();
+            updateHeaderStatus();
             setupAutoRefresh();
             setupSwipeRefresh();
             if (NetworkUtils.isNetworkAvailable(this)) {
@@ -89,6 +90,7 @@ public class DeviceControlActivity extends AppCompatActivity {
             @Override
             public void onSuccess(Device device) {
                 status = device.getStatus();
+                updateHeaderStatus();
             }
 
             @Override
@@ -106,6 +108,31 @@ public class DeviceControlActivity extends AppCompatActivity {
         }
 
         binding.toolbar.setNavigationOnClickListener(v -> finish());
+        // Set device name in header
+        binding.tvDeviceName.setText(deviceName);
+        binding.tvMacAddress.setText(deviceId);
+    }
+
+    private void updateHeaderStatus() {
+        boolean isOnline = "ONLINE".equalsIgnoreCase(status) || "on".equalsIgnoreCase(status);
+
+        if (isOnline) {
+            binding.statusBadgeHeader.setBackgroundColor(Color.parseColor("#D1FAE5")); // green-100
+            binding.statusIconHeader.setImageResource(android.R.drawable.presence_online);
+            binding.statusIconHeader.setImageTintList(
+                    android.content.res.ColorStateList.valueOf(Color.parseColor("#10B981"))
+            );
+            binding.tvIsOnline.setText("ONLINE");
+            binding.tvIsOnline.setTextColor(Color.parseColor("#10B981"));
+        } else {
+            binding.statusBadgeHeader.setBackgroundColor(Color.parseColor("#F1F5F9")); // slate-100
+            binding.statusIconHeader.setImageResource(android.R.drawable.presence_offline);
+            binding.statusIconHeader.setImageTintList(
+                    android.content.res.ColorStateList.valueOf(Color.parseColor("#94A3B8"))
+            );
+            binding.tvIsOnline.setText("OFFLINE");
+            binding.tvIsOnline.setTextColor(Color.parseColor("#94A3B8"));
+        }
     }
 
     private void setupSwipeRefresh(){
@@ -125,11 +152,6 @@ public class DeviceControlActivity extends AppCompatActivity {
     }
 
     private void updateUI(DeviceData data) {
-        // Device Name
-        binding.tvDeviceName.setText(deviceName);
-        binding.tvMacAddress.setText(deviceId);
-        binding.tvIsOnline.setText(status);
-
         // Fill Level
         int fillLevel = data.getFillLevel();
         binding.tvFillLevel.setText(fillLevel + "%");
@@ -137,11 +159,11 @@ public class DeviceControlActivity extends AppCompatActivity {
 
         int fillColor;
         if (fillLevel < 30) {
-            fillColor = Color.parseColor("#4CAF50"); // Green
+            fillColor = Color.parseColor("#10B981"); // Green
         } else if (fillLevel < 70) {
-            fillColor = Color.parseColor("#FFA726"); // Orange
+            fillColor = Color.parseColor("#F59E0B"); // Orange
         } else {
-            fillColor = Color.parseColor("#EF5350"); // Red
+            fillColor = Color.parseColor("#EF4444"); // Red
         }
         binding.progressFillLevel.setProgressTintList(android.content.res.ColorStateList.valueOf(fillColor));
         binding.tvFillLevel.setTextColor(fillColor);
@@ -150,14 +172,13 @@ public class DeviceControlActivity extends AppCompatActivity {
         int battery = data.getBattery();
         binding.tvBattery.setText(battery + "%");
 
-        // Change battery color
         int batteryColor;
         if (battery > 50) {
-            batteryColor = Color.parseColor("#4CAF50");
+            batteryColor = Color.parseColor("#10B981");
         } else if (battery > 20) {
-            batteryColor = Color.parseColor("#FFA726");
+            batteryColor = Color.parseColor("#F59E0B");
         } else {
-            batteryColor = Color.parseColor("#EF5350");
+            batteryColor = Color.parseColor("#EF4444");
         }
         binding.tvBattery.setTextColor(batteryColor);
 
@@ -165,25 +186,15 @@ public class DeviceControlActivity extends AppCompatActivity {
         binding.tvTotalWaste.setText(String.valueOf(data.getTotalWaste()));
 
         // Status
-        binding.tvStatus.setText(status.equals("ONLINE") ? "Active" : "Inactive");
-        binding.tvStatusSubtitle.setText(status.equals("ONLINE") ? "Connected" : "Disconnected");
+        boolean isOnline = "ONLINE".equalsIgnoreCase(status) || "on".equalsIgnoreCase(status);
+        binding.tvStatus.setText(isOnline ? "Active" : "Inactive");
+        binding.tvStatus.setTextColor(isOnline ? Color.parseColor("#10B981") : Color.parseColor("#94A3B8"));
+        binding.tvStatusSubtitle.setText(isOnline ? "Connected" : "Disconnected");
 
         // Waste Breakdown
         binding.tvRecycledCount.setText(String.valueOf(data.getRecycledCount()));
         binding.tvNonRecycledCount.setText(String.valueOf(data.getNonRecycledCount()));
         binding.tvComposableCount.setText(String.valueOf(data.getComposableCount()));
-
-        // Calculate percentages
-        int total = data.getRecycledCount() + data.getNonRecycledCount() + data.getComposableCount();
-        if (total > 0) {
-            int recycledPercent = (data.getRecycledCount() * 100) / total;
-            int nonRecycledPercent = (data.getNonRecycledCount() * 100) / total;
-            int composablePercent = (data.getComposableCount() * 100) / total;
-
-            binding.tvRecycledPercent.setText(recycledPercent + "%");
-            binding.tvNonRecycledPercent.setText(nonRecycledPercent + "%");
-            binding.tvComposablePercent.setText(composablePercent + "%");
-        }
     }
 
     private void showNetworkError() {

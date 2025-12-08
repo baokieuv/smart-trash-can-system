@@ -12,6 +12,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.smart_bin.adapter.DeviceAdapter;
 import com.example.smart_bin.api.ApiService;
@@ -55,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnD
 
     private void setupRecyclerView() {
         adapter = new DeviceAdapter(this);
-        binding.recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+        binding.recyclerView.setLayoutManager(new LinearLayoutManager(this));
         binding.recyclerView.setAdapter(adapter);
     }
 
@@ -104,6 +105,7 @@ public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnD
             public void onSuccess(List<Device> devices) {
                 deviceList = devices;
                 adapter.setDevices(devices);
+                updateStats(devices);
                 binding.setHasDevices(devices != null && !devices.isEmpty());
                 binding.progressBar.setVisibility(View.GONE);
                 binding.swipeRefresh.setRefreshing(false);
@@ -129,6 +131,25 @@ public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnD
         String networkType = NetworkUtils.getNetworkTypeName(this);
         String message = "No internet connection. Network: " + networkType;
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    }
+
+    private void updateStats(List<Device> devices) {
+        int totalDevices = devices.size();
+        int onlineDevices = 0;
+        int offlineDevices = 0;
+
+        for (Device device : devices) {
+            if ("ONLINE".equalsIgnoreCase(device.getStatus()) ||
+                    "on".equalsIgnoreCase(device.getStatus())) {
+                onlineDevices++;
+            } else {
+                offlineDevices++;
+            }
+        }
+
+        binding.tvTotalDevices.setText(String.valueOf(totalDevices));
+        binding.tvOnlineDevices.setText(String.valueOf(onlineDevices));
+        binding.tvOfflineDevices.setText(String.valueOf(offlineDevices));
     }
 
     @Override
@@ -172,8 +193,9 @@ public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnD
                             @Override
                             public void onSuccess(Device device) {
                                 Toast.makeText(MainActivity.this, "Device renamed", Toast.LENGTH_SHORT).show();
-                                deviceList.set(deviceList.indexOf(device), device);
-                                adapter.notifyItemChanged(deviceList.indexOf(device));
+//                                deviceList.set(deviceList.indexOf(device), device);
+//                                adapter.notifyItemChanged(deviceList.indexOf(device));
+                                loadDevices();
                                 Log.i(TAG, "Device renamed successfully");
                             }
 
@@ -200,8 +222,9 @@ public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnD
                         @Override
                         public void onSuccess(Device device) {
                             Toast.makeText(MainActivity.this, "Device deleted", Toast.LENGTH_SHORT).show();
-                            deviceList.remove(device);
-                            adapter.notifyDataSetChanged();
+//                            deviceList.remove(device);
+//                            adapter.notifyDataSetChanged();
+                            loadDevices();
                             Log.i(TAG, "Device deleted successfully");
                         }
 
