@@ -5,17 +5,17 @@ public class Device {
     private String id;
     private String name;
     private String macAddress;
-    private boolean isOnline;
+    private String status;
 
     public Device(){
 
     }
 
-    public Device(String id, String name, String macAddress, boolean isOnline) {
+    public Device(String id, String name, String macAddress, String status) {
         this.id = id;
         this.name = name;
         this.macAddress = macAddress;
-        this.isOnline = isOnline;
+        this.status = status;
     }
 
     public String getId() {
@@ -42,11 +42,11 @@ public class Device {
         this.macAddress = macAddress;
     }
 
-    public boolean isOnline() {
-        return isOnline;
+    public String getStatus() {
+        return status;
     }
 
-    public void setOnline(boolean online) {
-        isOnline = online;
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

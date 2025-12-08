@@ -15,13 +15,12 @@ public class Constants {
     // Intent Keys
     public static final String EXTRA_DEVICE_ID = "DEVICE_ID";
     public static final String EXTRA_DEVICE_NAME = "DEVICE_NAME";
-    public static final String EXTRA_DEVICE_IS_ONLINE = "DEVICE_IS_ONLINE";
+    public static final String EXTRA_DEVICE_STATUS = "DEVICE_STATUS";
 
 
     // API Response Keys
     public static final String KEY_ID = "id";
     public static final String KEY_NAME = "name";
-    public static final String KEY_IS_ONLINE = "isOnline";
     public static final String KEY_FILL_LEVEL = "fillLevel";
     public static final String KEY_BATTERY = "battery";
     public static final String KEY_RECYCLED_COUNT = "recycledWasteCount";

@@ -265,7 +265,7 @@ public class AddDeviceActivity extends AppCompatActivity {
         Device device = new Device();
         device.setName(receivedDeviceName);
         device.setMacAddress(receivedMacAddress);
-        device.setOnline(false);
+        device.setStatus("OFFLINE");
 
         ApiService.getInstance().createDevice(device, new ApiService.DeviceCallback() {
             @Override

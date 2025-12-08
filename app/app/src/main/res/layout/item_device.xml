@@ -44,8 +44,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:gravity="center"
-                android:text="@{device.online ? `Online` : `Offline`}"
-                android:textColor="@{device.online ? @color/colorOnline : @color/colorOffline}"
+                android:text='@{device.status.equals("ONLINE") ? "Online" : "Offline"}'
+                android:textColor='@{device.status.equals("ONLINE") ? @color/colorOnline : @color/colorOffline}'
                 android:textSize="12sp" />
 
         </LinearLayout>

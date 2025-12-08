@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnD
         Intent intent = new Intent(this, DeviceControlActivity.class);
         intent.putExtra(Constants.EXTRA_DEVICE_ID, device.getId());
         intent.putExtra(Constants.EXTRA_DEVICE_NAME, device.getName());
-        intent.putExtra(Constants.EXTRA_DEVICE_IS_ONLINE, device.isOnline());
+        intent.putExtra(Constants.EXTRA_DEVICE_STATUS, device.getStatus());
         startActivity(intent);
     }
 

@@ -25,7 +25,7 @@ public class DeviceControlActivity extends AppCompatActivity {
     private ActivityDeviceControlBinding binding;
     private String deviceId;
     private String deviceName;
-    private boolean isOnline;
+    private String status;
     private Handler handler;
     private Runnable runnable;
 
@@ -37,7 +37,7 @@ public class DeviceControlActivity extends AppCompatActivity {
 
         deviceId = getIntent().getStringExtra(Constants.EXTRA_DEVICE_ID);
         deviceName = getIntent().getStringExtra(Constants.EXTRA_DEVICE_NAME);
-        isOnline = getIntent().getBooleanExtra(Constants.EXTRA_DEVICE_IS_ONLINE, false);
+        status = getIntent().getStringExtra(Constants.EXTRA_DEVICE_STATUS);
 
         Log.i(TAG, "Device ID: " + deviceId);
         if (deviceId != null && deviceName != null) {
@@ -88,7 +88,7 @@ public class DeviceControlActivity extends AppCompatActivity {
         ApiService.getInstance().getDevice(deviceId, new ApiService.DeviceCallback() {
             @Override
             public void onSuccess(Device device) {
-                isOnline = device.isOnline();
+                status = device.getStatus();
             }
 
             @Override
@@ -128,7 +128,7 @@ public class DeviceControlActivity extends AppCompatActivity {
         // Device Name
         binding.tvDeviceName.setText(deviceName);
         binding.tvMacAddress.setText(deviceId);
-        binding.tvIsOnline.setText(isOnline ? "ONLINE" : "OFFLINE");
+        binding.tvIsOnline.setText(status);
 
         // Fill Level
         int fillLevel = data.getFillLevel();
@@ -165,8 +165,8 @@ public class DeviceControlActivity extends AppCompatActivity {
         binding.tvTotalWaste.setText(String.valueOf(data.getTotalWaste()));
 
         // Status
-        binding.tvStatus.setText(isOnline ? "Active" : "Inactive");
-        binding.tvStatusSubtitle.setText(isOnline ? "Connected" : "Disconnected");
+        binding.tvStatus.setText(status.equals("ONLINE") ? "Active" : "Inactive");
+        binding.tvStatusSubtitle.setText(status.equals("ONLINE") ? "Connected" : "Disconnected");
 
         // Waste Breakdown
         binding.tvRecycledCount.setText(String.valueOf(data.getRecycledCount()));

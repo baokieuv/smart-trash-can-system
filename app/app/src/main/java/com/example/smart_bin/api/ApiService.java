@@ -266,7 +266,7 @@ public class ApiService {
             device.setName(jsonObject.optString(Constants.KEY_NAME, "Device " + (i + 1)));
 
             device.setMacAddress(jsonObject.getString(Constants.KEY_ID));
-            device.setOnline(jsonObject.getString(Constants.KEY_IS_ONLINE).equalsIgnoreCase("on"));
+            device.setStatus(jsonObject.getString(Constants.KEY_STATUS));
             devices.add(device);
         }
         return devices;
@@ -282,7 +282,6 @@ public class ApiService {
         data.setNonRecycledCount(obj.optInt(Constants.KEY_NON_RECYCLED_COUNT, 0));
         data.setComposableCount(obj.optInt(Constants.KEY_COMPOSABLE_COUNT, 0));
         data.setTotalWaste(data.getRecycledCount() + data.getNonRecycledCount() + data.getComposableCount());
-        data.setStatus(obj.optString(Constants.KEY_STATUS, "Active"));
 
         return data;
     }
@@ -292,7 +291,7 @@ public class ApiService {
         Device device = new Device();
         device.setId(obj.optString(Constants.KEY_ID, null));
         device.setName(obj.optString(Constants.KEY_NAME, null));
-        device.setOnline(obj.getString(Constants.KEY_IS_ONLINE).equalsIgnoreCase("on"));
+        device.setStatus(obj.getString(Constants.KEY_STATUS));
 
         return device;
     }

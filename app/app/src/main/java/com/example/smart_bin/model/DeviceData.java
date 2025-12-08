@@ -7,7 +7,6 @@ public class DeviceData {
     private int recycledCount;
     private int nonRecycledCount;
     private int composableCount;
-    private String status;
 
     public DeviceData() {
     }
@@ -59,13 +58,5 @@ public class DeviceData {
 
     public void setComposableCount(int composableCount) {
         this.composableCount = composableCount;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 }
