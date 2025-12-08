@@ -1,5 +1,6 @@
 package com.example.smart_bin_server.service;
 
+import com.example.smart_bin_server.config.Constants;
 import com.example.smart_bin_server.dto.DeviceDataDTO;
 import com.example.smart_bin_server.dto.SendDataRequest;
 import com.example.smart_bin_server.dto.SendDataResponse;
@@ -31,7 +32,7 @@ public class DeviceDataService {
             throw new RuntimeException("Device not found");
         }
 
-        device.setOnline("on");
+        device.setStatus(String.valueOf(Constants.DeviceStatus.ONLINE));
         repository.save(device);
 
         DeviceData data = new DeviceData();

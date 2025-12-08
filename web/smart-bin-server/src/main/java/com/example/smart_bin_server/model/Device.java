@@ -5,19 +5,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.*;
 
-@Setter
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
 public class Device {
     @Id
     private String id;
-
     private String name;
-
-    private String isOnline;
+    private String status;
 
     public String getId() {
         return id;
@@ -35,11 +31,11 @@ public class Device {
         this.name = name;
     }
 
-    public String isOnline() {
-        return isOnline;
+    public String getStatus() {
+        return status;
     }
 
-    public void setOnline(String online) {
-        isOnline = online;
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

@@ -1,5 +1,6 @@
 package com.example.smart_bin_server.service;
 
+import com.example.smart_bin_server.config.Constants;
 import com.example.smart_bin_server.dto.CreateDeviceRequest;
 import com.example.smart_bin_server.dto.DeviceDto;
 import com.example.smart_bin_server.dto.UpdateDeviceRequest;
@@ -9,14 +10,19 @@ import com.example.smart_bin_server.model.DeviceData;
 import com.example.smart_bin_server.repository.DeviceDataRepository;
 import com.example.smart_bin_server.repository.DeviceRepository;
 import okhttp3.*;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@EnableScheduling
 public class DeviceService {
     private final DeviceRepository repository;
     private final DeviceMapper deviceMapper;
@@ -32,12 +38,21 @@ public class DeviceService {
 
     @Transactional
     public DeviceDto createDevice(CreateDeviceRequest request){
-        Device device = new Device();
-        device.setId(request.macAddress().replace(":", "_"));
+
+        String id = request.macAddress().replace(":", "_");
+
+        Device device = repository.findById(id).orElse(null);
+
+        if(device != null){
+            throw new RuntimeException("Device is existed");
+        }
+
+        device = new Device();
+        device.setId(id);
         device.setName(Optional.ofNullable(request.name())
                 .filter(n -> !n.isBlank())
                 .orElse("Device" + request.macAddress()));
-        device.setOnline("off");
+        device.setStatus(String.valueOf(Constants.DeviceStatus.OFFLINE));
 
         DeviceData data = new DeviceData();
         data.setDeviceId(device.getId());
@@ -78,9 +93,9 @@ public class DeviceService {
                     .filter(n -> !n.isBlank())
                     .orElse(device.getName()));
 
-            device.setOnline(Optional.ofNullable(request.isOnline())
+            device.setStatus(Optional.ofNullable(request.status())
                     .filter(n -> !n.isBlank())
-                    .orElse(device.isOnline()));
+                    .orElse(device.getStatus()));
         } else{
             throw new RuntimeException("Device not found");
         }
@@ -99,5 +114,22 @@ public class DeviceService {
         }
 
         return deviceId;
+    }
+
+    @Scheduled(fixedRate = 30000)
+    public void checkDevicesStatus(){
+        List<Device> devices = repository.findAll();
+        long now = System.currentTimeMillis();
+
+        for(Device d: devices){
+            DeviceData data = dataRepository.findById(d.getId()).orElse(null);
+
+            if(data == null) continue;
+
+            if(now - data.getTimestamp() > Constants.TIMEOUT_MILLIS){
+                d.setStatus(String.valueOf(Constants.DeviceStatus.OFFLINE));
+            }
+        }
+        repository.saveAll(devices);
     }
 }

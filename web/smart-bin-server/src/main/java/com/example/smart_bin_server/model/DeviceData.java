@@ -8,8 +8,6 @@ import lombok.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Setter
-@Getter
 public class DeviceData {
     @Id
     private String deviceId;

@@ -23,5 +23,4 @@ public class ClassificationController {
     public ResponseEntity<Object> classify(@RequestBody MultipartFile image){
         return ResponseEntity.ok().body(service.classify(image));
     }
-
 }
