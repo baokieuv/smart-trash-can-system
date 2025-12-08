@@ -15,28 +15,44 @@ export default function SmartBinDashboard() {
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
     const loadData = async () => {
-      try {
-        const [devicesData, logsData] = await Promise.all([
-          fetchDevices(),
-          fetchLogs()
-        ]);
-        setDevices(devicesData);
-        setLogs(logsData);
-      } catch (error) {
-        console.error("Failed to load dashboard data");
-      } finally {
-        setLoading(false);
-      }
-    };
+        try{
+            const [devicesData, logsData] = await Promise.all([
+                fetchDevices(),
+                fetchLogs()
+            ]);
+            setDevices(devicesData);
+            setLogs(logsData);
 
+            // Cập nhật selectedDevice nếu đang xem chi tiết
+            if (selectedDevice) {
+                const updatedDevice = devicesData.find(d => d.id === selectedDevice.id);
+                if (updatedDevice) {
+                setSelectedDevice(updatedDevice);
+                } else {
+                // Device đã bị xóa, quay về dashboard
+                setSelectedDevice(null);
+                }
+            }
+        }catch(error){
+            console.error("Failed to load dashboard data");
+        }finally {
+            setLoading(false);
+        }
+    }
+
+  useEffect(() => {
     loadData();
     
     // Tùy chọn: Auto refresh mỗi 30 giây
-    const interval = setInterval(loadData, 30000);
+    const interval = setInterval(loadData, 10000);
     return () => clearInterval(interval);
   }, []);
+
+    // Callback khi device được cập nhật hoặc xóa
+  const handleDeviceUpdated = () => {
+    loadData();
+  };
 
   // Nếu người dùng chọn xem chi tiết 1 device
   if (selectedDevice) {
@@ -44,6 +60,7 @@ export default function SmartBinDashboard() {
       <DeviceDetail 
         device={selectedDevice} 
         onBack={() => setSelectedDevice(null)} 
+        onDeviceUpdated={handleDeviceUpdated}
       />
     );
   }
@@ -87,7 +104,11 @@ export default function SmartBinDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Danh sách thiết bị (Chiếm 2/3 màn hình lớn) */}
           <div className="lg:col-span-2">
-            <DeviceList devices={devices} onSelectDevice={setSelectedDevice} />
+            <DeviceList 
+                devices={devices} 
+                onSelectDevice={setSelectedDevice}
+                onDeviceUpdated={handleDeviceUpdated} 
+            />
           </div>
           
           {/* Lịch sử hoạt động (Chiếm 1/3 màn hình lớn) */}

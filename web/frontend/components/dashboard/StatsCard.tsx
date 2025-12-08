@@ -7,8 +7,8 @@ interface StatsCardsProps {
 }
 
 export default function StatsCards({ devices }: StatsCardsProps) {
-  const onlineDevices = devices.filter(d => d.status === 'online').length;
-  const offlineDevices = devices.filter(d => d.status === 'offline').length;
+  const onlineDevices = devices.filter(d => d.status === 'ONLINE').length;
+  const offlineDevices = devices.filter(d => d.status === 'OFFLINE').length;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6">

@@ -4,7 +4,7 @@ import { Device } from '@/types';
 interface DeviceBasic {
   id: string;
   name: string;
-  isOnline: string;
+  status: string;
 }
 
 interface DeviceData{
@@ -38,22 +38,22 @@ export async function GET() {
             ? await dataRes.json()
             : { fillLevel: 0, battery: 0, recycled: 0, nonRecycled: 0, composable: 0 };
 
-            const totalWaste = (detailData.recycledWasteCount || 0) + 
-                             (detailData.nonRecycledWasteCount || 0) + 
-                             (detailData.compostableWasteCount || 0);
+          const totalWaste = (detailData.recycledWasteCount || 0) + 
+                            (detailData.nonRecycledWasteCount || 0) + 
+                            (detailData.compostableWasteCount || 0);
 
-            const mappedDevice: Device = {
+          const mappedDevice: Device = {
             id: device.id as any, 
             name: device.name,
             mac: device.id,
-            status: (device.isOnline === "on" ? 'online' : 'offline'),
+            status: device.status,
             
             fillLevel: detailData.fillLevel,
             battery: 50,
             recycled: detailData.recycledWasteCount,
             nonRecycled: detailData.nonRecycledWasteCount,
             composable: detailData.compostableWasteCount,
-         
+        
             total: totalWaste
           };
 

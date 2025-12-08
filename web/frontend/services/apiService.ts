@@ -36,4 +36,36 @@ export const fetchLogs = async (): Promise<ActivityLog[]> => {
     console.error("Error fetching logs:", error);
     return [];
   }
-};
+}; 
+
+export const updateDevice = async (deviceId: string, newName: string): Promise<boolean> => {
+    try{
+        const res = await fetch(`/api/devices/${deviceId}`, {
+            method: "PUT",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name: newName })
+        });
+
+        if (!res.ok) throw new Error('Failed to update device name');
+        return true;
+    }catch(error){
+        console.error("Error updating device: ", error);
+        return false;
+    }
+}
+
+export const deleteDevice = async (deviceId: string): Promise<boolean> => {
+    try{
+        const res = await fetch(`/api/devices/${deviceId}`, {
+            method: "DELETE"
+        });
+
+        if (!res.ok) throw new Error('Failed to delete device');
+        return true;
+    }catch(error){
+        console.error("Error deleting device: ", error);
+        return false;
+    }
+}

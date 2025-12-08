@@ -2,7 +2,7 @@ export type Device = {
   id: string;
   name: string;
   mac: string;
-  status: 'online' | 'offline';
+  status: string;
   fillLevel: number;
   battery: number;
   recycled: number;

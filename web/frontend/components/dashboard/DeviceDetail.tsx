@@ -1,15 +1,63 @@
-import React from 'react';
-import { ArrowLeft, Trash2, Wifi, WifiOff, Battery, TrendingUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, Trash2, Wifi, WifiOff, Battery, TrendingUp, Edit2, Trash, X, Check } from 'lucide-react';
 import { Device } from '@/types';
 import { getStatusBg, getStatusColor, getFillLevelColor, getBatteryColor } from '@/lib/utils';
+import { updateDevice, deleteDevice } from '@/services/apiService';
 
 interface DeviceDetailProps {
   device: Device;
   onBack: () => void;
+  onDeviceUpdated: () => void;
 }
 
-export default function DeviceDetail({ device, onBack }: DeviceDetailProps) {
-  return (
+export default function DeviceDetail({ device, onBack, onDeviceUpdated }: DeviceDetailProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(device.name);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handleStartEdit = () => {
+    setIsEditing(true);
+    setEditName(device.name);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditName(device.name);
+  }; 
+  
+  const handleSaveEdit = async () => {
+    if (!editName.trim() || isUpdating) return;
+
+    setIsUpdating(true);
+    const success = await updateDevice(device.id, editName.trim());
+    setIsUpdating(false);
+
+    if (success) {
+      setIsEditing(false);
+      onDeviceUpdated();
+    } else {
+      alert('Failed to update device name');
+    }
+  };
+  
+  const handleDelete = async () => {
+    if (!confirm(`Are you sure you want to delete "${device.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    setIsUpdating(true);
+    const success = await deleteDevice(device.id);
+    setIsUpdating(false);
+
+    if (success) {
+      onBack();
+      onDeviceUpdated();
+    } else {
+      alert('Failed to delete device');
+    }
+  };
+
+   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         {/* Back Button */}
@@ -26,24 +74,72 @@ export default function DeviceDetail({ device, onBack }: DeviceDetailProps) {
           {/* Header */}
           <div className="bg-linear-to-r from-blue-600 to-blue-700 p-6 text-white">
             <div className="flex items-start justify-between">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 flex-1">
                 <div className="bg-white/20 p-4 rounded-xl backdrop-blur-sm">
                   <Trash2 size={32} />
                 </div>
-                <div>
-                  <h1 className="text-2xl md:text-3xl font-bold">{device.name}</h1>
+                <div className="flex-1">
+                  {isEditing ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="text-2xl md:text-3xl font-bold bg-white/20 border-2 border-white/50 rounded-lg px-3 py-2 text-white placeholder-white/70 focus:outline-none focus:border-white"
+                        disabled={isUpdating}
+                        autoFocus
+                      />
+                      <button
+                        onClick={handleSaveEdit}
+                        disabled={isUpdating}
+                        className="p-2 bg-green-500 rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50"
+                        title="Save"
+                      >
+                        <Check size={20} />
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        disabled={isUpdating}
+                        className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors disabled:opacity-50"
+                        title="Cancel"
+                      >
+                        <X size={20} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <h1 className="text-2xl md:text-3xl font-bold">{device.name}</h1>
+                      <button
+                        onClick={handleStartEdit}
+                        className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
+                        title="Edit name"
+                      >
+                        <Edit2 size={20} />
+                      </button>
+                    </div>
+                  )}
                   <p className="text-blue-100 mt-1 font-mono text-sm">{device.mac}</p>
                 </div>
               </div>
-              <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${getStatusBg(device.status)}`}>
-                {device.status === 'online' ? (
-                  <Wifi size={16} className="text-green-600" />
-                ) : (
-                  <WifiOff size={16} className="text-gray-400" />
-                )}
-                <span className={`font-semibold text-sm ${getStatusColor(device.status)}`}>
-                  {device.status.toUpperCase()}
-                </span>
+              <div className="flex items-center gap-3">
+                <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${getStatusBg(device.status)}`}>
+                  {device.status === 'ONLINE' ? (
+                    <Wifi size={16} className="text-green-600" />
+                  ) : (
+                    <WifiOff size={16} className="text-gray-400" />
+                  )}
+                  <span className={`font-semibold text-sm ${getStatusColor(device.status)}`}>
+                    {device.status.toUpperCase()}
+                  </span>
+                </div>
+                <button
+                  onClick={handleDelete}
+                  disabled={isUpdating}
+                  className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                  title="Delete device"
+                >
+                  <Trash size={20} />
+                </button>
               </div>
             </div>
           </div>
@@ -85,11 +181,11 @@ export default function DeviceDetail({ device, onBack }: DeviceDetailProps) {
             {/* Status Indicator */}
             <div className="bg-slate-50 rounded-xl p-4">
               <div className="text-slate-600 text-sm mb-2">Status</div>
-              <div className={`text-2xl font-bold ${device.status === 'online' ? 'text-green-600' : 'text-gray-400'}`}>
-                {device.status === 'online' ? 'Active' : 'Inactive'}
+              <div className={`text-2xl font-bold ${device.status === 'ONLINE' ? 'text-green-600' : 'text-gray-400'}`}>
+                {device.status === 'ONLINE' ? 'Active' : 'Inactive'}
               </div>
               <div className="text-xs text-slate-500 mt-1">
-                {device.status === 'online' ? 'Connected' : 'Disconnected'}
+                {device.status === 'ONLINE' ? 'Connected' : 'Disconnected'}
               </div>
             </div>
           </div>

@@ -1,5 +1,6 @@
 /venv
 /temp
+/docker
 /__pycache__
 /result/
 **/result/
