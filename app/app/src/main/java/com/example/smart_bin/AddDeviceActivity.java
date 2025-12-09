@@ -57,7 +57,7 @@ public class AddDeviceActivity extends AppCompatActivity {
     }
 
     private void setupViews() {
-        binding.btnScanBluetooth.setText("Select Paired Device");
+        // binding.btnScanBluetooth.setText("Select Paired Device");
         binding.btnScanBluetooth.setOnClickListener(v -> showPairedDevicesDialog());
         binding.btnScanWifi.setOnClickListener(v -> scanForWiFiNetworks());
         binding.btnConnect.setOnClickListener(v -> sendWiFiConfig());
@@ -108,7 +108,7 @@ public class AddDeviceActivity extends AppCompatActivity {
                     deviceNames.add(name + "\n" + address);
                     discoveredDevices.add(device);
                 } catch (SecurityException e) {
-                    // Quyền chưa được cấp
+                    // Permission not granted
                 }
             }
         }
@@ -133,6 +133,7 @@ public class AddDeviceActivity extends AppCompatActivity {
     }
 
     private void connectToDevice(BluetoothDevice device) {
+        showStatusCard(true);
         binding.progressBar.setVisibility(View.VISIBLE);
         binding.tvStatus.setText("Connecting to device...");
 
@@ -145,11 +146,16 @@ public class AddDeviceActivity extends AppCompatActivity {
             @Override
             public void onConnected() {
                 runOnUiThread(() -> {
-                    binding.tvMacAddress.setText("MAC: " + receivedMacAddress);
+                    binding.tvMacAddress.setText("Connected: " + receivedMacAddress);
                     binding.tvMacAddress.setVisibility(View.VISIBLE);
-                    binding.tvStatus.setText("Connected! Configure WiFi for this device.");
+
+                    binding.tvStatus.setText("✓ Connected successfully!");
                     binding.layoutWifiConfig.setVisibility(View.VISIBLE);
                     binding.progressBar.setVisibility(View.GONE);
+
+                    binding.getRoot().postDelayed(() -> {
+                        showStatusCard(false);
+                    }, 2000);
                 });
             }
 
@@ -157,7 +163,7 @@ public class AddDeviceActivity extends AppCompatActivity {
             public void onDisconnected() {
                 runOnUiThread(() -> {
                     binding.progressBar.setVisibility(View.GONE);
-                    binding.tvStatus.setText("Disconnected");
+                    binding.tvStatus.setText("⚠\uFE0F Device disconnected");
                     Toast.makeText(AddDeviceActivity.this, "Device disconnected",
                             Toast.LENGTH_SHORT).show();
                 });
@@ -172,7 +178,7 @@ public class AddDeviceActivity extends AppCompatActivity {
             public void onError(String error) {
                 runOnUiThread(() -> {
                     binding.progressBar.setVisibility(View.GONE);
-                    binding.tvStatus.setText("Error: " + error);
+                    binding.tvStatus.setText("❌ Error: " + error);
                     Toast.makeText(AddDeviceActivity.this, error, Toast.LENGTH_SHORT).show();
                 });
             }
@@ -180,6 +186,7 @@ public class AddDeviceActivity extends AppCompatActivity {
     }
 
     private void scanForWiFiNetworks(){
+        showStatusCard(true);
         binding.progressBar.setVisibility(View.VISIBLE);
         binding.tvStatus.setText("Scanning for WiFi networks...");
         Log.i("My bluetooth", "Scanning for WiFi networks...");
@@ -190,9 +197,12 @@ public class AddDeviceActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     availableNetworks = networks;
                     binding.progressBar.setVisibility(View.GONE);
-                    binding.tvStatus.setText("Found " + networks.size() + " networks");
+                    binding.tvStatus.setText("✓ Found " + networks.size() + " networks");
                     Log.i("My bluetooth", "Found " + networks.size() + " networks");
-                    showNetworkSelectionDialog();
+                    binding.getRoot().postDelayed(() -> {
+                        showStatusCard(false);
+                        showNetworkSelectionDialog();
+                    }, 1000);
                 });
             }
 
@@ -200,8 +210,11 @@ public class AddDeviceActivity extends AppCompatActivity {
             public void onScanFailed(String error) {
                 runOnUiThread(() -> {
                     binding.progressBar.setVisibility(View.GONE);
-                    binding.tvStatus.setText("WiFi scan failed");
+                    binding.tvStatus.setText("❌ WiFi scan failed");
                     Toast.makeText(AddDeviceActivity.this, error, Toast.LENGTH_SHORT).show();
+                    binding.getRoot().postDelayed(() -> {
+                        showStatusCard(false);
+                    }, 2000);
                 });
             }
         });
@@ -228,6 +241,7 @@ public class AddDeviceActivity extends AppCompatActivity {
             return;
         }
 
+        showStatusCard(true);
         binding.progressBar.setVisibility(View.VISIBLE);
         binding.tvStatus.setText("Sending WiFi configuration...");
 
@@ -252,6 +266,7 @@ public class AddDeviceActivity extends AppCompatActivity {
             public void onError(String error) {
                 runOnUiThread(() -> {
                     binding.progressBar.setVisibility(View.GONE);
+                    binding.tvStatus.setText("❌ Error: " + error);
                     Toast.makeText(AddDeviceActivity.this, error, Toast.LENGTH_SHORT).show();
                 });
             }
@@ -270,24 +285,37 @@ public class AddDeviceActivity extends AppCompatActivity {
         ApiService.getInstance().createDevice(device, new ApiService.DeviceCallback() {
             @Override
             public void onSuccess(Device device) {
-                Toast.makeText(AddDeviceActivity.this, "Device added!", Toast.LENGTH_SHORT).show();
+                runOnUiThread(() -> {
+                    binding.progressBar.setVisibility(View.GONE);
+                    binding.tvStatus.setText("✓ Device added successfully!");
+                    Toast.makeText(AddDeviceActivity.this, "Device added!", Toast.LENGTH_SHORT).show();
+
+                    binding.getRoot().postDelayed(() -> {
+                        bluetoothManager.disconnect();
+                        finish();
+                    }, 1500);
+                });
             }
 
             @Override
             public void onError(String error) {
-                Toast.makeText(AddDeviceActivity.this, "Error: " + error, Toast.LENGTH_SHORT).show();
+                runOnUiThread(() -> {
+                    binding.progressBar.setVisibility(View.GONE);
+                    binding.tvStatus.setText("⚠️ Warning: " + error);
+                    Toast.makeText(AddDeviceActivity.this, "Error: " + error, Toast.LENGTH_SHORT).show();
+
+                    // Still finish after error since device might be configured
+                    binding.getRoot().postDelayed(() -> {
+                        bluetoothManager.disconnect();
+                        finish();
+                    }, 2000);
+                });
             }
         });
-        runOnUiThread(() -> {
-            binding.progressBar.setVisibility(View.GONE);
-            binding.tvStatus.setText("Device added successfully!");
-            Toast.makeText(this, "Device added!", Toast.LENGTH_SHORT).show();
+    }
 
-            binding.getRoot().postDelayed(() -> {
-                bluetoothManager.disconnect();
-                finish();
-            }, 1000);
-        });
+    private void showStatusCard(boolean show) {
+        binding.statusCard.setVisibility(show ? View.VISIBLE : View.GONE);
     }
 
     private void setupToolbar() {

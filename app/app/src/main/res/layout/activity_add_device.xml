@@ -5,20 +5,89 @@
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#F5F5F5">
+        android:background="#F8FAFC">
 
+        <!-- Modern Header -->
         <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:background="#2563EB"
+            android:elevation="4dp">
 
-            <com.google.android.material.appbar.MaterialToolbar
-                android:id="@+id/toolbar"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:background="?attr/colorPrimary"
-                app:title="Add Device"
-                app:titleTextColor="@android:color/white"
-                app:navigationIcon="@android:drawable/ic_menu_close_clear_cancel" />
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="#2563EB">
+
+                <com.google.android.material.appbar.MaterialToolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    app:title="Add New Device"
+                    app:titleTextColor="@android:color/white"
+                    app:navigationIcon="@android:drawable/ic_menu_close_clear_cancel"
+                    app:navigationIconTint="@android:color/white" />
+
+                <!-- Header Info -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp"
+                    android:paddingTop="8dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <!-- Icon -->
+                        <LinearLayout
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:background="#3B82F6"
+                            android:gravity="center">
+
+                            <ImageView
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:src="@android:drawable/ic_input_add"
+                                app:tint="@android:color/white" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="16dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Setup New Smart Bin"
+                                android:textColor="@android:color/white"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Connect via Bluetooth and configure WiFi"
+                                android:textColor="#93C5FD"
+                                android:textSize="12sp" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
 
         </com.google.android.material.appbar.AppBarLayout>
 
@@ -31,13 +100,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="24dp">
+                android:padding="16dp">
 
+                <!-- Step 1: Bluetooth Connection -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="2dp">
+                    android:layout_marginBottom="16dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="@android:color/white">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -45,51 +117,146 @@
                         android:orientation="vertical"
                         android:padding="20dp">
 
-                        <TextView
+                        <!-- Step Header -->
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Step 1: Connect via Bluetooth"
-                            android:textColor="#212121"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="16dp">
 
-                        <TextView
+                            <!-- Step Number Badge -->
+                            <LinearLayout
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:background="#DBEAFE"
+                                android:gravity="center">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="1"
+                                    android:textColor="#2563EB"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold" />
+
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginStart="12dp"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Bluetooth Connection"
+                                    android:textColor="#1E293B"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:text="Connect to your Smart Bin device"
+                                    android:textColor="#64748B"
+                                    android:textSize="13sp" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <!-- Info Box -->
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Make sure your device is in pairing mode"
-                            android:textColor="#757575"
-                            android:textSize="14sp" />
+                            android:orientation="horizontal"
+                            android:background="#EFF6FF"
+                            android:padding="12dp"
+                            android:layout_marginBottom="16dp"
+                            android:gravity="center_vertical">
 
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/icon_light"
+                                android:textSize="20sp"
+                                android:layout_marginEnd="8dp" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Make sure your device is powered on and in pairing mode"
+                                android:textColor="#1E40AF"
+                                android:textSize="12sp" />
+
+                        </LinearLayout>
+
+                        <!-- Scan Button -->
                         <Button
                             android:id="@+id/btnScanBluetooth"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="16dp"
-                            android:text="Scan for Devices" />
+                            android:layout_height="56dp"
+                            android:text="Select Paired Device"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textColor="@android:color/white"
+                            android:backgroundTint="#2563EB"
+                            app:cornerRadius="12dp"
+                            app:icon="@android:drawable/stat_sys_data_bluetooth"
+                            app:iconTint="@android:color/white"
+                            app:iconGravity="textStart" />
 
-                        <TextView
-                            android:id="@+id/tvMacAddress"
+                        <!-- MAC Address Display -->
+                        <LinearLayout
+                            android:id="@+id/macAddressContainer"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
-                            android:textColor="#4CAF50"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:visibility="gone" />
+                            android:layout_marginTop="16dp"
+                            android:orientation="horizontal"
+                            android:background="#F0FDF4"
+                            android:padding="12dp"
+                            android:gravity="center_vertical"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="✓"
+                                android:textSize="20sp"
+                                android:textColor="#10B981"
+                                android:layout_marginEnd="8dp" />
+
+                            <TextView
+                                android:id="@+id/tvMacAddress"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:textColor="#166534"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:fontFamily="monospace" />
+
+                        </LinearLayout>
 
                     </LinearLayout>
 
                 </com.google.android.material.card.MaterialCardView>
 
+                <!-- Step 2: WiFi Configuration -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/layoutWifiConfig"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="16dp"
                     android:visibility="gone"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="2dp">
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="@android:color/white">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -97,86 +264,241 @@
                         android:orientation="vertical"
                         android:padding="20dp">
 
-                        <TextView
+                        <!-- Step Header -->
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Step 2: Configure WiFi"
-                            android:textColor="#212121"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="16dp">
 
+                            <!-- Step Number Badge -->
+                            <LinearLayout
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:background="#DBEAFE"
+                                android:gravity="center">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="2"
+                                    android:textColor="#2563EB"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold" />
+
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginStart="12dp"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="WiFi Configuration"
+                                    android:textColor="#1E293B"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:text="Connect device to your network"
+                                    android:textColor="#64748B"
+                                    android:textSize="13sp" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <!-- Scan WiFi Button -->
                         <Button
                             android:id="@+id/btnScanWifi"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="16dp"
-                            android:text="Scan WiFi Networks" />
+                            android:layout_height="56dp"
+                            android:layout_marginBottom="16dp"
+                            android:text="Scan WiFi Networks"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textColor="#2563EB"
+                            android:backgroundTint="#EFF6FF"
+                            app:cornerRadius="12dp"
+                            app:icon="@android:drawable/ic_menu_search"
+                            app:iconTint="#2563EB"
+                            app:iconGravity="textStart" />
 
+                        <!-- SSID Input -->
                         <com.google.android.material.textfield.TextInputLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="16dp"
-                            android:hint="WiFi SSID"
-                            app:boxBackgroundMode="outline">
+                            android:layout_marginBottom="12dp"
+                            android:hint="WiFi Network (SSID)"
+                            app:boxBackgroundMode="outline"
+                            app:boxBackgroundColor="@android:color/white"
+                            app:boxStrokeColor="#2563EB"
+                            app:boxCornerRadiusTopStart="12dp"
+                            app:boxCornerRadiusTopEnd="12dp"
+                            app:boxCornerRadiusBottomStart="12dp"
+                            app:boxCornerRadiusBottomEnd="12dp"
+                            app:startIconDrawable="@android:drawable/ic_menu_compass"
+                            app:startIconTint="#64748B"
+                            app:hintTextColor="#64748B">
 
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/etSsid"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:inputType="text" />
+                                android:inputType="text"
+                                android:textColor="#1E293B"
+                                android:textSize="15sp"
+                                android:padding="16dp" />
 
                         </com.google.android.material.textfield.TextInputLayout>
 
+                        <!-- Password Input -->
                         <com.google.android.material.textfield.TextInputLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
+                            android:layout_marginBottom="20dp"
                             android:hint="WiFi Password"
                             app:boxBackgroundMode="outline"
-                            app:endIconMode="password_toggle">
+                            app:boxBackgroundColor="@android:color/white"
+                            app:boxStrokeColor="#2563EB"
+                            app:boxCornerRadiusTopStart="12dp"
+                            app:boxCornerRadiusTopEnd="12dp"
+                            app:boxCornerRadiusBottomStart="12dp"
+                            app:boxCornerRadiusBottomEnd="12dp"
+                            app:startIconDrawable="@android:drawable/ic_lock_lock"
+                            app:startIconTint="#64748B"
+                            app:endIconMode="password_toggle"
+                            app:endIconTint="#64748B"
+                            app:hintTextColor="#64748B">
 
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/etPassword"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:inputType="textPassword" />
+                                android:inputType="textPassword"
+                                android:textColor="#1E293B"
+                                android:textSize="15sp"
+                                android:padding="16dp" />
 
                         </com.google.android.material.textfield.TextInputLayout>
 
+                        <!-- Send Configuration Button -->
                         <Button
                             android:id="@+id/btnConnect"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="16dp"
-                            android:text="Send Configuration" />
+                            android:layout_height="56dp"
+                            android:text="Send Configuration"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textColor="@android:color/white"
+                            android:backgroundTint="#10B981"
+                            app:cornerRadius="12dp"
+                            app:icon="@android:drawable/stat_sys_upload"
+                            app:iconTint="@android:color/white"
+                            app:iconGravity="textStart" />
 
                     </LinearLayout>
 
                 </com.google.android.material.card.MaterialCardView>
 
-                <LinearLayout
+                <!-- Status Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/statusCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:gravity="center"
-                    android:orientation="vertical">
+                    android:layout_marginBottom="16dp"
+                    android:visibility="gone"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="#EFF6FF">
 
-                    <ProgressBar
-                        android:id="@+id/progressBar"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:visibility="gone" />
-
-                    <TextView
-                        android:id="@+id/tvStatus"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:gravity="center"
-                        android:textColor="#757575"
-                        android:textSize="14sp" />
+                        android:orientation="vertical"
+                        android:padding="20dp"
+                        android:gravity="center">
 
-                </LinearLayout>
+                        <ProgressBar
+                            android:id="@+id/progressBar"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:indeterminateTint="#2563EB"
+                            android:visibility="gone" />
+
+                        <TextView
+                            android:id="@+id/tvStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center"
+                            android:textColor="#1E40AF"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Help Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#E2E8F0"
+                    app:cardBackgroundColor="@android:color/white">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="12dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/icon_info"
+                                android:textSize="20sp"
+                                android:layout_marginEnd="8dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Setup Guide"
+                                android:textColor="#1E293B"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="1. Make sure your Smart Bin is powered on\n2. Enable Bluetooth on your phone\n3. Pair the device in your phone settings\n4. Return here and select the paired device\n5. Configure WiFi to complete setup"
+                            android:textColor="#64748B"
+                            android:textSize="13sp"
+                            android:lineSpacingExtra="4dp" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
 
             </LinearLayout>
 

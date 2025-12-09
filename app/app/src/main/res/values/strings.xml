@@ -3,4 +3,6 @@
     <string name="icon_recycled">♻️</string>
     <string name="icon_non_recycled">🗑️</string>
     <string name="icon_composable">🌱</string>
+    <string name="icon_info">ℹ️</string>
+    <string name="icon_light">💡</string>
 </resources>
