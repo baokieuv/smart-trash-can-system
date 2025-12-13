@@ -138,8 +138,84 @@
                         android:layout_marginTop="32dp"
                         android:visibility="gone" />
 
+                    <!-- Offline Warning Card -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/offlineWarningCard"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:visibility="gone"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="2dp"
+                        app:cardBackgroundColor="#FEF3C7">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="20dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:layout_marginBottom="12dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="⚠️"
+                                    android:textSize="32sp"
+                                    android:layout_marginEnd="12dp" />
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Device Offline"
+                                        android:textColor="#92400E"
+                                        android:textSize="18sp"
+                                        android:textStyle="bold" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:text="This device has lost WiFi connection"
+                                        android:textColor="#92400E"
+                                        android:textSize="13sp" />
+
+                                </LinearLayout>
+
+                            </LinearLayout>
+
+                            <Button
+                                android:id="@+id/btnReconfigureWifi"
+                                android:layout_width="match_parent"
+                                android:layout_height="56dp"
+                                android:text="Reconfigure WiFi"
+                                android:textSize="15sp"
+                                android:textStyle="bold"
+                                android:textColor="@android:color/white"
+                                android:backgroundTint="#F59E0B"
+                                app:cornerRadius="12dp"
+                                app:icon="@android:drawable/ic_menu_compass"
+                                app:iconTint="@android:color/white"
+                                app:iconGravity="textStart" />
+
+                        </LinearLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
+
                     <!-- Stats Grid -->
                     <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/statsCard"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
@@ -376,7 +452,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/icon_recycled"
+                                android:text="♻️"
                                 android:textSize="24sp" />
 
                             <LinearLayout
@@ -430,7 +506,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/icon_non_recycled"
+                                android:text="🗑️"
                                 android:textSize="24sp" />
 
                             <LinearLayout
@@ -484,7 +560,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/icon_composable"
+                                android:text="🌱"
                                 android:textSize="24sp" />
 
                             <LinearLayout

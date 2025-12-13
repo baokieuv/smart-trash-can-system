@@ -44,6 +44,11 @@
         <activity
             android:name=".DeviceControlActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".WiFiReconfigureActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>
