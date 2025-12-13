@@ -10,10 +10,8 @@
 extern EventGroupHandle_t g_event_group;
 
 static const char *TAG = "WIFI_MGR";
-// static EventGroupHandle_t g_event_group = NULL;
 static int s_retry_num = 0;
 static esp_netif_t *s_sta_netif = NULL;
-static esp_netif_t *s_ap_netif = NULL;
 
 static int s_reconnect_delay_sec = 2;
 
@@ -23,7 +21,6 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
         esp_wifi_connect();
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
         ESP_LOGW(TAG, "WiFi disconnected.");
-
         xTaskCreate(wifi_reconnect_task, "reconnect wifi", 4096, NULL, 5, NULL);
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
@@ -34,13 +31,15 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
     }
 }
 
-esp_err_t wifi_manager_init(EventGroupHandle_t event_group) {
-    if (!event_group) {
+esp_err_t wifi_manager_init() {
+    if (!g_event_group) {
         ESP_LOGE(TAG, "Invalid event group");
         return ESP_ERR_INVALID_ARG;
     }
 
-    g_event_group = event_group;
+    // Initialize networking
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     esp_err_t err = esp_event_handler_instance_register(
         WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL, NULL);
@@ -60,47 +59,6 @@ esp_err_t wifi_manager_init(EventGroupHandle_t event_group) {
     return ESP_OK;
 }
 
-esp_err_t wifi_start_ap_mode(void) {
-    ESP_LOGI(TAG, "Starting AP mode...");
-
-    if (!s_ap_netif) {
-        s_ap_netif = esp_netif_create_default_wifi_ap();
-    }
-
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    esp_err_t err = esp_wifi_init(&cfg);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "WiFi init failed: %s", esp_err_to_name(err));
-        return err;
-    }
-
-    wifi_config_t ap_config = {
-        .ap = {
-            .ssid = AP_SSID,
-            .ssid_len = strlen(AP_SSID),
-            .channel = 1,
-            .max_connection = AP_MAX_CONN,
-            .authmode = WIFI_AUTH_OPEN,
-        },
-    };
-
-    err = esp_wifi_set_mode(WIFI_MODE_AP);
-    if (err == ESP_OK) {
-        err = esp_wifi_set_config(WIFI_IF_AP, &ap_config);
-    }
-    if (err == ESP_OK) {
-        err = esp_wifi_start();
-    }
-
-    if (err == ESP_OK) {
-        xEventGroupClearBits(g_event_group, WIFI_CONNECTED_BIT);
-        ESP_LOGI(TAG, "AP Mode started, SSID: %s", AP_SSID);
-    } else {
-        ESP_LOGE(TAG, "Failed to start AP mode: %s", esp_err_to_name(err));
-    }
-
-    return err;
-}
 
 bool wifi_start_station_mode(const char *ssid, const char *pass) {
     ESP_LOGI(TAG, "In wifi_start_station_mode");
@@ -145,7 +103,7 @@ bool wifi_start_station_mode(const char *ssid, const char *pass) {
         WIFI_CONNECTED_BIT | WIFI_FAIL_BIT | CONFIG_MODE_BIT,
         pdTRUE,  // Clear bits after reading
         pdFALSE, // Wait for either bit
-        pdMS_TO_TICKS(WIFI_CONNECT_TIMEOUT_MS)
+        portMAX_DELAY
     );
 
     if (bits & CONFIG_MODE_BIT){
@@ -185,11 +143,6 @@ bool wifi_is_connected(void) {
 
 void wifi_reconnect_task(void *param){
     s_retry_num++;
-    if(s_retry_num > MAXIMUM_RETRY){
-        ESP_LOGW(TAG, "Max retry reached (%d). Stop reconnect attempts.", MAXIMUM_RETRY);
-        xEventGroupSetBits(g_event_group, WIFI_FAIL_BIT);
-        vTaskDelete(NULL);
-    }
     ESP_LOGI(TAG, "Reconnecting WiFi in %d seconds... (attempt %d)", s_reconnect_delay_sec, s_retry_num);
     vTaskDelay(pdMS_TO_TICKS(s_reconnect_delay_sec * 1000));
 

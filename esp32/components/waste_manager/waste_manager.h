@@ -8,10 +8,9 @@
 
 // ==================== Waste Statistics ====================
 typedef struct {
-    uint32_t total_count;           // Total waste throws
     uint32_t recyclable_count;      // Recyclable waste count
     uint32_t compostable_count;     // Compostable waste count
-    uint32_t hazardous_count;       // Hazardous waste count
+    uint32_t non_recyclable_count;  // Hazardous waste count
     float current_fill_level;       // Current fill level (%)
     bool is_full;                   // Is bin full?
 } waste_stats_t;
@@ -27,7 +26,7 @@ typedef struct {
  * @brief Initialize waste management system
  * @return ESP_OK on success
  */
-esp_err_t waste_manager_init(EventGroupHandle_t g_event_group);
+esp_err_t waste_manager_init();
 
 /**
  * @brief Start waste management system

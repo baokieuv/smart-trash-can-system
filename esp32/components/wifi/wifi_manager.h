@@ -5,6 +5,7 @@
 #include "esp_err.h"
 #include "esp_event.h"
 #include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "freertos/event_groups.h"
 
 void wifi_reconnect_task(void *param);
@@ -12,12 +13,7 @@ void wifi_reconnect_task(void *param);
 /**
  * @brief Initialize WiFi manager
  */
-esp_err_t wifi_manager_init(EventGroupHandle_t event_group);
-
-/**
- * @brief Start WiFi in AP mode for configuration
- */
-esp_err_t wifi_start_ap_mode(void);
+esp_err_t wifi_manager_init();
 
 /**
  * @brief Start WiFi in Station mode

@@ -6,7 +6,3 @@ cmake_minimum_required(VERSION 3.16)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(smart_trash_can)
-
-
-target_add_binary_data(${CMAKE_PROJECT_NAME}.elf "main/index.html" TEXT)
-target_add_binary_data(${CMAKE_PROJECT_NAME}.elf "server_certs/cert.pem" TEXT)

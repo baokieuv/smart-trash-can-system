@@ -3,7 +3,6 @@
 #include "esp_http_client.h"
 #include "esp_log.h"
 #include "cJSON.h"
-#include "img_converters.h"
 #include <string.h>
 
 static const char *TAG = "HTTP_CLIENT";
@@ -53,7 +52,7 @@ static esp_err_t parse_waste_json(const char *json_str, classification_result_t 
     if (cJSON_IsString(cat) && cJSON_IsNumber(conf)) {
         if (strcmp(cat->valuestring, "recyclable") == 0) result->category = WASTE_RECYCLABLE;
         else if (strcmp(cat->valuestring, "compostable") == 0) result->category = WASTE_COMPOSTABLE;
-        else result->category = WASTE_HAZARDOUS;
+        else result->category = WASTE_NON_RECYCLABLE;
         
         strncpy(result->description, cat->valuestring, sizeof(result->description) - 1);
         result->confidence = (float)conf->valuedouble;
@@ -84,9 +83,11 @@ esp_err_t http_client_classify_waste(camera_fb_t *fb, classification_result_t *r
 
     int total_len = header_len + fb->len + footer_len;
 
+    char _url[64] = { 0 };
+    sprintf(_url, "%s/classify-image", HTTP_SERVER_URL);
     // Configure HTTP client
     esp_http_client_config_t config = {
-        .url = HTTP_SERVER_URL,
+        .url = _url,
         .method = HTTP_METHOD_POST,
         .timeout_ms = HTTP_TIMEOUT_MS,
         .event_handler = http_event_handler,
@@ -115,14 +116,11 @@ esp_err_t http_client_classify_waste(camera_fb_t *fb, classification_result_t *r
     esp_http_client_write(client, footer, footer_len);
 
     // Get response
-    int content_length = esp_http_client_fetch_headers(client);
+    esp_http_client_fetch_headers(client);
     int status_code = esp_http_client_get_status_code(client);
     ESP_LOGI(TAG, "HTTP Status: %d", status_code);
 
-    // ESP_LOGI(TAG, "HTTP Status: %d, Content-Length: %d", status_code, content_length);
     if(status_code == 200){
-    // if (status_code == 200 && content_length > 0) {
-
         char *response_buffer = malloc(4096);
         if (response_buffer) {
             int total = 0, read = 0;
@@ -147,6 +145,44 @@ esp_err_t http_client_classify_waste(camera_fb_t *fb, classification_result_t *r
     esp_http_client_cleanup(client);
 
     return err;
+}
+
+esp_err_t http_client_send_device_data(char *deviceId, waste_stats_t stats){
+    char _url[64] = { 0 };
+    sprintf(_url, "%s/devices/%s/data", HTTP_SERVER_URL, deviceId);
+
+    esp_http_client_config_t conf = {
+        .url = _url,
+        .method = HTTP_METHOD_POST,
+        .timeout_ms = HTTP_TIMEOUT_MS,
+        .event_handler = http_event_handler,
+        .buffer_size = 2048,
+        .buffer_size_tx = 2048,
+    };
+
+
+    // char data[64] = { 0 };
+    // sprintf(data, "");
+    
+
+    esp_http_client_handle_t client = esp_http_client_init(&conf);
+
+    esp_http_client_set_header(client, "Content-Type", "application/json");
+    //esp_http_client_set_post_field(client, post_data, strlen(post_data));
+
+    esp_err_t err = esp_http_client_perform(client);
+
+    if (err == ESP_OK) {
+        ESP_LOGI(TAG, "HTTP POST Status = %d, content_length = %lld",
+                 esp_http_client_get_status_code(client),
+                 esp_http_client_get_content_length(client));
+    } else {
+        ESP_LOGE(TAG, "HTTP POST request failed: %s", esp_err_to_name(err));
+    }
+
+    esp_http_client_cleanup(client);
+   
+    return ESP_OK;
 }
 
 esp_err_t http_client_cleanup(void) {

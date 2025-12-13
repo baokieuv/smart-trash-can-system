@@ -30,7 +30,7 @@ esp_err_t ultrasonic_sensor_init() {
 
     // Configure echo pin as input
     gpio_config_t echo_cfg = {
-        .pin_bit_mask = (1ULL << ULTRASONIC1_ECHO_PIN) | (1ULL << ULTRASONIC2_ECHO_PIN),
+        .pin_bit_mask = (1ULL << ULTRASONIC1_ECHO_PIN) | (1ULL << ULTRASONIC_ECHO_SHARED_PIN),
         .mode = GPIO_MODE_INPUT,
         .pull_up_en = GPIO_PULLUP_DISABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
@@ -129,5 +129,5 @@ float ultrasonic_sensor_get_distance_for_detect(){
 }
 
 float ultrasonic_sensor_get_distance_for_check_full(){
-    return ultrasonic_sensor_read_distance(ULTRASONIC2_TRIG_PIN, ULTRASONIC2_ECHO_PIN);
+    return ultrasonic_sensor_read_distance(ULTRASONIC2_TRIG_PIN, ULTRASONIC_ECHO_SHARED_PIN);
 }

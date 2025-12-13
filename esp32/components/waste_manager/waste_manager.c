@@ -1,6 +1,5 @@
 #include "waste_manager.h"
 #include "nvs_storage.h"
-#include "nvs_flash.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -14,33 +13,9 @@ extern EventGroupHandle_t g_event_group;
 // Global state
 static waste_stats_t g_stats = {0};
 static SemaphoreHandle_t g_stats_mutex = NULL;
-// static EventGroupHandle_t g_event_group = NULL;
 static bool g_initialized = false;
 
 // ==================== Private Functions ====================
-
-static void load_stats_from_nvs(void) {
-    // Load persistent statistics from NVS
-    nvs_handle_t nvs;
-    esp_err_t err = nvs_open(NVS_NAMESPACE, NVS_READONLY, &nvs);
-    if (err == ESP_OK) {
-        nvs_get_u32(nvs, NVS_KEY_WASTE_COUNT, &g_stats.total_count);
-        nvs_close(nvs);
-        ESP_LOGI(TAG, "Loaded stats - Total count: %lu", g_stats.total_count);
-    }
-}
-
-static void save_stats_to_nvs(void) {
-    // Save statistics to NVS for persistence
-    nvs_handle_t nvs;
-    esp_err_t err = nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs);
-    if (err == ESP_OK) {
-        nvs_set_u32(nvs, NVS_KEY_WASTE_COUNT, g_stats.total_count);
-        nvs_commit(nvs);
-        nvs_close(nvs);
-        ESP_LOGD(TAG, "Stats saved to NVS");
-    }
-}
 
 static void update_bin_full_status(void) {
     bool was_full = g_stats.is_full;
@@ -61,7 +36,7 @@ static void update_bin_full_status(void) {
 
 // ==================== Public Functions ====================
 
-esp_err_t waste_manager_init(EventGroupHandle_t g_event_group) {
+esp_err_t waste_manager_init() {
     if (g_initialized) {
         ESP_LOGW(TAG, "Already initialized");
         return ESP_OK;
@@ -76,8 +51,6 @@ esp_err_t waste_manager_init(EventGroupHandle_t g_event_group) {
         return ESP_ERR_NO_MEM;
     }
 
-    // Create event group
-    g_event_group = g_event_group;
     if (!g_event_group) {
         ESP_LOGE(TAG, "Failed to create event group");
         vSemaphoreDelete(g_stats_mutex);
@@ -86,7 +59,8 @@ esp_err_t waste_manager_init(EventGroupHandle_t g_event_group) {
 
     // Initialize statistics
     memset(&g_stats, 0, sizeof(waste_stats_t));
-    load_stats_from_nvs();
+    // load_stats_from_nvs();
+    nvs_load_stats_info(&g_stats);
 
     g_initialized = true;
     ESP_LOGI(TAG, "Waste manager initialized successfully");
@@ -111,7 +85,7 @@ esp_err_t waste_manager_stop(void) {
     }
 
     ESP_LOGI(TAG, "Stopping waste manager");
-    save_stats_to_nvs();
+    nvs_save_stats_info(g_stats);
     return ESP_OK;
 }
 
@@ -138,13 +112,14 @@ esp_err_t waste_manager_reset_stats(void) {
     ESP_LOGI(TAG, "Resetting statistics");
 
     if (xSemaphoreTake(g_stats_mutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
-        g_stats.total_count = 0;
         g_stats.recyclable_count = 0;
         g_stats.compostable_count = 0;
-        g_stats.hazardous_count = 0;
+        g_stats.non_recyclable_count = 0;
+        g_stats.current_fill_level = 0;
+        g_stats.is_full = false;
         xSemaphoreGive(g_stats_mutex);
         
-        save_stats_to_nvs();
+        nvs_save_stats_info(g_stats);
         return ESP_OK;
     }
 
@@ -186,8 +161,6 @@ esp_err_t waste_manager_record_waste(waste_category_t category) {
     }
 
     if (xSemaphoreTake(g_stats_mutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
-        g_stats.total_count++;
-        
         switch (category) {
             case WASTE_RECYCLABLE:
                 g_stats.recyclable_count++;
@@ -197,8 +170,8 @@ esp_err_t waste_manager_record_waste(waste_category_t category) {
                 g_stats.compostable_count++;
                 ESP_LOGI(TAG, "Compostable waste recorded");
                 break;
-            case WASTE_HAZARDOUS:
-                g_stats.hazardous_count++;
+            case WASTE_NON_RECYCLABLE:
+                g_stats.non_recyclable_count++;
                 ESP_LOGI(TAG, "Hazardous waste recorded");
                 break;
             default:
@@ -206,12 +179,12 @@ esp_err_t waste_manager_record_waste(waste_category_t category) {
                 break;
         }
         
-        ESP_LOGI(TAG, "Total waste count: %lu", g_stats.total_count);
         xSemaphoreGive(g_stats_mutex);
         
         // Save periodically (every 10 throws)
-        if (g_stats.total_count % 10 == 0) {
-            save_stats_to_nvs();
+        uint32_t sum = g_stats.recyclable_count + g_stats.compostable_count + g_stats.non_recyclable_count;
+        if (sum % 10 == 0) {
+            nvs_save_stats_info(g_stats);
         }
         
         return ESP_OK;

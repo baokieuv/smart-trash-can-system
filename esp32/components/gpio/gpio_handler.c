@@ -1,45 +1,61 @@
 #include "gpio_handler.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
-#include "esp_timer.h"
-#include <string.h>
+#include "iot_button.h"
+#include "esp_event.h"
 
 static const char *TAG = "GPIO";
 
+ESP_EVENT_DEFINE_BASE(APP_BUTTON_EVENT);
+
 extern EventGroupHandle_t g_event_group;
-// static EventGroupHandle_t g_event_group = NULL;
 static volatile int64_t g_button_press_time = 0;
 
-static void IRAM_ATTR button_isr_handler(void* arg) {
-    int64_t now = esp_timer_get_time() / 1000;  // Convert to ms
-    
-    if (gpio_get_level(BTN_CONFIG_PIN) == 0) {
-        // Button pressed
-        g_button_press_time = now;
-    } else {
-        // Button released
-        int64_t press_duration = now - g_button_press_time;
-        
-        if (press_duration >= BUTTON_LONG_PRESS_MS) {
-            // Long press: enter config mode
-            BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-            EventBits_t bits = xEventGroupGetBitsFromISR(g_event_group);
-            if(bits & CONFIG_MODE_BIT) xEventGroupSetBitsFromISR(g_event_group, EXIT_CONFIG_MODE_BIT, &xHigherPriorityTaskWoken);
-            else xEventGroupSetBitsFromISR(g_event_group, CONFIG_MODE_BIT, &xHigherPriorityTaskWoken);
-            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-        }
-        
-        g_button_press_time = 0;
+static void button_signle_click_cb(void *args, void *data){
+    ESP_LOGI(TAG, "Handle single click");
+    esp_event_post(APP_BUTTON_EVENT, BUTTON_EVENT_SINGLE_CLICK, NULL, 0, portMAX_DELAY); 
+}
+
+static void button_double_click_cb(void *args, void *data){
+    ESP_LOGI(TAG, "Handle double click");
+    esp_event_post(APP_BUTTON_EVENT, BUTTON_EVENT_DOUBLE_CLICK, NULL, 0, portMAX_DELAY); 
+}
+
+static void button_long_press_cb(void *args, void *data){
+    ESP_LOGI(TAG, "Handle long press");
+    esp_event_post(APP_BUTTON_EVENT, BUTTON_EVENT_LONG_PRESS, NULL, 0, portMAX_DELAY); 
+}
+
+static esp_err_t button_manager_init(gpio_num_t pin_num) {
+    ESP_LOGI(TAG, "Initializing Button on GPIO %d", pin_num);
+
+    button_config_t conf = {
+        .type = BUTTON_TYPE_GPIO,
+        .long_press_time = BUTTON_LONG_PRESS_MS,
+        .short_press_time = BUTTON_SHORT_PRESS_MS,
+        .gpio_button_config = {
+            .gpio_num = pin_num,
+            .active_level = 0,
+            .disable_pull = false,
+        },
+    };
+
+    button_handle_t btn_handler = iot_button_create(&conf);
+    if(btn_handler == NULL) {
+        ESP_LOGE(TAG, "Button create failed");
+        return ESP_FAIL;
     }
+
+    iot_button_register_cb(btn_handler, BUTTON_SINGLE_CLICK, button_signle_click_cb, NULL);
+    iot_button_register_cb(btn_handler, BUTTON_DOUBLE_CLICK, button_double_click_cb, NULL);
+    iot_button_register_cb(btn_handler, BUTTON_LONG_PRESS_START, button_long_press_cb, NULL);
+    
+    return ESP_OK;
 }
 
 static void led_buzzer_init(void) {
     gpio_config_t led_cfg = {
-        .pin_bit_mask = (1ULL << LED_RECYCLABLE_PIN) | 
-                       (1ULL << LED_COMPOSTABLE_PIN) | 
-                       (1ULL << LED_HAZARDOUS_PIN) |
-                       (1ULL << LED_STATUS_PIN) |
-                       (1ULL << BUZZER_PIN),
+        .pin_bit_mask = (1ULL << LED_STATUS_PIN) | (1ULL << BUZZER_PIN),
         .mode = GPIO_MODE_OUTPUT,
         .pull_up_en = GPIO_PULLUP_DISABLE,
         .pull_down_en = GPIO_PULLDOWN_ENABLE,
@@ -47,41 +63,21 @@ static void led_buzzer_init(void) {
     };
     ESP_ERROR_CHECK(gpio_config(&led_cfg));
     
-    // Turn off all LEDs
-    gpio_set_level(LED_RECYCLABLE_PIN, 0);
-    gpio_set_level(LED_COMPOSTABLE_PIN, 0);
-    gpio_set_level(LED_HAZARDOUS_PIN, 0);
     gpio_set_level(LED_STATUS_PIN, 0);
     gpio_set_level(BUZZER_PIN, 0);
     
     ESP_LOGI(TAG, "LED & Buzzer initialized");
 }
 
-static void button_init(void) {
-    gpio_config_t btn_cfg = {
-        .pin_bit_mask = (1ULL << BTN_CONFIG_PIN),
-        .mode = GPIO_MODE_INPUT,
-        .pull_up_en = GPIO_PULLUP_ENABLE,
-        .pull_down_en = GPIO_PULLDOWN_DISABLE,
-        .intr_type = GPIO_INTR_ANYEDGE,
-    };
-    ESP_ERROR_CHECK(gpio_config(&btn_cfg));
-    
-    ESP_ERROR_CHECK(gpio_install_isr_service(0));
-    ESP_ERROR_CHECK(gpio_isr_handler_add(BTN_CONFIG_PIN, button_isr_handler, NULL));
-    
-    ESP_LOGI(TAG, "Button initialized (GPIO%d)", BTN_CONFIG_PIN);
-}
-
-esp_err_t gpio_handler_init(EventGroupHandle_t g_event_group) {
+esp_err_t gpio_handler_init() {
     ESP_LOGI(TAG, "Initializing GPIO...");
 
-    g_event_group = g_event_group;
+    esp_err_t ret = ESP_OK;
 
     led_buzzer_init();
-    button_init();
+    ret = button_manager_init(BTN_CONFIG_PIN);
 
-    return ESP_OK;
+    return ret;
 }
 
 void beep_pattern(int count, int duration){
@@ -102,36 +98,36 @@ void blink_led(int times) {
     }
 }
 
-void indicate_waste_category(waste_category_t category) {
+// void indicate_waste_category(waste_category_t category) {
     // Turn off all LEDs first
-    gpio_set_level(LED_RECYCLABLE_PIN, 0);
-    gpio_set_level(LED_COMPOSTABLE_PIN, 0);
-    gpio_set_level(LED_HAZARDOUS_PIN, 0);
+//     gpio_set_level(LED_RECYCLABLE_PIN, 0);
+//     gpio_set_level(LED_COMPOSTABLE_PIN, 0);
+//     gpio_set_level(LED_HAZARDOUS_PIN, 0);
     
-    // Turn on appropriate LED
-    switch (category) {
-        case WASTE_RECYCLABLE:
-            ESP_LOGI(TAG, "Indicating RECYCLABLE waste");
-            gpio_set_level(LED_RECYCLABLE_PIN, 1);
-            break;
-        case WASTE_COMPOSTABLE:
-            ESP_LOGI(TAG, "Indicating COMPOSTABLE waste");
-            gpio_set_level(LED_COMPOSTABLE_PIN, 1);
-            break;
-        case WASTE_HAZARDOUS:
-            ESP_LOGI(TAG, "Indicating HAZARDOUS waste");
-            gpio_set_level(LED_HAZARDOUS_PIN, 1);
-            break;
-        default:
-            ESP_LOGW(TAG, "Unknown waste category");
-            break;
-    }
+//     // Turn on appropriate LED
+//     switch (category) {
+//         case WASTE_RECYCLABLE:
+//             ESP_LOGI(TAG, "Indicating RECYCLABLE waste");
+//             gpio_set_level(LED_RECYCLABLE_PIN, 1);
+//             break;
+//         case WASTE_COMPOSTABLE:
+//             ESP_LOGI(TAG, "Indicating COMPOSTABLE waste");
+//             gpio_set_level(LED_COMPOSTABLE_PIN, 1);
+//             break;
+//         case WASTE_HAZARDOUS:
+//             ESP_LOGI(TAG, "Indicating HAZARDOUS waste");
+//             gpio_set_level(LED_HAZARDOUS_PIN, 1);
+//             break;
+//         default:
+//             ESP_LOGW(TAG, "Unknown waste category");
+//             break;
+//     }
     
-    // Keep LED on for indication duration
-    vTaskDelay(pdMS_TO_TICKS(LED_INDICATION_DURATION_MS));
+//     // Keep LED on for indication duration
+//     vTaskDelay(pdMS_TO_TICKS(LED_INDICATION_DURATION_MS));
     
-    // Turn off LED
-    gpio_set_level(LED_RECYCLABLE_PIN, 0);
-    gpio_set_level(LED_COMPOSTABLE_PIN, 0);
-    gpio_set_level(LED_HAZARDOUS_PIN, 0);
-}
+//     // Turn off LED
+//     gpio_set_level(LED_RECYCLABLE_PIN, 0);
+//     gpio_set_level(LED_COMPOSTABLE_PIN, 0);
+//     gpio_set_level(LED_HAZARDOUS_PIN, 0);
+// }

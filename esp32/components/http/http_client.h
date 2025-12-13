@@ -19,6 +19,8 @@ esp_err_t http_client_init(void);
  */
 esp_err_t http_client_classify_waste(camera_fb_t *fb, classification_result_t *result);
 
+esp_err_t http_client_send_device_data(char *deviceId, waste_stats_t stats);
+
 /**
  * @brief Cleanup HTTP client
  * @return ESP_OK on success
