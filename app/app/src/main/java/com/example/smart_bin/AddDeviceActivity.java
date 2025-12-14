@@ -111,6 +111,7 @@ public class AddDeviceActivity extends AppCompatActivity {
                     discoveredDevices.add(device);
                 } catch (SecurityException e) {
                     // Permission not granted
+                    Log.e(TAG, "Security exception: " + e.getMessage());
                 }
             }
         }
@@ -121,7 +122,7 @@ public class AddDeviceActivity extends AppCompatActivity {
         if (deviceNames.isEmpty()) {
             builder.setMessage("No paired devices found. Please pair your device in Settings first.");
         } else {
-            Log.i("My bluetooth", "Showing paired devices dialog");
+            Log.i(TAG, "Showing paired devices dialog");
             builder.setItems(deviceNames.toArray(new String[0]), (dialog, which) -> connectToDevice(discoveredDevices.get(which)));
         }
 

@@ -13,7 +13,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleGenericException(Exception e){
-        log.error("An unexpected error occurred: ", e);
-        return ResponseEntity.ok().body(e.getMessage());
+        log.error("An unexpected error occurred: {}", e.getMessage());
+        return ResponseEntity.badRequest().body(e.getMessage());
     }
 }

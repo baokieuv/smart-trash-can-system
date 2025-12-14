@@ -12,6 +12,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -80,7 +81,7 @@ public class ApiService {
                     mainHandler.post(() -> callback.onSuccess(devices));
                 }else{
                     Log.i(TAG, "fetchDevices: Failed to fetch devices" + responseCode);
-                    mainHandler.post(() -> callback.onError("Failed to fetch devices" + responseCode));
+                    mainHandler.post(() -> callback.onError("Failed to fetch devices " + responseCode));
                 }
 
                 connection.disconnect();
@@ -150,7 +151,7 @@ public class ApiService {
                     mainHandler.post(() -> callback.onSuccess(device));
                 } else {
                     Log.i(TAG, "createDevice: Failed to create device " + responseCode);
-                    mainHandler.post(() -> callback.onError("Failed to create device " + responseCode));
+                    mainHandler.post(() -> callback.onError("Failed to create device."));
                 }
 
                 connection.disconnect();
