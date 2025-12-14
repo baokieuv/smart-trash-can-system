@@ -1,6 +1,7 @@
 package com.example.smart_bin;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -111,6 +112,13 @@ public class DeviceControlActivity extends AppCompatActivity {
         // Set device name in header
         binding.tvDeviceName.setText(deviceName);
         binding.tvMacAddress.setText(deviceId);
+
+        binding.btnReconfigureWifi.setOnClickListener(v -> {
+            Intent intent = new Intent(this, WiFiReconfigureActivity.class);
+            intent.putExtra(Constants.EXTRA_DEVICE_ID, deviceId);
+            intent.putExtra(Constants.EXTRA_DEVICE_NAME, deviceName);
+            startActivity(intent);
+        });
     }
 
     private void updateHeaderStatus() {
@@ -124,6 +132,8 @@ public class DeviceControlActivity extends AppCompatActivity {
             );
             binding.tvIsOnline.setText("ONLINE");
             binding.tvIsOnline.setTextColor(Color.parseColor("#10B981"));
+            binding.offlineWarningCard.setVisibility(View.GONE);
+            binding.statsCard.setAlpha(1.0f);
         } else {
             binding.statusBadgeHeader.setBackgroundColor(Color.parseColor("#F1F5F9")); // slate-100
             binding.statusIconHeader.setImageResource(android.R.drawable.presence_offline);
@@ -132,6 +142,8 @@ public class DeviceControlActivity extends AppCompatActivity {
             );
             binding.tvIsOnline.setText("OFFLINE");
             binding.tvIsOnline.setTextColor(Color.parseColor("#94A3B8"));
+            binding.offlineWarningCard.setVisibility(View.VISIBLE);
+            binding.statsCard.setAlpha(0.6f); // Dim stats when offline
         }
     }
 

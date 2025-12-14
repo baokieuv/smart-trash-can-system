@@ -94,7 +94,7 @@ public class ApiService {
     public void fetchDeviceData(String deviceId, DeviceDataCallback callback){
         executorService.execute(() -> {
            try{
-               URL url = new URL(Constants.DEVICES_ENDPOINT + "/" + deviceId + "/data");
+               URL url = new URL(Constants.DEVICES_ENDPOINT + "/" + deviceId.replace(":", "_") + "/data");
                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                connection.setRequestMethod("GET");
                connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
@@ -164,7 +164,7 @@ public class ApiService {
     public void getDevice(String deviceId, DeviceCallback callback){
         executorService.execute(() -> {
             try{
-                URL url = new URL(Constants.DEVICES_ENDPOINT + "/" + deviceId);
+                URL url = new URL(Constants.DEVICES_ENDPOINT + "/" + deviceId.replace(":", "_"));
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
@@ -199,7 +199,7 @@ public class ApiService {
     public void updateDevice(Device device, DeviceCallback callback){
         executorService.execute(() -> {
             try {
-                URL url = new URL(Constants.DEVICES_ENDPOINT + "/" + device.getId());
+                URL url = new URL(Constants.DEVICES_ENDPOINT + "/" + device.getId().replace(":", "_"));
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("PUT");
                 connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
@@ -232,7 +232,7 @@ public class ApiService {
     public void deleteDevice(String deviceId, DeviceCallback callback) {
         executorService.execute(() -> {
             try{
-                URL url = new URL(Constants.DEVICES_ENDPOINT + "/" + deviceId);
+                URL url = new URL(Constants.DEVICES_ENDPOINT + "/" + deviceId.replace(":", "_"));
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("DELETE");
                 connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
@@ -262,7 +262,7 @@ public class ApiService {
         for(int i = 0; i < jsonArray.length(); i++){
             JSONObject jsonObject = jsonArray.getJSONObject(i);
             Device device = new Device();
-            device.setId(jsonObject.getString(Constants.KEY_ID));
+            device.setId(jsonObject.getString(Constants.KEY_ID).replace("_", ":"));
             device.setName(jsonObject.optString(Constants.KEY_NAME, "Device " + (i + 1)));
 
             device.setMacAddress(jsonObject.getString(Constants.KEY_ID));
@@ -289,7 +289,7 @@ public class ApiService {
     private Device parseDevice(String string) throws Exception{
         JSONObject obj = new JSONObject(string);
         Device device = new Device();
-        device.setId(obj.optString(Constants.KEY_ID, null));
+        device.setId(obj.optString(Constants.KEY_ID, null).replace("_", ":"));
         device.setName(obj.optString(Constants.KEY_NAME, null));
         device.setStatus(obj.getString(Constants.KEY_STATUS));
 

@@ -33,6 +33,8 @@ import java.util.Set;
 
 @SuppressLint("SetTextI18n")
 public class AddDeviceActivity extends AppCompatActivity {
+    private final String TAG = "AddDeviceActivity";
+
     private ActivityAddDeviceBinding binding;
     private BluetoothManager bluetoothManager;
     private WiFiScanner wifiScanner;
@@ -92,7 +94,7 @@ public class AddDeviceActivity extends AppCompatActivity {
             return;
         }
 
-        Log.i("My bluetooth", "Getting paired devices");
+        Log.i(TAG, "Getting paired devices");
         Set<BluetoothDevice> pairedDevices = bluetoothManager.getPairedDevices();
         discoveredDevices.clear();
         List<String> deviceNames = new ArrayList<>();
@@ -141,7 +143,7 @@ public class AddDeviceActivity extends AppCompatActivity {
         receivedMacAddress = device.getAddress();
         receivedDeviceName = device.getName();
 
-        Log.i("My bluetooth", "Connecting to device: " + receivedDeviceName + " - " + receivedMacAddress);
+        Log.i(TAG, "Connecting to device: " + receivedDeviceName + " - " + receivedMacAddress);
         bluetoothManager.connectToDevice(device, new BluetoothManager.BluetoothCallback() {
             @Override
             public void onConnected() {
@@ -189,7 +191,7 @@ public class AddDeviceActivity extends AppCompatActivity {
         showStatusCard(true);
         binding.progressBar.setVisibility(View.VISIBLE);
         binding.tvStatus.setText("Scanning for WiFi networks...");
-        Log.i("My bluetooth", "Scanning for WiFi networks...");
+        Log.i(TAG, "Scanning for WiFi networks...");
 
         wifiScanner.startScan(new WiFiScanner.ScanCallback() {
             @Override
@@ -198,7 +200,7 @@ public class AddDeviceActivity extends AppCompatActivity {
                     availableNetworks = networks;
                     binding.progressBar.setVisibility(View.GONE);
                     binding.tvStatus.setText("✓ Found " + networks.size() + " networks");
-                    Log.i("My bluetooth", "Found " + networks.size() + " networks");
+                    Log.i(TAG, "Found " + networks.size() + " networks");
                     binding.getRoot().postDelayed(() -> {
                         showStatusCard(false);
                         showNetworkSelectionDialog();
