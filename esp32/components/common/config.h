@@ -40,13 +40,13 @@
 #define SERVO_360_RANGE_US          350
 #define SERVO_360_TIME_PER_DEGREE   8
 
-#define ULTRASONIC1_ECHO_PIN        GPIO_NUM_46
-#define ULTRASONIC1_TRIG_PIN        GPIO_NUM_45
+#define ULTRASONIC1_ECHO_PIN        GPIO_NUM_45
+#define ULTRASONIC1_TRIG_PIN        GPIO_NUM_47
 
 #define ULTRASONIC_ECHO_SHARED_PIN  GPIO_NUM_40
-#define ULTRASONIC2_TRIG_PIN        GPIO_NUM_47
-#define ULTRASONIC3_TRIG_PIN        GPIO_NUM_48
-#define ULTRASONIC4_TRIG_PIN        GPIO_NUM_39
+#define ULTRASONIC2_TRIG_PIN        GPIO_NUM_39
+// #define ULTRASONIC3_TRIG_PIN        GPIO_NUM_48
+// #define ULTRASONIC4_TRIG_PIN        GPIO_NUM_39
 
 #define DISTANCE_THRESHOLD_CM   15   // Waste detected if distance < 15cm
 #define BIN_HEIGHT_CM           50   // Total bin height

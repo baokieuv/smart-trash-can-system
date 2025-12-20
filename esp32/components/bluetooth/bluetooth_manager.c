@@ -46,44 +46,44 @@ void save_wifi_credentials(){
         ESP_LOGW(TAG, "Waiting for full credentials (SSID or Pass missing)");
     }
 }
-static esp_err_t extract_wifi_info(char *data, int length){
-    cJSON *root = cJSON_Parse(data);
-    esp_err_t ret = ESP_FAIL;
-    if(!root){
-        ESP_LOGE(TAG, "Failed to parse JSON");
-        goto cleanup;
-    }
+// static esp_err_t extract_wifi_info(char *data, int length){
+//     cJSON *root = cJSON_Parse(data);
+//     esp_err_t ret = ESP_FAIL;
+//     if(!root){
+//         ESP_LOGE(TAG, "Failed to parse JSON");
+//         goto cleanup;
+//     }
 
-    // Extract fields
-    const cJSON *ssid = cJSON_GetObjectItem(root, "ssid");
-    const cJSON *pass = cJSON_GetObjectItem(root, "password");
+//     // Extract fields
+//     const cJSON *ssid = cJSON_GetObjectItem(root, "ssid");
+//     const cJSON *pass = cJSON_GetObjectItem(root, "password");
 
-    // Validate fields
-    if (!ssid || !pass || !cJSON_IsString(ssid) || !cJSON_IsString(pass)) {
-        ESP_LOGE(TAG, "Invalid or missing fields in JSON");
-        goto cleanup;
-    }
+//     // Validate fields
+//     if (!ssid || !pass || !cJSON_IsString(ssid) || !cJSON_IsString(pass)) {
+//         ESP_LOGE(TAG, "Invalid or missing fields in JSON");
+//         goto cleanup;
+//     }
 
-    ESP_LOGI(TAG, "Received config - SSID: %s, Password: %s", 
-             ssid->valuestring, pass->valuestring);
+//     ESP_LOGI(TAG, "Received config - SSID: %s, Password: %s", 
+//              ssid->valuestring, pass->valuestring);
 
-    // Save WiFi configuration
-    esp_err_t err = nvs_save_wifi_config(ssid->valuestring, pass->valuestring);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to save WiFi config");
-        goto cleanup;
-    }
+//     // Save WiFi configuration
+//     esp_err_t err = nvs_save_wifi_config(ssid->valuestring, pass->valuestring);
+//     if (err != ESP_OK) {
+//         ESP_LOGE(TAG, "Failed to save WiFi config");
+//         goto cleanup;
+//     }
 
-    if(xEventGroupGetBits(g_event_group) & RESET_MODE_BIT){
-        waste_manager_reset_stats();
-    }
+//     if(xEventGroupGetBits(g_event_group) & RESET_MODE_BIT){
+//         waste_manager_reset_stats();
+//     }
 
-    xTaskCreate(restart_task, "Restart task", 2048, NULL, 5, NULL);
-    ret = ESP_OK;
-cleanup:
-    if (root) cJSON_Delete(root);
-    return ret;
-}
+//     xTaskCreate(restart_task, "Restart task", 2048, NULL, 5, NULL);
+//     ret = ESP_OK;
+// cleanup:
+//     if (root) cJSON_Delete(root);
+//     return ret;
+// }
 
 static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param){
     switch (event)

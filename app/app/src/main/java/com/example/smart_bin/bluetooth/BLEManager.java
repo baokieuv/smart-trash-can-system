@@ -17,6 +17,8 @@ import android.os.Looper;
 import android.util.Log;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.Set;
 import java.util.UUID;
 
 @SuppressLint("MissingPermission") // Quyền đã được kiểm tra ở Activity
@@ -104,6 +106,18 @@ public class BLEManager {
             bluetoothGatt.close();
             bluetoothGatt = null;
         }
+    }
+
+    public Set<BluetoothDevice> getPairedDevices(){
+        if(bluetoothAdapter != null && bluetoothAdapter.isEnabled()){
+            try{
+                return bluetoothAdapter.getBondedDevices();
+            }catch (SecurityException e){
+                Log.e("My bluetooth", "Security exception:" + e.getMessage());
+                return Collections.emptySet();
+            }
+        }
+        return Collections.emptySet();
     }
 
     // Hàm gửi WiFi Credentials (SSID trước, sau đó Pass)

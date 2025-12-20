@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 @SuppressLint("SetTextI18n")
 public class AddDeviceActivity extends AppCompatActivity {
@@ -41,8 +42,9 @@ public class AddDeviceActivity extends AppCompatActivity {
     private String receivedMacAddress;
     private String receivedDeviceName;
     private List<String> availableNetworks = new ArrayList<>();
-    private final Map<String, BluetoothDevice> discoveredDevicesMap = new HashMap<>();
-    private final List<String> deviceDisplayList = new ArrayList<>();
+//    private final Map<String, BluetoothDevice> discoveredDevicesMap = new HashMap<>();
+//    private final List<String> deviceDisplayList = new ArrayList<>();
+    private final List<BluetoothDevice> discoveredDevices = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -61,8 +63,8 @@ public class AddDeviceActivity extends AppCompatActivity {
     }
 
     private void setupViews() {
-        binding.btnScanBluetooth.setText("Scan for Devices");
-        binding.btnScanBluetooth.setOnClickListener(v -> startBLEScan());
+        binding.btnScanBluetooth.setText("Select Paired Device");
+        binding.btnScanBluetooth.setOnClickListener(v -> showPairedDevicesDialog());
         binding.btnScanWifi.setOnClickListener(v -> scanForWiFiNetworks());
         binding.btnConnect.setOnClickListener(v -> sendWiFiConfig());
     }
@@ -95,7 +97,7 @@ public class AddDeviceActivity extends AppCompatActivity {
         }
     }
 
-    private void startBLEScan(){
+    private void showPairedDevicesDialog(){
         if(!bleManager.isBluetoothEnabled()){
             Toast.makeText(this, "Enabling Bluetooth...", Toast.LENGTH_SHORT).show();
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -103,107 +105,38 @@ public class AddDeviceActivity extends AppCompatActivity {
             return;
         }
 
-        showStatusCard(true);
-        binding.progressBar.setVisibility(View.VISIBLE);
-        binding.tvStatus.setText("Scanning for devices...");
+        Log.i(TAG, "Getting paired devices");
+        Set<BluetoothDevice> pairedDevices = bleManager.getPairedDevices();
+        discoveredDevices.clear();
+        List<String> deviceNames = new ArrayList<>();
 
-        discoveredDevicesMap.clear();
-        deviceDisplayList.clear();
+        if (!pairedDevices.isEmpty()) {
+            for (BluetoothDevice device : pairedDevices) {
+                try {
+                    String name = device.getName();
+                    String address = device.getAddress();
+                    if (name == null || name.isEmpty()) name = "Unknown Device";
 
-        Log.i(TAG, "Starting BLE Scan");
-
-        bleManager.startScan(new BLEManager.BLECallback() {
-            @Override
-            public void onDeviceFound(BluetoothDevice device, int rssi) {
-                runOnUiThread(() -> {
-                    try{
-                        String deviceName = device.getName();
-                        String deviceAddress = device.getAddress();
-
-                        if(deviceName == null || deviceName.isEmpty()) deviceName = "Unknown Device";
-
-                        if(!discoveredDevicesMap.containsKey(deviceAddress)){
-                            discoveredDevicesMap.put(deviceAddress, device);
-                            String displayText = deviceName + "\n" + deviceAddress;
-                            deviceDisplayList.add(displayText);
-
-                            binding.tvStatus.setText("Found " + discoveredDevicesMap.size() + " devices...");
-                            Log.d(TAG, "Found device: " + displayText);
-                        }
-                    }catch (Exception e){
-                        Log.e(TAG, "Security exception: " + e.getMessage());
-                    }
-                });
+                    deviceNames.add(name + "\n" + address);
+                    discoveredDevices.add(device);
+                } catch (SecurityException e) {
+                    // Permission not granted
+                    Log.e(TAG, "Security exception: " + e.getMessage());
+                }
             }
+        }
 
-            @Override
-            public void onScanStopped() {
-                runOnUiThread(() -> {
-                    binding.progressBar.setVisibility(View.GONE);
-
-                    if (discoveredDevicesMap.isEmpty()) {
-                        binding.tvStatus.setText("❌ No devices found");
-                        Toast.makeText(AddDeviceActivity.this, "No devices found", Toast.LENGTH_SHORT).show();
-                    } else {
-                        binding.tvStatus.setText("✓ Found " + discoveredDevicesMap.size() + " devices");
-
-                    }
-
-                    binding.getRoot().postDelayed(() -> {
-                        showStatusCard(false);
-                        showDeviceSelectionDialog();
-                    }, 1000);
-                });
-            }
-
-            @Override
-            public void onConnected() {
-
-            }
-
-            @Override
-            public void onDisconnected() {
-
-            }
-
-            @Override
-            public void onDataSentSuccess() {
-
-            }
-
-            @Override
-            public void onError(String error) {
-                runOnUiThread(() -> {
-                    binding.progressBar.setVisibility(View.GONE);
-                    binding.tvStatus.setText("❌ Error: " + error);
-                    Toast.makeText(AddDeviceActivity.this, error, Toast.LENGTH_SHORT).show();
-
-                    binding.getRoot().postDelayed(() -> showStatusCard(false), 2000);
-                });
-            }
-        });
-    }
-
-    private void showDeviceSelectionDialog(){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Select Device");
 
-        if(deviceDisplayList.isEmpty()){
-            builder.setMessage("No devices found. Please pair your device in Settings first.");
-            builder.setPositiveButton("Scan Again", (dialog, which) -> startBLEScan());
-        }else{
-            builder.setItems(deviceDisplayList.toArray(new String[0]), (dialog, which) -> {
-                String selectedDisplay = deviceDisplayList.get(which);
-                String[] parts = selectedDisplay.split("\n");
-                if(parts.length > 1){
-                    String addressPart = parts[1].split(" ")[0];
-                    BluetoothDevice device = discoveredDevicesMap.get(addressPart);
-                    if(device != null){
-                        connectToDevice(device);
-                    }
-                }
-            });
+        if (deviceNames.isEmpty()) {
+            builder.setMessage("No paired devices found. Please pair your device in Settings first.");
+        } else {
+            Log.i("My bluetooth", "Showing paired devices dialog");
+            builder.setItems(deviceNames.toArray(new String[0]), (dialog, which) ->
+                    connectToDevice(discoveredDevices.get(which)));
         }
+
         builder.setNeutralButton("Pair New Device", (dialog, which) -> {
             Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
             startActivity(intent);
@@ -211,8 +144,130 @@ public class AddDeviceActivity extends AppCompatActivity {
 
         builder.setNegativeButton("Cancel", null);
         builder.show();
-
     }
+//
+//    private void startBLEScan(){
+//        if(!bleManager.isBluetoothEnabled()){
+//            Toast.makeText(this, "Enabling Bluetooth...", Toast.LENGTH_SHORT).show();
+//            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+//            startActivityForResult(enableBtIntent, Constants.REQUEST_ENABLE_BT);
+//            return;
+//        }
+//
+//        showStatusCard(true);
+//        binding.progressBar.setVisibility(View.VISIBLE);
+//        binding.tvStatus.setText("Scanning for devices...");
+//
+//        discoveredDevicesMap.clear();
+//        deviceDisplayList.clear();
+////
+////        Log.i(TAG, "Starting BLE Scan");
+//
+//        Log.i(TAG, "Fetching Paired Devices...");
+//        Set<BluetoothDevice> pairedDevices = bleManager.getPairedDevices();
+//
+//
+//        bleManager.startScan(new BLEManager.BLECallback() {
+//            @Override
+//            public void onDeviceFound(BluetoothDevice device, int rssi) {
+//                runOnUiThread(() -> {
+//                    try{
+//                        String deviceName = device.getName();
+//                        String deviceAddress = device.getAddress();
+//
+//                        if(deviceName == null || deviceName.isEmpty()) deviceName = "Unknown Device";
+//
+//                        if(!discoveredDevicesMap.containsKey(deviceAddress)){
+//                            discoveredDevicesMap.put(deviceAddress, device);
+//                            String displayText = deviceName + "\n" + deviceAddress;
+//                            deviceDisplayList.add(displayText);
+//
+//                            binding.tvStatus.setText("Found " + discoveredDevicesMap.size() + " devices...");
+//                            Log.d(TAG, "Found device: " + displayText);
+//                        }
+//                    }catch (Exception e){
+//                        Log.e(TAG, "Security exception: " + e.getMessage());
+//                    }
+//                });
+//            }
+//
+//            @Override
+//            public void onScanStopped() {
+//                runOnUiThread(() -> {
+//                    binding.progressBar.setVisibility(View.GONE);
+//
+//                    if (discoveredDevicesMap.isEmpty()) {
+//                        binding.tvStatus.setText("❌ No devices found");
+//                        Toast.makeText(AddDeviceActivity.this, "No devices found", Toast.LENGTH_SHORT).show();
+//                    } else {
+//                        binding.tvStatus.setText("✓ Found " + discoveredDevicesMap.size() + " devices");
+//
+//                    }
+//
+//                    binding.getRoot().postDelayed(() -> {
+//                        showStatusCard(false);
+//                        showDeviceSelectionDialog();
+//                    }, 1000);
+//                });
+//            }
+//
+//            @Override
+//            public void onConnected() {
+//
+//            }
+//
+//            @Override
+//            public void onDisconnected() {
+//
+//            }
+//
+//            @Override
+//            public void onDataSentSuccess() {
+//
+//            }
+//
+//            @Override
+//            public void onError(String error) {
+//                runOnUiThread(() -> {
+//                    binding.progressBar.setVisibility(View.GONE);
+//                    binding.tvStatus.setText("❌ Error: " + error);
+//                    Toast.makeText(AddDeviceActivity.this, error, Toast.LENGTH_SHORT).show();
+//
+//                    binding.getRoot().postDelayed(() -> showStatusCard(false), 2000);
+//                });
+//            }
+//        });
+//    }
+//
+//    private void showDeviceSelectionDialog(){
+//        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//        builder.setTitle("Select Device");
+//
+//        if(deviceDisplayList.isEmpty()){
+//            builder.setMessage("No devices found. Please pair your device in Settings first.");
+//            builder.setPositiveButton("Scan Again", (dialog, which) -> startBLEScan());
+//        }else{
+//            builder.setItems(deviceDisplayList.toArray(new String[0]), (dialog, which) -> {
+//                String selectedDisplay = deviceDisplayList.get(which);
+//                String[] parts = selectedDisplay.split("\n");
+//                if(parts.length > 1){
+//                    String addressPart = parts[1].split(" ")[0];
+//                    BluetoothDevice device = discoveredDevicesMap.get(addressPart);
+//                    if(device != null){
+//                        connectToDevice(device);
+//                    }
+//                }
+//            });
+//        }
+//        builder.setNeutralButton("Pair New Device", (dialog, which) -> {
+//            Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
+//            startActivity(intent);
+//        });
+//
+//        builder.setNegativeButton("Cancel", null);
+//        builder.show();
+//
+//    }
 
     private void connectToDevice(BluetoothDevice device) {
         showStatusCard(true);
@@ -224,14 +279,14 @@ public class AddDeviceActivity extends AppCompatActivity {
             receivedMacAddress = device.getAddress();
             receivedDeviceName = device.getName();
             if (receivedDeviceName == null || receivedDeviceName.isEmpty()) {
-                receivedDeviceName = "BLE Device";
+                receivedDeviceName = "Unknown Device";
             }
         } catch (SecurityException e) {
             Log.e(TAG, "Security exception: " + e.getMessage());
-            receivedDeviceName = "BLE Device";
+            receivedDeviceName = "Unknown Device";
         }
 
-        Log.i(TAG, "Connecting to BLE device: " + receivedDeviceName + " - " + receivedMacAddress);
+        Log.i(TAG, "Connecting to device: " + receivedDeviceName + " - " + receivedMacAddress);
 
         bleManager.connectToDevice(device, new BLEManager.BLECallback() {
             @Override

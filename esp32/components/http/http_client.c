@@ -163,12 +163,20 @@ esp_err_t http_client_send_device_data(char *deviceId, waste_stats_t stats){
 
     // char data[64] = { 0 };
     // sprintf(data, "");
-    
+    cJSON *root = cJSON_CreateObject();
 
+    cJSON_AddNumberToObject(root, "recycledWasteCount", stats.recyclable_count);
+    cJSON_AddNumberToObject(root, "nonRecycledWasteCount", stats.non_recyclable_count);
+    cJSON_AddNumberToObject(root, "compostableWasteCount", stats.compostable_count);
+    cJSON_AddNumberToObject(root, "fillLevel", stats.current_fill_level);
+    cJSON_AddNumberToObject(root, "isFull", stats.is_full);    
+
+    char *payload = cJSON_Print(root);
+    cJSON_Delete(root);
     esp_http_client_handle_t client = esp_http_client_init(&conf);
 
     esp_http_client_set_header(client, "Content-Type", "application/json");
-    //esp_http_client_set_post_field(client, post_data, strlen(post_data));
+    esp_http_client_set_post_field(client, payload, strlen(payload));
 
     esp_err_t err = esp_http_client_perform(client);
 

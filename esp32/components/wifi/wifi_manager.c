@@ -41,7 +41,18 @@ esp_err_t wifi_manager_init() {
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-    esp_err_t err = esp_event_handler_instance_register(
+    if (!s_sta_netif) {
+        s_sta_netif = esp_netif_create_default_wifi_sta();
+    }
+
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    esp_err_t err = esp_wifi_init(&cfg);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "WiFi init failed: %s", esp_err_to_name(err));
+        return false;
+    }
+
+    err = esp_event_handler_instance_register(
         WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL, NULL);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to register WiFi event handler");
@@ -68,23 +79,13 @@ bool wifi_start_station_mode(const char *ssid, const char *pass) {
     }
 
     ESP_LOGI(TAG, "Starting Station mode...");
-
-    if (!s_sta_netif) {
-        s_sta_netif = esp_netif_create_default_wifi_sta();
-    }
-
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    esp_err_t err = esp_wifi_init(&cfg);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "WiFi init failed: %s", esp_err_to_name(err));
-        return false;
-    }
+    xEventGroupClearBits(g_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT);
 
     wifi_config_t wifi_config = {0};
     strncpy((char*)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid) - 1);
     strncpy((char*)wifi_config.sta.password, pass, sizeof(wifi_config.sta.password) - 1);
 
-    err = esp_wifi_set_mode(WIFI_MODE_STA);
+    esp_err_t err = esp_wifi_set_mode(WIFI_MODE_STA);
     if (err == ESP_OK) {
         err = esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
     }
@@ -101,7 +102,7 @@ bool wifi_start_station_mode(const char *ssid, const char *pass) {
     EventBits_t bits = xEventGroupWaitBits(
         g_event_group,
         WIFI_CONNECTED_BIT | WIFI_FAIL_BIT | CONFIG_MODE_BIT,
-        pdTRUE,  // Clear bits after reading
+        pdFALSE,  // Clear bits after reading
         pdFALSE, // Wait for either bit
         portMAX_DELAY
     );
@@ -132,6 +133,7 @@ esp_err_t wifi_stop(void) {
     
     if (err == ESP_OK) {
         ESP_LOGI(TAG, "WiFi stopped");
+        xEventGroupClearBits(g_event_group, WIFI_CONNECTED_BIT);
     } else {
         ESP_LOGE(TAG, "Failed to stop WiFi: %s", esp_err_to_name(err));
     }

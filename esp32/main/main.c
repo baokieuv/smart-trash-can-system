@@ -287,11 +287,12 @@ void app_main(void){
 
     ESP_ERROR_CHECK(system_init());
 
-    start_sensor_tasks();
+    vTaskDelay(pdMS_TO_TICKS(2000));
 
     if(start_normal_mode() != ESP_OK){
         ESP_LOGW(TAG, "Cannot connect to WiFi");
     }
+    start_sensor_tasks();
 
     ESP_LOGI(TAG, "=== Initialization Complete ===");
 }
