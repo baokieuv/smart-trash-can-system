@@ -57,7 +57,7 @@ static void handle_config_mode(void) {
     // // Stop normal operations
     // xEventGroupSetBits(g_event_group, CONFIG_MODE_BIT);
     EventBits_t bits = xEventGroupGetBits(g_event_group);
-    if((bits & CONFIG_MODE_BIT) || (bits & RESET_MODE_BIT)) return;
+    if((bits & CONFIG_MODE_BIT) && (bits & RESET_MODE_BIT)) return;
 
     blink_led(5);
     // Stop current WiFi

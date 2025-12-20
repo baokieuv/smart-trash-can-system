@@ -2,7 +2,6 @@ package com.example.smart_bin;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
@@ -16,33 +15,34 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 
 import com.example.smart_bin.api.ApiService;
-import com.example.smart_bin.bluetooth.BluetoothManager;
+import com.example.smart_bin.bluetooth.BLEManager;
 import com.example.smart_bin.databinding.ActivityAddDeviceBinding;
 import com.example.smart_bin.model.Device;
 import com.example.smart_bin.utils.Constants;
-import com.example.smart_bin.wifi.WiFiConfiguration;
 import com.example.smart_bin.wifi.WiFiScanner;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 @SuppressLint("SetTextI18n")
 public class AddDeviceActivity extends AppCompatActivity {
     private final String TAG = "AddDeviceActivity";
 
     private ActivityAddDeviceBinding binding;
-    private BluetoothManager bluetoothManager;
+    //private BluetoothManager bluetoothManager;
+    private BLEManager bleManager;
     private WiFiScanner wifiScanner;
 
     private String receivedMacAddress;
     private String receivedDeviceName;
     private List<String> availableNetworks = new ArrayList<>();
-    private final List<BluetoothDevice> discoveredDevices = new ArrayList<>();
+    private final Map<String, BluetoothDevice> discoveredDevicesMap = new HashMap<>();
+    private final List<String> deviceDisplayList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -51,16 +51,18 @@ public class AddDeviceActivity extends AppCompatActivity {
         binding = ActivityAddDeviceBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        bluetoothManager = new BluetoothManager(this);
+        bleManager = new BLEManager(this);
+        //bluetoothManager = new BluetoothManager(this);
         wifiScanner = new WiFiScanner(this);
+
         setupViews();
         checkPermissions();
         setupToolbar();
     }
 
     private void setupViews() {
-        // binding.btnScanBluetooth.setText("Select Paired Device");
-        binding.btnScanBluetooth.setOnClickListener(v -> showPairedDevicesDialog());
+        binding.btnScanBluetooth.setText("Scan for Devices");
+        binding.btnScanBluetooth.setOnClickListener(v -> startBLEScan());
         binding.btnScanWifi.setOnClickListener(v -> scanForWiFiNetworks());
         binding.btnConnect.setOnClickListener(v -> sendWiFiConfig());
     }
@@ -75,6 +77,13 @@ public class AddDeviceActivity extends AppCompatActivity {
             if(checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED){
                 permissions.add(Manifest.permission.BLUETOOTH_CONNECT);
             }
+        }else {
+            if (checkSelfPermission(Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.BLUETOOTH);
+            }
+            if (checkSelfPermission(Manifest.permission.BLUETOOTH_ADMIN) != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.BLUETOOTH_ADMIN);
+            }
         }
 
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -86,46 +95,115 @@ public class AddDeviceActivity extends AppCompatActivity {
         }
     }
 
-    private void showPairedDevicesDialog(){
-        if(!bluetoothManager.isBluetoothEnabled()){
+    private void startBLEScan(){
+        if(!bleManager.isBluetoothEnabled()){
             Toast.makeText(this, "Enabling Bluetooth...", Toast.LENGTH_SHORT).show();
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, Constants.REQUEST_ENABLE_BT);
             return;
         }
 
-        Log.i(TAG, "Getting paired devices");
-        Set<BluetoothDevice> pairedDevices = bluetoothManager.getPairedDevices();
-        discoveredDevices.clear();
-        List<String> deviceNames = new ArrayList<>();
+        showStatusCard(true);
+        binding.progressBar.setVisibility(View.VISIBLE);
+        binding.tvStatus.setText("Scanning for devices...");
 
-        if (!pairedDevices.isEmpty()) {
-            for (BluetoothDevice device : pairedDevices) {
-                // Kiểm tra quyền truy cập tên thiết bị (Android 12+)
-                try {
-                    String name = device.getName();
-                    String address = device.getAddress();
-                    if (name == null || name.isEmpty()) name = "Unknown Device";
+        discoveredDevicesMap.clear();
+        deviceDisplayList.clear();
 
-                    deviceNames.add(name + "\n" + address);
-                    discoveredDevices.add(device);
-                } catch (SecurityException e) {
-                    // Permission not granted
-                    Log.e(TAG, "Security exception: " + e.getMessage());
-                }
+        Log.i(TAG, "Starting BLE Scan");
+
+        bleManager.startScan(new BLEManager.BLECallback() {
+            @Override
+            public void onDeviceFound(BluetoothDevice device, int rssi) {
+                runOnUiThread(() -> {
+                    try{
+                        String deviceName = device.getName();
+                        String deviceAddress = device.getAddress();
+
+                        if(deviceName == null || deviceName.isEmpty()) deviceName = "Unknown Device";
+
+                        if(!discoveredDevicesMap.containsKey(deviceAddress)){
+                            discoveredDevicesMap.put(deviceAddress, device);
+                            String displayText = deviceName + "\n" + deviceAddress;
+                            deviceDisplayList.add(displayText);
+
+                            binding.tvStatus.setText("Found " + discoveredDevicesMap.size() + " devices...");
+                            Log.d(TAG, "Found device: " + displayText);
+                        }
+                    }catch (Exception e){
+                        Log.e(TAG, "Security exception: " + e.getMessage());
+                    }
+                });
             }
-        }
 
+            @Override
+            public void onScanStopped() {
+                runOnUiThread(() -> {
+                    binding.progressBar.setVisibility(View.GONE);
+
+                    if (discoveredDevicesMap.isEmpty()) {
+                        binding.tvStatus.setText("❌ No devices found");
+                        Toast.makeText(AddDeviceActivity.this, "No devices found", Toast.LENGTH_SHORT).show();
+                    } else {
+                        binding.tvStatus.setText("✓ Found " + discoveredDevicesMap.size() + " devices");
+
+                    }
+
+                    binding.getRoot().postDelayed(() -> {
+                        showStatusCard(false);
+                        showDeviceSelectionDialog();
+                    }, 1000);
+                });
+            }
+
+            @Override
+            public void onConnected() {
+
+            }
+
+            @Override
+            public void onDisconnected() {
+
+            }
+
+            @Override
+            public void onDataSentSuccess() {
+
+            }
+
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
+                    binding.progressBar.setVisibility(View.GONE);
+                    binding.tvStatus.setText("❌ Error: " + error);
+                    Toast.makeText(AddDeviceActivity.this, error, Toast.LENGTH_SHORT).show();
+
+                    binding.getRoot().postDelayed(() -> showStatusCard(false), 2000);
+                });
+            }
+        });
+    }
+
+    private void showDeviceSelectionDialog(){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Select Device");
 
-        if (deviceNames.isEmpty()) {
-            builder.setMessage("No paired devices found. Please pair your device in Settings first.");
-        } else {
-            Log.i(TAG, "Showing paired devices dialog");
-            builder.setItems(deviceNames.toArray(new String[0]), (dialog, which) -> connectToDevice(discoveredDevices.get(which)));
+        if(deviceDisplayList.isEmpty()){
+            builder.setMessage("No devices found. Please pair your device in Settings first.");
+            builder.setPositiveButton("Scan Again", (dialog, which) -> startBLEScan());
+        }else{
+            builder.setItems(deviceDisplayList.toArray(new String[0]), (dialog, which) -> {
+                String selectedDisplay = deviceDisplayList.get(which);
+                String[] parts = selectedDisplay.split("\n");
+                if(parts.length > 1){
+                    String addressPart = parts[1].split(" ")[0];
+                    BluetoothDevice device = discoveredDevicesMap.get(addressPart);
+                    if(device != null){
+                        connectToDevice(device);
+                    }
+                }
+            });
         }
-
         builder.setNeutralButton("Pair New Device", (dialog, which) -> {
             Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
             startActivity(intent);
@@ -133,6 +211,7 @@ public class AddDeviceActivity extends AppCompatActivity {
 
         builder.setNegativeButton("Cancel", null);
         builder.show();
+
     }
 
     private void connectToDevice(BluetoothDevice device) {
@@ -141,11 +220,30 @@ public class AddDeviceActivity extends AppCompatActivity {
         binding.tvStatus.setText("Connecting to device...");
 
         // Get MAC address from BluetoothDevice
-        receivedMacAddress = device.getAddress();
-        receivedDeviceName = device.getName();
+        try {
+            receivedMacAddress = device.getAddress();
+            receivedDeviceName = device.getName();
+            if (receivedDeviceName == null || receivedDeviceName.isEmpty()) {
+                receivedDeviceName = "BLE Device";
+            }
+        } catch (SecurityException e) {
+            Log.e(TAG, "Security exception: " + e.getMessage());
+            receivedDeviceName = "BLE Device";
+        }
 
-        Log.i(TAG, "Connecting to device: " + receivedDeviceName + " - " + receivedMacAddress);
-        bluetoothManager.connectToDevice(device, new BluetoothManager.BluetoothCallback() {
+        Log.i(TAG, "Connecting to BLE device: " + receivedDeviceName + " - " + receivedMacAddress);
+
+        bleManager.connectToDevice(device, new BLEManager.BLECallback() {
+            @Override
+            public void onDeviceFound(BluetoothDevice device, int rssi) {
+
+            }
+
+            @Override
+            public void onScanStopped() {
+
+            }
+
             @Override
             public void onConnected() {
                 runOnUiThread(() -> {
@@ -156,9 +254,7 @@ public class AddDeviceActivity extends AppCompatActivity {
                     binding.layoutWifiConfig.setVisibility(View.VISIBLE);
                     binding.progressBar.setVisibility(View.GONE);
 
-                    binding.getRoot().postDelayed(() -> {
-                        showStatusCard(false);
-                    }, 2000);
+                    binding.getRoot().postDelayed(() -> showStatusCard(false), 2000);
                 });
             }
 
@@ -166,15 +262,17 @@ public class AddDeviceActivity extends AppCompatActivity {
             public void onDisconnected() {
                 runOnUiThread(() -> {
                     binding.progressBar.setVisibility(View.GONE);
-                    binding.tvStatus.setText("⚠\uFE0F Device disconnected");
-                    Toast.makeText(AddDeviceActivity.this, "Device disconnected",
-                            Toast.LENGTH_SHORT).show();
+                    binding.tvStatus.setText("⚠️ Device disconnected");
+                    Toast.makeText(AddDeviceActivity.this, "Device disconnected", Toast.LENGTH_SHORT).show();
                 });
             }
 
             @Override
-            public void onDataReceived(String data) {
-                runOnUiThread(() -> binding.tvStatus.setText("Received: " + data));
+            public void onDataSentSuccess() {
+                runOnUiThread(() -> {
+                    binding.tvStatus.setText("Received: " + Objects.requireNonNull(binding.etSsid.getText()));
+                    Log.d(TAG, "Data received: " + binding.etSsid.getText().toString());
+                });
             }
 
             @Override
@@ -215,9 +313,7 @@ public class AddDeviceActivity extends AppCompatActivity {
                     binding.progressBar.setVisibility(View.GONE);
                     binding.tvStatus.setText("❌ WiFi scan failed");
                     Toast.makeText(AddDeviceActivity.this, error, Toast.LENGTH_SHORT).show();
-                    binding.getRoot().postDelayed(() -> {
-                        showStatusCard(false);
-                    }, 2000);
+                    binding.getRoot().postDelayed(() -> showStatusCard(false), 2000);
                 });
             }
         });
@@ -248,32 +344,69 @@ public class AddDeviceActivity extends AppCompatActivity {
         binding.progressBar.setVisibility(View.VISIBLE);
         binding.tvStatus.setText("Sending WiFi configuration...");
 
-        WiFiConfiguration config = new WiFiConfiguration(ssid, password);
-        bluetoothManager.sendData(config.toJsonString(), new BluetoothManager.BluetoothCallback() {
-            @Override
-            public void onConnected() {
-
-            }
-
-            @Override
-            public void onDisconnected() {
-
-            }
-
-            @Override
-            public void onDataReceived(String data) {
-
-            }
-
-            @Override
-            public void onError(String error) {
-                runOnUiThread(() -> {
-                    binding.progressBar.setVisibility(View.GONE);
-                    binding.tvStatus.setText("❌ Error: " + error);
-                    Toast.makeText(AddDeviceActivity.this, error, Toast.LENGTH_SHORT).show();
-                });
-            }
-        });
+//        WiFiConfiguration config = new WiFiConfiguration(ssid, password);
+        bleManager.sendWifiCredentials(ssid, password);
+//        bleManager.sendData(config.toJsonString(), new BLEManager.BLECallback() {
+//            @Override
+//            public void onDeviceFound(BluetoothDevice device, int rssi) {
+//
+//            }
+//
+//            @Override
+//            public void onScanStopped() {
+//
+//            }
+//
+//            @Override
+//            public void onConnected() {
+//
+//            }
+//
+//            @Override
+//            public void onDisconnected() {
+//
+//            }
+//
+//            @Override
+//            public void onDataReceived(String data) {
+//
+//            }
+//
+//            @Override
+//            public void onError(String error) {
+//                runOnUiThread(() -> {
+//                    binding.progressBar.setVisibility(View.GONE);
+//                    binding.tvStatus.setText("❌ Error: " + error);
+//                    Toast.makeText(AddDeviceActivity.this, error, Toast.LENGTH_SHORT).show();
+//                });
+//            }
+//        });
+//
+//        bluetoothManager.sendData(config.toJsonString(), new BluetoothManager.BluetoothCallback() {
+//            @Override
+//            public void onConnected() {
+//
+//            }
+//
+//            @Override
+//            public void onDisconnected() {
+//
+//            }
+//
+//            @Override
+//            public void onDataReceived(String data) {
+//
+//            }
+//
+//            @Override
+//            public void onError(String error) {
+//                runOnUiThread(() -> {
+//                    binding.progressBar.setVisibility(View.GONE);
+//                    binding.tvStatus.setText("❌ Error: " + error);
+//                    Toast.makeText(AddDeviceActivity.this, error, Toast.LENGTH_SHORT).show();
+//                });
+//            }
+//        });
 
         // Simulate successful configuration after 2 seconds
         binding.getRoot().postDelayed(() -> saveDevice(ssid), 2000);
@@ -294,7 +427,8 @@ public class AddDeviceActivity extends AppCompatActivity {
                     Toast.makeText(AddDeviceActivity.this, "Device added!", Toast.LENGTH_SHORT).show();
 
                     binding.getRoot().postDelayed(() -> {
-                        bluetoothManager.disconnect();
+//                        bluetoothManager.disconnect();
+                        bleManager.disconnect();
                         finish();
                     }, 1500);
                 });
@@ -309,7 +443,8 @@ public class AddDeviceActivity extends AppCompatActivity {
 
                     // Still finish after error since device might be configured
                     binding.getRoot().postDelayed(() -> {
-                        bluetoothManager.disconnect();
+//                        bluetoothManager.disconnect();
+                        bleManager.disconnect();
                         finish();
                     }, 2000);
                 });
@@ -331,6 +466,7 @@ public class AddDeviceActivity extends AppCompatActivity {
         binding.toolbar.setNavigationOnClickListener(v -> finish());
     }
 
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -347,6 +483,7 @@ public class AddDeviceActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        bluetoothManager.disconnect();
+//        bluetoothManager.disconnect();
+        bleManager.cleanup();
     }
 }

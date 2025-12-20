@@ -121,17 +121,21 @@ bool wifi_start_station_mode(const char *ssid, const char *pass) {
 
 esp_err_t wifi_stop(void) {
     ESP_LOGI(TAG, "Stopping WiFi...");
-    esp_err_t err = esp_wifi_stop();
-    if (err == ESP_OK) {
-        err = esp_wifi_deinit();
+    esp_err_t err = esp_wifi_disconnect();
+    if (err != ESP_OK && err != ESP_ERR_WIFI_NOT_STARTED) {
+        ESP_LOGW(TAG, "esp_wifi_disconnect: %s", esp_err_to_name(err));
     }
+    err = esp_wifi_stop();
+    // if (err == ESP_OK) {
+    //     err = esp_wifi_deinit();
+    // }
     
     if (err == ESP_OK) {
         ESP_LOGI(TAG, "WiFi stopped");
     } else {
         ESP_LOGE(TAG, "Failed to stop WiFi: %s", esp_err_to_name(err));
     }
-    
+    vTaskDelay(pdMS_TO_TICKS(1000));
     return err;
 }
 
