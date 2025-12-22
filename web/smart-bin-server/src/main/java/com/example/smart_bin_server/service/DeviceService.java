@@ -7,6 +7,7 @@ import com.example.smart_bin_server.dto.UpdateDeviceRequest;
 import com.example.smart_bin_server.mapper.DeviceMapper;
 import com.example.smart_bin_server.model.Device;
 import com.example.smart_bin_server.model.DeviceData;
+import com.example.smart_bin_server.model.Log;
 import com.example.smart_bin_server.repository.DeviceDataRepository;
 import com.example.smart_bin_server.repository.DeviceRepository;
 import okhttp3.*;
@@ -27,13 +28,15 @@ public class DeviceService {
     private final DeviceRepository repository;
     private final DeviceMapper deviceMapper;
     private final DeviceDataRepository dataRepository;
+    private final LogService logService;
 
     private final OkHttpClient client = new OkHttpClient();
 
-    public DeviceService(DeviceRepository repository, DeviceMapper deviceMapper, DeviceDataRepository dataRepository){
+    public DeviceService(DeviceRepository repository, DeviceMapper deviceMapper, DeviceDataRepository dataRepository, LogService logService){
         this.repository = repository;
         this.deviceMapper = deviceMapper;
         this.dataRepository = dataRepository;
+        this.logService = logService;
     }
 
     @Transactional
@@ -64,6 +67,13 @@ public class DeviceService {
         data.setTimestamp(System.currentTimeMillis());
 
         dataRepository.save(data);
+
+        Log log = new Log();
+        log.setDeviceId(device.getId());
+        log.setMessage("Create device successfully.");
+        log.setType(Constants.LogType.SUCCESS.toString());
+        log.setTimestamp(System.currentTimeMillis());
+        logService.addLog(log);
 
         return deviceMapper.toDto(repository.save(device));
     }
@@ -96,6 +106,13 @@ public class DeviceService {
             device.setStatus(Optional.ofNullable(request.status())
                     .filter(n -> !n.isBlank())
                     .orElse(device.getStatus()));
+
+            Log log = new Log();
+            log.setDeviceId(deviceId);
+            log.setMessage("Update device successfully.");
+            log.setType(Constants.LogType.SUCCESS.toString());
+            log.setTimestamp(System.currentTimeMillis());
+            logService.addLog(log);
         } else{
             throw new RuntimeException("Device not found");
         }
@@ -109,6 +126,13 @@ public class DeviceService {
         if (device != null) {
             repository.deleteById(deviceId);
             dataRepository.deleteById(deviceId);
+
+            Log log = new Log();
+            log.setDeviceId(deviceId);
+            log.setMessage("Delete device successfully.");
+            log.setType(Constants.LogType.SUCCESS.toString());
+            log.setTimestamp(System.currentTimeMillis());
+            logService.addLog(log);
         } else {
             throw new RuntimeException("Device not found");
         }
@@ -116,9 +140,9 @@ public class DeviceService {
         return deviceId;
     }
 
-    @Scheduled(fixedRate = 30000)
+    @Scheduled(fixedRate = 10000)
     public void checkDevicesStatus(){
-        List<Device> devices = repository.findAll();
+        List<Device> devices = repository.findByStatus(Constants.DeviceStatus.ONLINE.toString());
         long now = System.currentTimeMillis();
 
         for(Device d: devices){
@@ -127,6 +151,14 @@ public class DeviceService {
             if(data == null) continue;
 
             if(now - data.getTimestamp() > Constants.TIMEOUT_MILLIS){
+
+                Log log = new Log();
+                log.setDeviceId(d.getId());
+                log.setType(Constants.LogType.WARNING.toString());
+                log.setMessage("Device disconnected.");
+                log.setTimestamp(System.currentTimeMillis());
+
+                logService.addLog(log);
                 d.setStatus(String.valueOf(Constants.DeviceStatus.OFFLINE));
             }
         }

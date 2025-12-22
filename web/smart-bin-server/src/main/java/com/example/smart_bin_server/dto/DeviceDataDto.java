@@ -1,6 +1,6 @@
 package com.example.smart_bin_server.dto;
 
-public record DeviceDataDTO(
+public record DeviceDataDto(
         String deviceId,
         int recycledWasteCount,
         int nonRecycledWasteCount,

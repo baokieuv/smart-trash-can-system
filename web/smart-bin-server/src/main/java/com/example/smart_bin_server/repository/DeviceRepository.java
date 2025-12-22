@@ -1,8 +1,11 @@
 package com.example.smart_bin_server.repository;
 
+import com.example.smart_bin_server.config.Constants;
 import com.example.smart_bin_server.model.Device;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface DeviceRepository extends JpaRepository<Device, String> {
+import java.util.List;
 
+public interface DeviceRepository extends JpaRepository<Device, String> {
+    List<Device> findByStatus(String status);
 }

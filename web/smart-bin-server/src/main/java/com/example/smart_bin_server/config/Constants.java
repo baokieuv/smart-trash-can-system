@@ -6,5 +6,12 @@ public class Constants {
         OFFLINE
     }
 
+    public enum LogType{
+        SUCCESS,
+        ERROR,
+        WARNING,
+        INFO
+    }
+
     public static final long TIMEOUT_MILLIS = 60 * 1000; //60s
 }

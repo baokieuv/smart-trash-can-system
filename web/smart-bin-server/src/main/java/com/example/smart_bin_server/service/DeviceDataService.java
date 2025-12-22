@@ -1,7 +1,7 @@
 package com.example.smart_bin_server.service;
 
 import com.example.smart_bin_server.config.Constants;
-import com.example.smart_bin_server.dto.DeviceDataDTO;
+import com.example.smart_bin_server.dto.DeviceDataDto;
 import com.example.smart_bin_server.dto.SendDataRequest;
 import com.example.smart_bin_server.dto.SendDataResponse;
 import com.example.smart_bin_server.mapper.DeviceDataMapper;
@@ -49,7 +49,7 @@ public class DeviceDataService {
         return new SendDataResponse(deviceId, 200, "Successfully", data.getTimestamp());
     }
 
-    public DeviceDataDTO getData(String deviceId){
+    public DeviceDataDto getData(String deviceId){
         DeviceData data = dataRepository.findById(deviceId).orElse(null);
         if(data == null){
             throw new RuntimeException("Device not found");
