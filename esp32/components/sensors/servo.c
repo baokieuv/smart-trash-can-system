@@ -12,20 +12,20 @@
 #define SERVO_DUTY_MAX        ((1 << 14) - 1)
 
 // ========== Servo 360° ==========
-servo360_t sv360 = {
-    .pin = SERVO_360_GPIO,
-    .channel = SERVO_360_CHANNEL,
-    .stop_pulse_us = SERVO_360_STOP_US,
-    .range_pulse_us = SERVO_360_RANGE_US
-};
-
-// ========== Servo 180° ==========
-// servo180_t sv180_1 = {
+// servo360_t sv360 = {
 //     .pin = SERVO_360_GPIO,
 //     .channel = SERVO_360_CHANNEL,
-//     .min_pulse_us = SERVO_180_MIN_US,   // SG90
-//     .max_pulse_us = SERVO_180_MAX_US
+//     .stop_pulse_us = SERVO_360_STOP_US,
+//     .range_pulse_us = SERVO_360_RANGE_US
 // };
+
+// ========== Servo 180° ==========
+servo180_t sv180_1 = {
+    .pin = SERVO_360_GPIO,
+    .channel = SERVO_360_CHANNEL,
+    .min_pulse_us = SERVO_180_MIN_US,   // SG90
+    .max_pulse_us = SERVO_180_MAX_US
+};
 
 servo180_t sv180 = {
     .pin = SERVO_180_GPIO,
@@ -147,50 +147,53 @@ esp_err_t trashlid_init(){
     ret = servo180_init(&sv180);
     if(ret != ESP_OK) return ret;
 
-    ret = servo360_init(&sv360);
-    if(ret != ESP_OK) return ret;
     // ret = servo360_init(&sv360);
     // if(ret != ESP_OK) return ret;
+    ret = servo180_init(&sv180_1);
+    if(ret != ESP_OK) return ret;
+    servo180_write_angle(&sv180_1, 90);
 
     return ret;
 }
 
 void trashlid_open(waste_category_t category){
-    if(category == WASTE_RECYCLABLE){
-        ESP_ERROR_CHECK(servo360_write_angle(&sv360, 60));
-        ESP_ERROR_CHECK(servo180_write_angle(&sv180, 90));
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        ESP_ERROR_CHECK(servo180_write_angle(&sv180, 0));
-        ESP_ERROR_CHECK(servo360_write_angle(&sv360, -60));
-    }else if(category == WASTE_COMPOSTABLE){
-        ESP_ERROR_CHECK(servo360_write_angle(&sv360, 180));
-        ESP_ERROR_CHECK(servo180_write_angle(&sv180, 90));
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        ESP_ERROR_CHECK(servo180_write_angle(&sv180, 0));
-        ESP_ERROR_CHECK(servo360_write_angle(&sv360, -180));
-    }else{
-        ESP_ERROR_CHECK(servo360_write_angle(&sv360, -60));
-        ESP_ERROR_CHECK(servo180_write_angle(&sv180, 90));
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        ESP_ERROR_CHECK(servo180_write_angle(&sv180, 0));
-        ESP_ERROR_CHECK(servo360_write_angle(&sv360, 60));
-    }
-
     // if(category == WASTE_RECYCLABLE){
-    //     ESP_ERROR_CHECK(servo180_write_angle(&sv180_2, 90));
+    //     ESP_ERROR_CHECK(servo360_write_angle(&sv360, 60));
+    //     ESP_ERROR_CHECK(servo180_write_angle(&sv180, 90));
     //     vTaskDelay(pdMS_TO_TICKS(1000));
-    //     ESP_ERROR_CHECK(servo180_write_angle(&sv180_2, 0));
+    //     ESP_ERROR_CHECK(servo180_write_angle(&sv180, 0));
+    //     ESP_ERROR_CHECK(servo360_write_angle(&sv360, -60));
     // }else if(category == WASTE_COMPOSTABLE){
-    //     ESP_ERROR_CHECK(servo180_write_angle(&sv180_1, 90));
-    //     ESP_ERROR_CHECK(servo180_write_angle(&sv180_2, 90));
+    //     ESP_ERROR_CHECK(servo360_write_angle(&sv360, 180));
+    //     ESP_ERROR_CHECK(servo180_write_angle(&sv180, 90));
     //     vTaskDelay(pdMS_TO_TICKS(1000));
-    //     ESP_ERROR_CHECK(servo180_write_angle(&sv180_2, 0));
-    //     ESP_ERROR_CHECK(servo180_write_angle(&sv180_1, 0));
+    //     ESP_ERROR_CHECK(servo180_write_angle(&sv180, 0));
+    //     ESP_ERROR_CHECK(servo360_write_angle(&sv360, -180));
     // }else{
-    //     ESP_ERROR_CHECK(servo180_write_angle(&sv180_1, 180));
-    //     ESP_ERROR_CHECK(servo180_write_angle(&sv180_2, 90));
+    //     ESP_ERROR_CHECK(servo360_write_angle(&sv360, -60));
+    //     ESP_ERROR_CHECK(servo180_write_angle(&sv180, 90));
     //     vTaskDelay(pdMS_TO_TICKS(1000));
-    //     ESP_ERROR_CHECK(servo180_write_angle(&sv180_2, 0));
-    //     ESP_ERROR_CHECK(servo180_write_angle(&sv180_1, 0));
+    //     ESP_ERROR_CHECK(servo180_write_angle(&sv180, 0));
+    //     ESP_ERROR_CHECK(servo360_write_angle(&sv360, 60));
     // }
+
+    if(category == WASTE_RECYCLABLE){
+        ESP_ERROR_CHECK(servo180_write_angle(&sv180_1, 90));
+        ESP_ERROR_CHECK(servo180_write_angle(&sv180, 90));
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        ESP_ERROR_CHECK(servo180_write_angle(&sv180, 0));
+        ESP_ERROR_CHECK(servo180_write_angle(&sv180_1, 90));
+    }else if(category == WASTE_COMPOSTABLE){
+        ESP_ERROR_CHECK(servo180_write_angle(&sv180_1, 0));
+        ESP_ERROR_CHECK(servo180_write_angle(&sv180, 90));
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        ESP_ERROR_CHECK(servo180_write_angle(&sv180, 0));
+        ESP_ERROR_CHECK(servo180_write_angle(&sv180_1, 90));
+    }else{
+        ESP_ERROR_CHECK(servo180_write_angle(&sv180_1, 180));
+        ESP_ERROR_CHECK(servo180_write_angle(&sv180, 90));
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        ESP_ERROR_CHECK(servo180_write_angle(&sv180, 0));
+        ESP_ERROR_CHECK(servo180_write_angle(&sv180_1, 90));
+    }
 }
