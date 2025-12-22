@@ -45,7 +45,7 @@ export async function GET() {
           const mappedDevice: Device = {
             id: device.id as any, 
             name: device.name,
-            mac: device.id,
+            mac: device.id.replaceAll("_", ":"),
             status: device.status,
             
             fillLevel: detailData.fillLevel,
@@ -63,7 +63,7 @@ export async function GET() {
           return {
             id: device.id as any,
             name: device.name,
-            mac: device.id,
+            mac: device.id.replaceAll("_", ":"),
             status: 'offline',
             fillLevel: 0, battery: 0, recycled: 0, nonRecycled: 0, composable: 0, total: 0
           } as Device;

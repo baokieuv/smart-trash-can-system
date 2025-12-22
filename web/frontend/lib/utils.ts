@@ -20,10 +20,10 @@ export const getBatteryColor = (level: number) => {
 
 export const getLogIcon = (type: string) => {
   switch (type) {
-    case 'warning': return '⚠️';
-    case 'success': return '✅';
-    case 'error': return '🔴';
-    case 'info': return 'ℹ️';
+    case 'WARNING': return '⚠️';
+    case 'SUCCESS': return '✅';
+    case 'ERROR': return '🔴';
+    case 'INFO': return 'ℹ️';
     default: return '•';
   }
 };

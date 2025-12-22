@@ -13,8 +13,8 @@ export type Device = {
 
 export type ActivityLog = {
   id: number;
-  device: string;
+  deviceName: string;
   message: string;
-  type: 'warning' | 'success' | 'error' | 'info';
-  time: string;
+  type: string;
+  timestamp: number;
 };
