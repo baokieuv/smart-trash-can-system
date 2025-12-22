@@ -9,8 +9,6 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.BluetoothLeScanner;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
@@ -55,39 +53,6 @@ public class BLEManager {
 
     public boolean isBluetoothEnabled() {
         return bluetoothAdapter != null && bluetoothAdapter.isEnabled();
-    }
-
-    public void startScan(BLECallback callback) {
-        if (bluetoothAdapter == null) return;
-        bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
-
-        // Scan trong 10 giây rồi tự tắt
-        handler.postDelayed(() -> {
-            stopScan();
-            callback.onScanStopped();
-        }, 5000);
-
-        bluetoothLeScanner.startScan(new ScanCallback() {
-            @Override
-            public void onScanResult(int callbackType, ScanResult result) {
-                super.onScanResult(callbackType, result);
-                if (result.getDevice() != null) {
-                    callback.onDeviceFound(result.getDevice(), result.getRssi());
-                }
-            }
-
-            @Override
-            public void onScanFailed(int errorCode) {
-                super.onScanFailed(errorCode);
-                callback.onError("Scan failed with error: " + errorCode);
-            }
-        });
-    }
-
-    public void stopScan() {
-        if (bluetoothLeScanner != null && bluetoothAdapter.isEnabled()) {
-            bluetoothLeScanner.stopScan((ScanCallback) null); // Stop all callbacks (simplified)
-        }
     }
 
     public void connectToDevice(BluetoothDevice device, BLECallback callback) {
@@ -199,14 +164,13 @@ public class BLEManager {
                 else if (uuid.equals(CHAR_UUID_PASS)) {
                     Log.d(TAG, "Password written successfully.");
                     if (currentCallback != null) {
-                        // Chạy trên Main Thread để update UI an toàn
+
                         handler.post(currentCallback::onDataSentSuccess);
                     }
                 }
             } else {
-                // Xử lý lỗi (ví dụ: chưa Pair, lỗi Auth)
+
                 if (status == BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION || status == BluetoothGatt.GATT_INSUFFICIENT_ENCRYPTION) {
-                    // Android sẽ tự động hiện popup Pair, người dùng cần nhập 123456
                     Log.e(TAG, "Authentication required. Pairing dialog should appear.");
                 } else {
                     if (currentCallback != null) {
@@ -215,9 +179,6 @@ public class BLEManager {
                 }
             }
         }
-
-        // Callback khi bonding thay đổi (Pairing)
-        // Không bắt buộc phải xử lý ở đây vì Android tự handle UI, nhưng tốt cho log
     };
 
     public void cleanup() {

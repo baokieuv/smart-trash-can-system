@@ -19,10 +19,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.smart_bin.bluetooth.BLEManager;
-import com.example.smart_bin.bluetooth.BluetoothManager;
 import com.example.smart_bin.databinding.ActivityWifiReconfigureBinding;
 import com.example.smart_bin.utils.Constants;
-import com.example.smart_bin.wifi.WiFiConfiguration;
 import com.example.smart_bin.wifi.WiFiScanner;
 
 import java.util.ArrayList;
@@ -35,7 +33,6 @@ public class WiFiReconfigureActivity extends AppCompatActivity {
     private static final String TAG = "WiFiReconfig";
 
     private ActivityWifiReconfigureBinding binding;
-//    private BluetoothManager bluetoothManager;
     private BLEManager bleManager;
     private WiFiScanner wiFiScanner;
 
@@ -62,7 +59,6 @@ public class WiFiReconfigureActivity extends AppCompatActivity {
             return;
         }
 
-//        bluetoothManager = new BluetoothManager(this);
         bleManager = new BLEManager(this);
         wiFiScanner = new WiFiScanner(this);
         timeoutHandler = new Handler(Looper.getMainLooper());
@@ -210,7 +206,7 @@ public class WiFiReconfigureActivity extends AppCompatActivity {
             });
         }else{
             builder.setItems(deviceNames.toArray(new String[0]), (dialog, which) -> {
-               BluetoothDevice selectedDevice = deviceList.get(which);
+                BluetoothDevice selectedDevice = deviceList.get(which);
 
                if(selectedDevice.getAddress().equals(deviceMac)){
                    connectToDevice(selectedDevice);
@@ -261,9 +257,7 @@ public class WiFiReconfigureActivity extends AppCompatActivity {
                     binding.progressBluetooth.setVisibility(View.GONE);
                     binding.tvBluetoothStatus.setText("✓ Connected successfully!");
 
-                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                        binding.wifiConfigCard.setVisibility(View.VISIBLE);
-                    }, 1000);
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> binding.wifiConfigCard.setVisibility(View.VISIBLE), 1000);
                 });
             }
 
@@ -293,46 +287,6 @@ public class WiFiReconfigureActivity extends AppCompatActivity {
                 });
             }
         });
-//        bluetoothManager.connectToDevice(device, new BluetoothManager.BluetoothCallback() {
-//            @Override
-//            public void onConnected() {
-//                runOnUiThread(() -> {
-//                    isConnected = true;
-//                    binding.progressBluetooth.setVisibility(View.GONE);
-//                    binding.tvBluetoothStatus.setText("✓ Connected successfully!");
-//
-//                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
-//                        binding.wifiConfigCard.setVisibility(View.VISIBLE);
-//                    }, 1000);
-//                });
-//            }
-//
-//            @Override
-//            public void onDisconnected() {
-//                runOnUiThread(() -> {
-//                    isConnected = false;
-//                    binding.progressBluetooth.setVisibility(View.GONE);
-//                    binding.tvBluetoothStatus.setText("⚠️ Device disconnected");
-//                    binding.btnScanBluetooth.setVisibility(View.VISIBLE);
-//                    Toast.makeText(WiFiReconfigureActivity.this, "Device disconnected", Toast.LENGTH_SHORT).show();
-//                });
-//            }
-//
-//            @Override
-//            public void onDataReceived(String data) {
-//                Log.i(TAG, "Data received: " + data);
-//            }
-//
-//            @Override
-//            public void onError(String error) {
-//                runOnUiThread(() -> {
-//                    binding.progressBluetooth.setVisibility(View.GONE);
-//                    binding.tvBluetoothStatus.setText("❌ Connection failed: " + error);
-//                    binding.btnScanBluetooth.setVisibility(View.VISIBLE);
-//                    Toast.makeText(WiFiReconfigureActivity.this, error, Toast.LENGTH_SHORT).show();
-//                });
-//            }
-//        });
     }
 
     private void scanForWiFiNetworks(){
@@ -358,9 +312,7 @@ public class WiFiReconfigureActivity extends AppCompatActivity {
                     showStatusCard(true, false, "❌ WiFi scan failed");
                     Toast.makeText(WiFiReconfigureActivity.this, error, Toast.LENGTH_SHORT).show();
 
-                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                        showStatusCard(false, false, "");
-                    }, 2000);
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> showStatusCard(false, false, ""), 2000);
                 });
             }
         });
@@ -392,45 +344,19 @@ public class WiFiReconfigureActivity extends AppCompatActivity {
 
 //        WiFiConfiguration config = new WiFiConfiguration(ssid, password);
         bleManager.sendWifiCredentials(ssid, password);
-//        bluetoothManager.sendData(config.toJsonString(), new BluetoothManager.BluetoothCallback() {
-//            @Override
-//            public void onConnected() {
-//
-//            }
-//
-//            @Override
-//            public void onDisconnected() {
-//
-//            }
-//
-//            @Override
-//            public void onDataReceived(String data) {
-//
-//            }
-//
-//            @Override
-//            public void onError(String error) {
-//                runOnUiThread(() -> {
-//                    showStatusCard(true, false, "❌ Error: " + error);
-//                    Toast.makeText(WiFiReconfigureActivity.this, error, Toast.LENGTH_SHORT).show();
-//                });
-//            }
-//        });
 
         // Simulate successful configuration
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            runOnUiThread(() -> {
-                showStatusCard(true, false, "✓ Configuration sent successfully!\nDevice is reconnecting to WiFi...");
+        new Handler(Looper.getMainLooper()).postDelayed(() -> runOnUiThread(() -> {
+            showStatusCard(true, false, "✓ Configuration sent successfully!\nDevice is reconnecting to WiFi...");
 
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    bleManager.disconnect();
-                    Toast.makeText(WiFiReconfigureActivity.this,
-                            "WiFi reconfigured! Please wait for device to reconnect.",
-                            Toast.LENGTH_LONG).show();
-                    finish();
-                }, 2000);
-            });
-        }, 2000);
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                bleManager.disconnect();
+                Toast.makeText(WiFiReconfigureActivity.this,
+                        "WiFi reconfigured! Please wait for device to reconnect.",
+                        Toast.LENGTH_LONG).show();
+                finish();
+            }, 2000);
+        }), 2000);
     }
 
     private void showStatusCard(boolean show, boolean showProgress, String message){

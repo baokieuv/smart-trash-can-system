@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.smart_bin.databinding.ItemDeviceBinding;
 import com.example.smart_bin.model.Device;
+import com.example.smart_bin.utils.Constants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -92,7 +93,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
                 binding.statusIcon.setImageTintList(
                         android.content.res.ColorStateList.valueOf(Color.parseColor("#10B981"))
                 );
-                binding.statusText.setText("ONLINE");
+                binding.statusText.setText(Constants.STATUS_ONLINE);
                 binding.statusText.setTextColor(Color.parseColor("#10B981"));
             } else {
                 // Offline styling - gray
@@ -106,7 +107,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
                 binding.statusIcon.setImageTintList(
                         android.content.res.ColorStateList.valueOf(Color.parseColor("#94A3B8"))
                 );
-                binding.statusText.setText("OFFLINE");
+                binding.statusText.setText(Constants.STATUS_OFFLINE);
                 binding.statusText.setTextColor(Color.parseColor("#94A3B8"));
             }
 

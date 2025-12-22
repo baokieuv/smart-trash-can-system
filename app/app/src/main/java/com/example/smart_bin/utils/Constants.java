@@ -8,7 +8,7 @@ public class Constants {
     public static final String DEVICES_ENDPOINT = BASE_URL + API_VERSION + "/devices";
 
     // Timing Configuration
-    public static final int REFRESH_INTERVAL = 30000; // 30 seconds in milliseconds
+    public static final int REFRESH_INTERVAL = 10000; // 30 seconds in milliseconds
     public static final int CONNECTION_TIMEOUT = 5000; // 5 seconds
     public static final int READ_TIMEOUT = 5000; // 5 seconds
 
@@ -29,8 +29,8 @@ public class Constants {
     public static final String KEY_STATUS = "status";
 
     // Status Values
-    public static final String STATUS_ONLINE = "on";
-    public static final String STATUS_OFFLINE = "off";
+    public static final String STATUS_ONLINE = "ONLINE";
+    public static final String STATUS_OFFLINE = "OFFLINE";
     public static final String STATUS_ACTIVE = "Active";
     public static final String STATUS_INACTIVE = "Inactive";
 

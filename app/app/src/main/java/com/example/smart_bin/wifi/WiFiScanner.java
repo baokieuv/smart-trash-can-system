@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WiFiScanner {
+    private final String TAG = "WiFiScanner";
     private final WifiManager wifiManager;
     private final Context context;
     private ScanCallback callback;
@@ -25,7 +26,7 @@ public class WiFiScanner {
         @Override
         public void onReceive(Context context, Intent intent) {
             boolean success = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false);
-            Log.i("My bluetooth", "Wifi scan receiver: " + success);
+            Log.i(TAG, "Wifi scan receiver: " + success);
 
             if(success){
                 scanSuccess();
@@ -48,7 +49,7 @@ public class WiFiScanner {
 
         boolean success = wifiManager.startScan();
 
-        Log.i("My bluetooth", "Wifi scan started: " + success);
+        Log.i(TAG, "Wifi scan started: " + success);
         if(!success){
             scanFailed();
         }
@@ -62,7 +63,7 @@ public class WiFiScanner {
         try{
             context.unregisterReceiver(wifiScanReceiver);
         }catch (Exception e){
-            e.printStackTrace();
+            Log.e(TAG, "Error unregistering receiver", e);
         }
     }
 
@@ -83,7 +84,7 @@ public class WiFiScanner {
         try{
             context.unregisterReceiver(wifiScanReceiver);
         }catch (Exception e){
-            e.printStackTrace();
+            Log.e(TAG, "Error unregistering receiver", e);
         }
     }
 }

@@ -11,7 +11,6 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.smart_bin.adapter.DeviceAdapter;
@@ -21,7 +20,6 @@ import com.example.smart_bin.model.Device;
 import com.example.smart_bin.utils.Constants;
 import com.example.smart_bin.utils.NetworkUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -32,7 +30,6 @@ public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnD
     private DeviceAdapter adapter;
     private Handler handler;
     private Runnable runnable;
-    private List<Device> deviceList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,10 +100,9 @@ public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnD
         ApiService.getInstance().fetchDevices(new ApiService.DevicesCallback() {
             @Override
             public void onSuccess(List<Device> devices) {
-                deviceList = devices;
                 adapter.setDevices(devices);
                 updateStats(devices);
-                binding.setHasDevices(devices != null && !devices.isEmpty());
+                binding.setHasDevices(!devices.isEmpty());
                 binding.progressBar.setVisibility(View.GONE);
                 binding.swipeRefresh.setRefreshing(false);
 
@@ -139,8 +135,7 @@ public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnD
         int offlineDevices = 0;
 
         for (Device device : devices) {
-            if ("ONLINE".equalsIgnoreCase(device.getStatus()) ||
-                    "on".equalsIgnoreCase(device.getStatus())) {
+            if (Constants.STATUS_ONLINE.equalsIgnoreCase(device.getStatus())) {
                 onlineDevices++;
             } else {
                 offlineDevices++;
@@ -188,13 +183,10 @@ public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnD
                     String newName = input.getText().toString().trim();
                     if (!newName.isEmpty()){
                         device.setName(newName);
-//                        viewModel.updateDevice(device);
                         ApiService.getInstance().updateDevice(device, new ApiService.DeviceCallback() {
                             @Override
                             public void onSuccess(Device device) {
                                 Toast.makeText(MainActivity.this, "Device renamed", Toast.LENGTH_SHORT).show();
-//                                deviceList.set(deviceList.indexOf(device), device);
-//                                adapter.notifyItemChanged(deviceList.indexOf(device));
                                 loadDevices();
                                 Log.i(TAG, "Device renamed successfully");
                             }
@@ -217,13 +209,10 @@ public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnD
                 .setTitle("Delete Device")
                 .setMessage("Are you sure you want to delete " + device.getName() + "?")
                 .setPositiveButton("Delete", (dialog, which) -> {
-//                    viewModel.deleteDevice(device.getId());
                     ApiService.getInstance().deleteDevice(device.getId(), new ApiService.DeviceCallback() {
                         @Override
                         public void onSuccess(Device device) {
                             Toast.makeText(MainActivity.this, "Device deleted", Toast.LENGTH_SHORT).show();
-//                            deviceList.remove(device);
-//                            adapter.notifyDataSetChanged();
                             loadDevices();
                             Log.i(TAG, "Device deleted successfully");
                         }
@@ -243,7 +232,6 @@ public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnD
     @Override
     protected void onResume(){
         super.onResume();
-//        viewModel.loadDevices();
         loadDevices();
         handler.postDelayed(runnable, Constants.REFRESH_INTERVAL);
     }

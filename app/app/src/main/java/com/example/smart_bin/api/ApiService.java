@@ -151,7 +151,13 @@ public class ApiService {
                     mainHandler.post(() -> callback.onSuccess(device));
                 } else {
                     Log.i(TAG, "createDevice: Failed to create device " + responseCode);
-                    mainHandler.post(() -> callback.onError("Failed to create device."));
+                    mainHandler.post(() -> {
+                        try {
+                            callback.onError("Failed to create device." + connection.getResponseMessage());
+                        } catch (IOException e) {
+                            callback.onError("Failed to create device.");
+                        }
+                    });
                 }
 
                 connection.disconnect();

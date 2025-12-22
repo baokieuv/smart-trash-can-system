@@ -96,7 +96,7 @@ public class DeviceControlActivity extends AppCompatActivity {
 
             @Override
             public void onError(String error) {
-                Log.i("My bluetooth", "Error getting device: " + error);
+                Log.i(TAG, "Error getting device: " + error);
             }
         });
     }
@@ -122,7 +122,7 @@ public class DeviceControlActivity extends AppCompatActivity {
     }
 
     private void updateHeaderStatus() {
-        boolean isOnline = "ONLINE".equalsIgnoreCase(status) || "on".equalsIgnoreCase(status);
+        boolean isOnline = Constants.STATUS_ONLINE.equalsIgnoreCase(status);
 
         if (isOnline) {
             binding.statusBadgeHeader.setBackgroundColor(Color.parseColor("#D1FAE5")); // green-100
@@ -130,7 +130,7 @@ public class DeviceControlActivity extends AppCompatActivity {
             binding.statusIconHeader.setImageTintList(
                     android.content.res.ColorStateList.valueOf(Color.parseColor("#10B981"))
             );
-            binding.tvIsOnline.setText("ONLINE");
+            binding.tvIsOnline.setText(Constants.STATUS_ONLINE);
             binding.tvIsOnline.setTextColor(Color.parseColor("#10B981"));
             binding.offlineWarningCard.setVisibility(View.GONE);
             binding.statsCard.setAlpha(1.0f);
@@ -140,7 +140,7 @@ public class DeviceControlActivity extends AppCompatActivity {
             binding.statusIconHeader.setImageTintList(
                     android.content.res.ColorStateList.valueOf(Color.parseColor("#94A3B8"))
             );
-            binding.tvIsOnline.setText("OFFLINE");
+            binding.tvIsOnline.setText(Constants.STATUS_OFFLINE);
             binding.tvIsOnline.setTextColor(Color.parseColor("#94A3B8"));
             binding.offlineWarningCard.setVisibility(View.VISIBLE);
             binding.statsCard.setAlpha(0.6f); // Dim stats when offline
@@ -170,9 +170,9 @@ public class DeviceControlActivity extends AppCompatActivity {
         binding.progressFillLevel.setProgress(fillLevel);
 
         int fillColor;
-        if (fillLevel < 30) {
+        if (fillLevel < Constants.FILL_LEVEL_LOW) {
             fillColor = Color.parseColor("#10B981"); // Green
-        } else if (fillLevel < 70) {
+        } else if (fillLevel < Constants.FILL_LEVEL_MEDIUM) {
             fillColor = Color.parseColor("#F59E0B"); // Orange
         } else {
             fillColor = Color.parseColor("#EF4444"); // Red
@@ -185,9 +185,9 @@ public class DeviceControlActivity extends AppCompatActivity {
         binding.tvBattery.setText(battery + "%");
 
         int batteryColor;
-        if (battery > 50) {
+        if (battery > Constants.BATTERY_MEDIUM) {
             batteryColor = Color.parseColor("#10B981");
-        } else if (battery > 20) {
+        } else if (battery > Constants.BATTERY_LOW) {
             batteryColor = Color.parseColor("#F59E0B");
         } else {
             batteryColor = Color.parseColor("#EF4444");
@@ -198,8 +198,8 @@ public class DeviceControlActivity extends AppCompatActivity {
         binding.tvTotalWaste.setText(String.valueOf(data.getTotalWaste()));
 
         // Status
-        boolean isOnline = "ONLINE".equalsIgnoreCase(status) || "on".equalsIgnoreCase(status);
-        binding.tvStatus.setText(isOnline ? "Active" : "Inactive");
+        boolean isOnline = Constants.STATUS_ONLINE.equalsIgnoreCase(status);
+        binding.tvStatus.setText(isOnline ? Constants.STATUS_ACTIVE : Constants.STATUS_INACTIVE);
         binding.tvStatus.setTextColor(isOnline ? Color.parseColor("#10B981") : Color.parseColor("#94A3B8"));
         binding.tvStatusSubtitle.setText(isOnline ? "Connected" : "Disconnected");
 
