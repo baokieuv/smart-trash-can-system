@@ -5,10 +5,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -19,17 +21,19 @@ import com.example.smart_bin.databinding.ActivityMainBinding;
 import com.example.smart_bin.model.Device;
 import com.example.smart_bin.utils.Constants;
 import com.example.smart_bin.utils.NetworkUtils;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.List;
 import java.util.Objects;
 
-public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnDeviceClickListener {
+public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnDeviceClickListener, BottomNavigationView.OnNavigationItemSelectedListener {
     private static final String TAG = "MainActivity";
 
     private ActivityMainBinding binding;
     private DeviceAdapter adapter;
     private Handler handler;
     private Runnable runnable;
+    private BottomNavigationView navigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +47,9 @@ public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnD
         setupFab();
         setupSwipeRefresh();
         setupAutoRefresh();
+
+        navigationView = findViewById(R.id.nav_view);
+        navigationView.setOnNavigationItemSelectedListener(this);
 
         if (NetworkUtils.isNetworkAvailable(this)) {
             loadDevices();
@@ -240,5 +247,28 @@ public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnD
     protected void onPause(){
         super.onPause();
         handler.removeCallbacks(runnable);
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+        int itemId = menuItem.getItemId();
+
+        if(itemId == R.id.navigation_home){
+            return true;
+        } else if(itemId == R.id.navigation_noti){
+            Intent intent = new Intent(this, NotificationActivity.class);
+            startActivity(intent);
+            return true;
+        } else if(itemId == R.id.navigation_setting){
+            Toast.makeText(this, "Coming soon", Toast.LENGTH_SHORT).show();
+            return true;
+        }
+        finish();
+        return false;
+    }
+
+    @Override
+    public void onPointerCaptureChanged(boolean hasCapture) {
+        super.onPointerCaptureChanged(hasCapture);
     }
 }

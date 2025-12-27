@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.example.smart_bin.model.Device;
 import com.example.smart_bin.model.DeviceData;
+import com.example.smart_bin.model.Notification;
 import com.example.smart_bin.utils.Constants;
 
 import org.json.JSONArray;
@@ -39,6 +40,11 @@ public class ApiService {
 
     public interface DeviceCallback{
         void onSuccess(Device device);
+        void onError(String error);
+    }
+
+    public interface NotificationCallback {
+        void onSuccess(List<Notification> notifications);
         void onError(String error);
     }
 
@@ -260,7 +266,41 @@ public class ApiService {
                 mainHandler.post(() -> callback.onError("Failed to delete device " + e.getMessage()));
             }
         });
+    }
 
+    public void fetchNotifications(NotificationCallback callback){
+        executorService.execute(() -> {
+            try{
+                URL url = new URL(Constants.BASE_URL + Constants.API_VERSION + "/notifications");
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
+                connection.setReadTimeout(Constants.READ_TIMEOUT);
+
+                int responseCode = connection.getResponseCode();
+                if(responseCode == HttpURLConnection.HTTP_OK){
+                    BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(connection.getInputStream())
+                    );
+                    StringBuilder response = new StringBuilder();
+                    String line;
+
+                    while((line = reader.readLine()) != null){
+                        response.append(line);
+                    }
+                    reader.close();
+
+                    List<Notification> notifications = parseNotifications(response.toString());
+                    mainHandler.post(() -> callback.onSuccess(notifications));
+                }else{
+                    Log.e(TAG, "Failed to fetch notifications " + responseCode);
+                    mainHandler.post(() -> callback.onError("Failed to fetch notifications " + responseCode));
+                }
+            }catch (Exception e){
+                Log.e(TAG, "Failed to fetch notifications", e);
+                mainHandler.post(() -> callback.onError("Failed to fetch notifications " + e.getMessage()));
+            }
+        });
     }
     private List<Device> parseDevices(String string) throws Exception {
         List<Device> devices = new ArrayList<>();
@@ -302,6 +342,28 @@ public class ApiService {
 
         return device;
     }
+
+    private List<Notification> parseNotifications(String data) throws Exception{
+        List<Notification> notifications = new ArrayList<>();
+        JSONArray jsonArray = new JSONArray(data);
+
+        for(int i = 0; i < jsonArray.length(); i++){
+            JSONObject obj = jsonArray.getJSONObject(i);
+            Notification notification = new Notification();
+
+            notification.setId(obj.optLong("id"));
+            notification.setDeviceId(obj.optString("deviceId"));
+            notification.setDeviceName(obj.optString("deviceName", "Unknown Device"));
+            notification.setMessage(obj.optString("message"));
+            notification.setType(obj.optString("type", "INFO"));
+            notification.setTimestamp(obj.optLong("timestamp"));
+
+            notifications.add(notification);
+        }
+
+        return notifications;
+    }
+
     public void shutdown() {
         executorService.shutdown();
     }

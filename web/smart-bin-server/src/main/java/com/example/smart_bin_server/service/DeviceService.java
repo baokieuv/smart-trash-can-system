@@ -7,7 +7,7 @@ import com.example.smart_bin_server.dto.UpdateDeviceRequest;
 import com.example.smart_bin_server.mapper.DeviceMapper;
 import com.example.smart_bin_server.model.Device;
 import com.example.smart_bin_server.model.DeviceData;
-import com.example.smart_bin_server.model.Log;
+import com.example.smart_bin_server.model.Notification;
 import com.example.smart_bin_server.repository.DeviceDataRepository;
 import com.example.smart_bin_server.repository.DeviceRepository;
 import okhttp3.*;
@@ -16,9 +16,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,15 +25,15 @@ public class DeviceService {
     private final DeviceRepository repository;
     private final DeviceMapper deviceMapper;
     private final DeviceDataRepository dataRepository;
-    private final LogService logService;
+    private final NotificationService notificationService;
 
     private final OkHttpClient client = new OkHttpClient();
 
-    public DeviceService(DeviceRepository repository, DeviceMapper deviceMapper, DeviceDataRepository dataRepository, LogService logService){
+    public DeviceService(DeviceRepository repository, DeviceMapper deviceMapper, DeviceDataRepository dataRepository, NotificationService notificationService){
         this.repository = repository;
         this.deviceMapper = deviceMapper;
         this.dataRepository = dataRepository;
-        this.logService = logService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -68,12 +65,12 @@ public class DeviceService {
 
         dataRepository.save(data);
 
-        Log log = new Log();
-        log.setDeviceId(device.getId());
-        log.setMessage("Create device successfully.");
-        log.setType(Constants.LogType.SUCCESS.toString());
-        log.setTimestamp(System.currentTimeMillis());
-        logService.addLog(log);
+        Notification notification = new Notification();
+        notification.setDeviceId(device.getId());
+        notification.setMessage("Create device successfully.");
+        notification.setType(Constants.LogType.SUCCESS.toString());
+        notification.setTimestamp(System.currentTimeMillis());
+        notificationService.addNotification(notification);
 
         return deviceMapper.toDto(repository.save(device));
     }
@@ -107,12 +104,12 @@ public class DeviceService {
                     .filter(n -> !n.isBlank())
                     .orElse(device.getStatus()));
 
-            Log log = new Log();
-            log.setDeviceId(deviceId);
-            log.setMessage("Update device successfully.");
-            log.setType(Constants.LogType.SUCCESS.toString());
-            log.setTimestamp(System.currentTimeMillis());
-            logService.addLog(log);
+            Notification notification = new Notification();
+            notification.setDeviceId(deviceId);
+            notification.setMessage("Update device successfully.");
+            notification.setType(Constants.LogType.SUCCESS.toString());
+            notification.setTimestamp(System.currentTimeMillis());
+            notificationService.addNotification(notification);
         } else{
             throw new RuntimeException("Device not found");
         }
@@ -127,12 +124,12 @@ public class DeviceService {
             repository.deleteById(deviceId);
             dataRepository.deleteById(deviceId);
 
-            Log log = new Log();
-            log.setDeviceId(deviceId);
-            log.setMessage("Delete device successfully.");
-            log.setType(Constants.LogType.SUCCESS.toString());
-            log.setTimestamp(System.currentTimeMillis());
-            logService.addLog(log);
+            Notification notification = new Notification();
+            notification.setDeviceId(deviceId);
+            notification.setMessage("Delete device successfully.");
+            notification.setType(Constants.LogType.SUCCESS.toString());
+            notification.setTimestamp(System.currentTimeMillis());
+            notificationService.addNotification(notification);
         } else {
             throw new RuntimeException("Device not found");
         }
@@ -152,13 +149,13 @@ public class DeviceService {
 
             if(now - data.getTimestamp() > Constants.TIMEOUT_MILLIS){
 
-                Log log = new Log();
-                log.setDeviceId(d.getId());
-                log.setType(Constants.LogType.WARNING.toString());
-                log.setMessage("Device disconnected.");
-                log.setTimestamp(System.currentTimeMillis());
+                Notification notification = new Notification();
+                notification.setDeviceId(d.getId());
+                notification.setType(Constants.LogType.WARNING.toString());
+                notification.setMessage("Device disconnected.");
+                notification.setTimestamp(System.currentTimeMillis());
 
-                logService.addLog(log);
+                notificationService.addNotification(notification);
                 d.setStatus(String.valueOf(Constants.DeviceStatus.OFFLINE));
             }
         }

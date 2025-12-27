@@ -34,6 +34,12 @@ public class Constants {
     public static final String STATUS_ACTIVE = "Active";
     public static final String STATUS_INACTIVE = "Inactive";
 
+    // Notification Type
+    public static final String NOTIFICATION_TYPE_INFO = "info";
+    public static final String NOTIFICATION_TYPE_WARNING = "warning";
+    public static final String NOTIFICATION_TYPE_SUCCESS = "success";
+    public static final String NOTIFICATION_TYPE_ERROR = "error";
+
     // Color Thresholds
     public static final int FILL_LEVEL_LOW = 30;
     public static final int FILL_LEVEL_MEDIUM = 70;

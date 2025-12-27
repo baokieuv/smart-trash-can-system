@@ -7,9 +7,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.smart_bin.api.ApiService;
@@ -18,9 +20,10 @@ import com.example.smart_bin.model.Device;
 import com.example.smart_bin.model.DeviceData;
 import com.example.smart_bin.utils.Constants;
 import com.example.smart_bin.utils.NetworkUtils;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 @SuppressLint("SetTextI18n")
-public class DeviceControlActivity extends AppCompatActivity {
+public class DeviceControlActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener {
     private static final String TAG = "DeviceControl";
 
     private ActivityDeviceControlBinding binding;
@@ -225,5 +228,29 @@ public class DeviceControlActivity extends AppCompatActivity {
     protected void onPause(){
         super.onPause();
         handler.removeCallbacks(runnable);
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+        int item = menuItem.getItemId();
+
+        if(item == R.id.navigation_home){
+            finish();
+            return true;
+        }else if(item == R.id.navigation_noti){
+            Intent intent = new Intent(this, NotificationActivity.class);
+            startActivity(intent);
+            return true;
+        }else if(item == R.id.navigation_setting){
+            Toast.makeText(this, "Coming soon", Toast.LENGTH_SHORT).show();
+            return true;
+        }
+        finish();
+        return false;
+    }
+
+    @Override
+    public void onPointerCaptureChanged(boolean hasCapture) {
+        super.onPointerCaptureChanged(hasCapture);
     }
 }

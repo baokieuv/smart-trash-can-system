@@ -1,22 +1,21 @@
 package com.example.smart_bin_server.model;
 
-import com.example.smart_bin_server.config.Constants.*;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "logs")
-public class Log {
+public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    String deviceId;
+    private String deviceId;
 
-    String message;
+    private String message;
 
-    String type;
+    private String type;
 
-    Long timestamp;
+    private Long timestamp;
 
     public Long getId() {
         return id;
