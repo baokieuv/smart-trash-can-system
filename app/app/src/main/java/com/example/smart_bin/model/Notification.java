@@ -17,15 +17,6 @@ public class Notification {
 
     }
 
-    public Notification(Long id, String deviceId, String deviceName, String message, String type, Long timestamp) {
-        this.id = id;
-        this.deviceId = deviceId;
-        this.deviceName = deviceName;
-        this.message = message;
-        this.type = type;
-        this.timestamp = timestamp;
-    }
-
     public Long getId() {
         return id;
     }

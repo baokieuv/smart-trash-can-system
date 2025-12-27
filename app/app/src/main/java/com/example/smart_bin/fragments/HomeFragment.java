@@ -15,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.smart_bin.DeviceControlActivity;
@@ -38,6 +39,8 @@ public class HomeFragment extends Fragment implements DeviceAdapter.OnDeviceClic
     private Runnable runnable;
     private List<Device> deviceList = new ArrayList<>();
 
+    private boolean autoRefresh;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -48,6 +51,8 @@ public class HomeFragment extends Fragment implements DeviceAdapter.OnDeviceClic
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        autoRefresh = SettingsFragment.isAutoRefreshEnabled(PreferenceManager.getDefaultSharedPreferences(requireContext()));
 
         setupRecyclerView();
         setupSwipeRefresh();
@@ -87,7 +92,7 @@ public class HomeFragment extends Fragment implements DeviceAdapter.OnDeviceClic
         runnable = new Runnable() {
             @Override
             public void run() {
-                if (NetworkUtils.isNetworkAvailable(requireContext())) {
+                if (autoRefresh && NetworkUtils.isNetworkAvailable(requireContext())) {
                     loadDevices();
                 }
                 handler.postDelayed(this, Constants.REFRESH_INTERVAL);
@@ -106,7 +111,7 @@ public class HomeFragment extends Fragment implements DeviceAdapter.OnDeviceClic
                 deviceList = devices;
                 adapter.setDevices(devices);
                 updateStats(devices);
-                binding.setHasDevices(devices != null && !devices.isEmpty());
+                binding.setHasDevices(!devices.isEmpty());
                 binding.progressBar.setVisibility(View.GONE);
                 binding.swipeRefresh.setRefreshing(false);
 

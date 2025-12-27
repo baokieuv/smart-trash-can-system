@@ -46,6 +46,10 @@ public class Constants {
     public static final int BATTERY_LOW = 20;
     public static final int BATTERY_MEDIUM = 50;
 
+    // Shared Preferences Keys
+    public static final String KEY_PREF_AUTO_REFRESH = "auto_refresh_enabled";
+    public static final String KEY_PREF_THEME_MODE = "theme_mode";
+
     // Request Codes
     public static final int REQUEST_BLUETOOTH_PERMISSIONS = 1;
     public static final int REQUEST_ENABLE_BT = 2;

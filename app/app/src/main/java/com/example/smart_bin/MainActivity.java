@@ -1,18 +1,22 @@
 package com.example.smart_bin;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.preference.PreferenceManager;
 
 import com.example.smart_bin.databinding.ActivityMainBinding;
 import com.example.smart_bin.fragments.HomeFragment;
 import com.example.smart_bin.fragments.NotificationsFragment;
 import com.example.smart_bin.fragments.SettingsFragment;
+import com.example.smart_bin.utils.Constants;
 import com.google.android.material.badge.BadgeDrawable;
 
 public class MainActivity extends AppCompatActivity {
@@ -20,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String SELECTED_ITEM_ID = "selected_item_id";
 
     private ActivityMainBinding binding;
+
     private int selectedItemId = R.id.navigation_home;
 
     @Override
@@ -29,6 +34,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         Log.i(TAG, "onCreate: MainActivity with Bottom Navigation");
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        int themeMode = SettingsFragment.getThemeMode(preferences);
+        AppCompatDelegate.setDefaultNightMode(themeMode);
 
         if (savedInstanceState != null) {
             selectedItemId = savedInstanceState.getInt(SELECTED_ITEM_ID, R.id.navigation_home);

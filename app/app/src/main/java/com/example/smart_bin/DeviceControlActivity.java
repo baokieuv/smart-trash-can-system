@@ -2,25 +2,25 @@ package com.example.smart_bin;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.PreferenceManager;
 
 import com.example.smart_bin.api.ApiService;
 import com.example.smart_bin.databinding.ActivityDeviceControlBinding;
+import com.example.smart_bin.fragments.SettingsFragment;
 import com.example.smart_bin.model.Device;
 import com.example.smart_bin.model.DeviceData;
 import com.example.smart_bin.utils.Constants;
 import com.example.smart_bin.utils.NetworkUtils;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 @SuppressLint("SetTextI18n")
 public class DeviceControlActivity extends AppCompatActivity {
@@ -33,6 +33,8 @@ public class DeviceControlActivity extends AppCompatActivity {
     private Handler handler;
     private Runnable runnable;
 
+    private boolean autoRefresh;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,6 +44,9 @@ public class DeviceControlActivity extends AppCompatActivity {
         deviceId = getIntent().getStringExtra(Constants.EXTRA_DEVICE_ID);
         deviceName = getIntent().getStringExtra(Constants.EXTRA_DEVICE_NAME);
         status = getIntent().getStringExtra(Constants.EXTRA_DEVICE_STATUS);
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        autoRefresh = SettingsFragment.isAutoRefreshEnabled(preferences);
 
         Log.i(TAG, "Device ID: " + deviceId);
         if (deviceId != null && deviceName != null) {
@@ -64,7 +69,9 @@ public class DeviceControlActivity extends AppCompatActivity {
         runnable = new Runnable() {
             @Override
             public void run() {
-                loadDeviceData();
+                if(autoRefresh && NetworkUtils.isNetworkAvailable(DeviceControlActivity.this)) {
+                    loadDeviceData();
+                }
                 handler.postDelayed(this, Constants.REFRESH_INTERVAL);
             }
         };
