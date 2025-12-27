@@ -2,38 +2,25 @@ package com.example.smart_bin;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.EditText;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
-import com.example.smart_bin.adapter.DeviceAdapter;
-import com.example.smart_bin.api.ApiService;
 import com.example.smart_bin.databinding.ActivityMainBinding;
-import com.example.smart_bin.model.Device;
-import com.example.smart_bin.utils.Constants;
-import com.example.smart_bin.utils.NetworkUtils;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.example.smart_bin.fragments.HomeFragment;
+import com.example.smart_bin.fragments.NotificationsFragment;
+import com.example.smart_bin.fragments.SettingsFragment;
+import com.google.android.material.badge.BadgeDrawable;
 
-import java.util.List;
-import java.util.Objects;
-
-public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnDeviceClickListener, BottomNavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
+    private static final String SELECTED_ITEM_ID = "selected_item_id";
 
     private ActivityMainBinding binding;
-    private DeviceAdapter adapter;
-    private Handler handler;
-    private Runnable runnable;
-    private BottomNavigationView navigationView;
+    private int selectedItemId = R.id.navigation_home;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,27 +28,49 @@ public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnD
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        Log.i(TAG, "onCreate: MainActivity");
+        Log.i(TAG, "onCreate: MainActivity with Bottom Navigation");
 
-        setupRecyclerView();
+        if (savedInstanceState != null) {
+            selectedItemId = savedInstanceState.getInt(SELECTED_ITEM_ID, R.id.navigation_home);
+        }
+
+        setupBottomNavigation();
         setupFab();
-        setupSwipeRefresh();
-        setupAutoRefresh();
 
-        navigationView = findViewById(R.id.nav_view);
-        navigationView.setOnNavigationItemSelectedListener(this);
-
-        if (NetworkUtils.isNetworkAvailable(this)) {
-            loadDevices();
-        } else {
-            showNetworkError();
+        // Load initial fragment
+        if (savedInstanceState == null) {
+            loadFragment(new HomeFragment());
         }
     }
 
-    private void setupRecyclerView() {
-        adapter = new DeviceAdapter(this);
-        binding.recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        binding.recyclerView.setAdapter(adapter);
+    private void setupBottomNavigation() {
+        binding.bottomNavigation.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            Fragment selectedFragment = null;
+
+            if (itemId == R.id.navigation_home) {
+                selectedFragment = new HomeFragment();
+            } else if (itemId == R.id.navigation_noti) {
+                selectedFragment = new NotificationsFragment();
+                // Clear notification badge when opening
+                clearNotificationBadge();
+            } else if (itemId == R.id.navigation_setting) {
+                selectedFragment = new SettingsFragment();
+            }
+
+            if (selectedFragment != null) {
+                selectedItemId = itemId;
+                loadFragment(selectedFragment);
+                return true;
+            }
+            return false;
+        });
+
+        // Set selected item
+        binding.bottomNavigation.setSelectedItemId(selectedItemId);
+
+        // Setup notification badge (example)
+        updateNotificationBadge(5); // Mock 5 unread notifications
     }
 
     private void setupFab() {
@@ -71,204 +80,37 @@ public class MainActivity extends AppCompatActivity implements DeviceAdapter.OnD
         });
     }
 
-    private void setupSwipeRefresh(){
-        binding.swipeRefresh.setOnRefreshListener(() -> {
-            if(NetworkUtils.isNetworkAvailable(this)){
-                loadDevices();
-            }else{
-                binding.swipeRefresh.setRefreshing(false);
-                showNetworkError();
-            }
-        });
-        binding.swipeRefresh.setColorSchemeResources(
-                android.R.color.holo_blue_bright,
-                android.R.color.holo_green_light,
-                android.R.color.holo_orange_light
-        );
+    private void loadFragment(Fragment fragment) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, fragment)
+                .commit();
     }
 
-    private void setupAutoRefresh() {
-        handler = new Handler(Looper.getMainLooper());
-        runnable = new Runnable() {
-            @Override
-            public void run() {
-                if(NetworkUtils.isNetworkAvailable(MainActivity.this)){
-                    loadDevices();
-                }
-                handler.postDelayed(this, Constants.REFRESH_INTERVAL);
-            }
-        };
-    }
-
-    private void loadDevices() {
-        Log.i(TAG, "loadDevices: Loading devices...");
-//        viewModel.loadDevices();
-        binding.progressBar.setVisibility(View.VISIBLE);
-        ApiService.getInstance().fetchDevices(new ApiService.DevicesCallback() {
-            @Override
-            public void onSuccess(List<Device> devices) {
-                adapter.setDevices(devices);
-                updateStats(devices);
-                binding.setHasDevices(!devices.isEmpty());
-                binding.progressBar.setVisibility(View.GONE);
-                binding.swipeRefresh.setRefreshing(false);
-
-                Log.d(TAG, "Loaded " + Objects.requireNonNull(devices).size() + " devices");
-
-                if(Objects.requireNonNull(devices).isEmpty()){
-                    Toast.makeText(MainActivity.this, "No devices found", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onError(String error) {
-                binding.progressBar.setVisibility(View.GONE);
-                binding.swipeRefresh.setRefreshing(false);
-                Toast.makeText(MainActivity.this, "Error: " + error, Toast.LENGTH_SHORT).show();
-                Log.e(TAG, "Error loading devices: " + error);
-            }
-        });
-    }
-
-    private void showNetworkError() {
-        String networkType = NetworkUtils.getNetworkTypeName(this);
-        String message = "No internet connection. Network: " + networkType;
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-    }
-
-    private void updateStats(List<Device> devices) {
-        int totalDevices = devices.size();
-        int onlineDevices = 0;
-        int offlineDevices = 0;
-
-        for (Device device : devices) {
-            if (Constants.STATUS_ONLINE.equalsIgnoreCase(device.getStatus())) {
-                onlineDevices++;
-            } else {
-                offlineDevices++;
-            }
+    public void updateNotificationBadge(int count) {
+        if (count > 0) {
+            BadgeDrawable badge = binding.bottomNavigation.getOrCreateBadge(R.id.navigation_noti);
+            badge.setNumber(count);
+            badge.setVisible(true);
+        } else {
+            clearNotificationBadge();
         }
+    }
 
-        binding.tvTotalDevices.setText(String.valueOf(totalDevices));
-        binding.tvOnlineDevices.setText(String.valueOf(onlineDevices));
-        binding.tvOfflineDevices.setText(String.valueOf(offlineDevices));
+    private void clearNotificationBadge() {
+        binding.bottomNavigation.removeBadge(R.id.navigation_noti);
     }
 
     @Override
-    public void onDeviceClick(Device device) {
-        Log.i(TAG, "Device clicked: " + device.getName());
-        Intent intent = new Intent(this, DeviceControlActivity.class);
-        intent.putExtra(Constants.EXTRA_DEVICE_ID, device.getId());
-        intent.putExtra(Constants.EXTRA_DEVICE_NAME, device.getName());
-        intent.putExtra(Constants.EXTRA_DEVICE_STATUS, device.getStatus());
-        startActivity(intent);
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(SELECTED_ITEM_ID, selectedItemId);
     }
 
     @Override
-    public void onDeviceLongClick(Device device) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Device Options")
-                .setItems(new CharSequence[]{"Rename", "Delete"}, (dialog, which)->{
-                    if(which == 0){
-                        showRenameDialog(device);
-                    }else{
-                        showDeleteDialog(device);
-                    }
-                })
-                .show();
-    }
-
-    private void showRenameDialog(Device device) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        final EditText input = new EditText(this);
-        input.setText(device.getName());
-        input.setPadding(50, 30, 50, 30);
-
-        builder.setTitle("Rename Device")
-                .setView(input)
-                .setPositiveButton("Rename", (dialog, which) -> {
-                    String newName = input.getText().toString().trim();
-                    if (!newName.isEmpty()){
-                        device.setName(newName);
-                        ApiService.getInstance().updateDevice(device, new ApiService.DeviceCallback() {
-                            @Override
-                            public void onSuccess(Device device) {
-                                Toast.makeText(MainActivity.this, "Device renamed", Toast.LENGTH_SHORT).show();
-                                loadDevices();
-                                Log.i(TAG, "Device renamed successfully");
-                            }
-
-                            @Override
-                            public void onError(String error) {
-                                Toast.makeText(MainActivity.this, "Error: " + error, Toast.LENGTH_SHORT).show();
-                                Log.e(TAG, "Error renaming device:" + error);
-                            }
-                        });
-                        Toast.makeText(this, "Device renamed", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
-    }
-
-    private void showDeleteDialog(Device device) {
-        new AlertDialog.Builder(this)
-                .setTitle("Delete Device")
-                .setMessage("Are you sure you want to delete " + device.getName() + "?")
-                .setPositiveButton("Delete", (dialog, which) -> {
-                    ApiService.getInstance().deleteDevice(device.getId(), new ApiService.DeviceCallback() {
-                        @Override
-                        public void onSuccess(Device device) {
-                            Toast.makeText(MainActivity.this, "Device deleted", Toast.LENGTH_SHORT).show();
-                            loadDevices();
-                            Log.i(TAG, "Device deleted successfully");
-                        }
-
-                        @Override
-                        public void onError(String error) {
-                            Toast.makeText(MainActivity.this, "Error: " + error, Toast.LENGTH_SHORT).show();
-                            Log.e(TAG, "Error deleting device: " + error);
-                        }
-                    });
-                    Toast.makeText(this, "Device deleted", Toast.LENGTH_SHORT).show();
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
-    }
-
-    @Override
-    protected void onResume(){
+    protected void onResume() {
         super.onResume();
-        loadDevices();
-        handler.postDelayed(runnable, Constants.REFRESH_INTERVAL);
-    }
-
-    @Override
-    protected void onPause(){
-        super.onPause();
-        handler.removeCallbacks(runnable);
-    }
-
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-        int itemId = menuItem.getItemId();
-
-        if(itemId == R.id.navigation_home){
-            return true;
-        } else if(itemId == R.id.navigation_noti){
-            Intent intent = new Intent(this, NotificationActivity.class);
-            startActivity(intent);
-            return true;
-        } else if(itemId == R.id.navigation_setting){
-            Toast.makeText(this, "Coming soon", Toast.LENGTH_SHORT).show();
-            return true;
-        }
-        finish();
-        return false;
-    }
-
-    @Override
-    public void onPointerCaptureChanged(boolean hasCapture) {
-        super.onPointerCaptureChanged(hasCapture);
+        // You can update notification badge here from a service or API
+        // updateNotificationBadge(getUnreadNotificationCount());
     }
 }

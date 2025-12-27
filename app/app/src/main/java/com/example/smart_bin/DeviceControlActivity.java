@@ -23,7 +23,7 @@ import com.example.smart_bin.utils.NetworkUtils;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 @SuppressLint("SetTextI18n")
-public class DeviceControlActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener {
+public class DeviceControlActivity extends AppCompatActivity {
     private static final String TAG = "DeviceControl";
 
     private ActivityDeviceControlBinding binding;
@@ -228,29 +228,5 @@ public class DeviceControlActivity extends AppCompatActivity implements BottomNa
     protected void onPause(){
         super.onPause();
         handler.removeCallbacks(runnable);
-    }
-
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-        int item = menuItem.getItemId();
-
-        if(item == R.id.navigation_home){
-            finish();
-            return true;
-        }else if(item == R.id.navigation_noti){
-            Intent intent = new Intent(this, NotificationActivity.class);
-            startActivity(intent);
-            return true;
-        }else if(item == R.id.navigation_setting){
-            Toast.makeText(this, "Coming soon", Toast.LENGTH_SHORT).show();
-            return true;
-        }
-        finish();
-        return false;
-    }
-
-    @Override
-    public void onPointerCaptureChanged(boolean hasCapture) {
-        super.onPointerCaptureChanged(hasCapture);
     }
 }

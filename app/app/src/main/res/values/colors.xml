@@ -42,4 +42,8 @@
     <!-- Border Colors -->
     <color name="borderLight">#E2E8F0</color>
     <color name="borderMedium">#CBD5E1</color>
+    
+    <color name="bottom_nav_bar">#2563EB</color>
+    <color name="bottom_nav_bar_selected">#94A3B8</color>
+
 </resources>

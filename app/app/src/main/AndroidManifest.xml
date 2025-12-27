@@ -49,9 +49,6 @@
             android:name=".WiFiReconfigureActivity"
             android:exported="false" />
 
-        <activity android:name=".NotificationActivity"
-            android:exported="false" />
-
     </application>
 
 </manifest>
