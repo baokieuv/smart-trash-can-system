@@ -15,13 +15,18 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
-@AllArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
     private final KeycloakService keycloakService;
     private final EmailService emailService;
 
     private static final long VERIFICATION_TOKEN_EXPIRY = 24 * 60 * 60 * 1000;
+
+    public UserService(UserRepository userRepository, KeycloakService keycloakService, EmailService emailService){
+        this.userRepository = userRepository;
+        this.keycloakService = keycloakService;
+        this.emailService = emailService;
+    }
 
     public UserDto register(RegisterRequest request){
         if(userRepository.existsByEmail(request.email())){

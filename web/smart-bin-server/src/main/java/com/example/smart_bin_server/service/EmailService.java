@@ -32,7 +32,7 @@ public class EmailService {
             helper.setSubject("Smart Bin - Verify Email");
 
             String htmlContent = buildVerificationEmailHtml(firstName, token);
-            helper.setText(htmlContent);
+            helper.setText(htmlContent, true);
 
             mailSender.send(message);
         }catch (MessagingException ex){

@@ -27,6 +27,7 @@ public class DeviceController {
             @AuthenticationPrincipal Jwt jwt){
 
         String userId = jwt.getSubject();
+        System.out.println(userId);
         return ResponseEntity.ok().body(deviceService.createDevice(request, userId));
     }
 
@@ -35,6 +36,7 @@ public class DeviceController {
             @AuthenticationPrincipal Jwt jwt){
 
         String userId = jwt.getSubject();
+        System.out.println(userId);
         return ResponseEntity.ok().body(deviceService.getDevices(userId));
     }
 

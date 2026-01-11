@@ -10,12 +10,14 @@ import org.keycloak.representations.idm.CertificateRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Service
 public class KeycloakService {
     private final Keycloak keycloak;
     private final String realm;
