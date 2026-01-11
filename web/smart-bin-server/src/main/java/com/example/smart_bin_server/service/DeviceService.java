@@ -37,7 +37,7 @@ public class DeviceService {
     }
 
     @Transactional
-    public DeviceDto createDevice(CreateDeviceRequest request){
+    public DeviceDto createDevice(CreateDeviceRequest request, String userId){
 
         String id = request.macAddress().replace(":", "_");
 
@@ -53,6 +53,9 @@ public class DeviceService {
                 .filter(n -> !n.isBlank())
                 .orElse("Device" + request.macAddress()));
         device.setStatus(String.valueOf(Constants.DeviceStatus.OFFLINE));
+        device.setUserId(userId);
+        device.setCreatedAt(System.currentTimeMillis());
+        device.setUpdatedAt(System.currentTimeMillis());
 
         DeviceData data = new DeviceData();
         data.setDeviceId(device.getId());
@@ -75,64 +78,78 @@ public class DeviceService {
         return deviceMapper.toDto(repository.save(device));
     }
 
-    public List<DeviceDto> getDevices(){
-        List<Device> devices = repository.findAll();
+    public List<DeviceDto> getDevices(String userId){
+        List<Device> devices = repository.findByUserId(userId);
 
         return devices.stream()
                 .map(deviceMapper::toDto)
                 .toList();
     }
 
-    public DeviceDto getDeviceById(String deviceId) {
+    public DeviceDto getDeviceById(String deviceId, String userId) {
         Device device = repository.findById(deviceId).orElse(null);
 
         if(device == null){
             throw new RuntimeException("Device not found");
         }
+
+        if(!device.getUserId().equals(userId)){
+            throw new RuntimeException("Unauthorized access to device");
+        }
         return deviceMapper.toDto(device);
     }
 
-    public DeviceDto updateDevice(String deviceId, UpdateDeviceRequest request) {
+    public DeviceDto updateDevice(String deviceId, UpdateDeviceRequest request, String userId) {
         Device device = repository.findById(deviceId).orElse(null);
 
-        if(device != null){
-            device.setName(Optional.ofNullable(request.name())
-                    .filter(n -> !n.isBlank())
-                    .orElse(device.getName()));
-
-            device.setStatus(Optional.ofNullable(request.status())
-                    .filter(n -> !n.isBlank())
-                    .orElse(device.getStatus()));
-
-            Notification notification = new Notification();
-            notification.setDeviceId(deviceId);
-            notification.setMessage("Update device successfully.");
-            notification.setType(Constants.LogType.SUCCESS.toString());
-            notification.setTimestamp(System.currentTimeMillis());
-            notificationService.addNotification(notification);
-        } else{
+        if(device == null){
             throw new RuntimeException("Device not found");
         }
+
+        if(!device.getUserId().equals(userId)){
+            throw new RuntimeException("Unauthorized access to device");
+        }
+
+        device.setName(Optional.ofNullable(request.name())
+                .filter(n -> !n.isBlank())
+                .orElse(device.getName()));
+
+        device.setStatus(Optional.ofNullable(request.status())
+                .filter(n -> !n.isBlank())
+                .orElse(device.getStatus()));
+
+        device.setUpdatedAt(System.currentTimeMillis());
+
+        Notification notification = new Notification();
+        notification.setDeviceId(deviceId);
+        notification.setMessage("Update device successfully.");
+        notification.setType(Constants.LogType.SUCCESS.toString());
+        notification.setTimestamp(System.currentTimeMillis());
+        notificationService.addNotification(notification);
 
         return deviceMapper.toDto(repository.save(device));
     }
 
-    public String deleteDevice(String deviceId) {
+    public String deleteDevice(String deviceId, String userId) {
         Device device = repository.findById(deviceId).orElse(null);
 
-        if (device != null) {
-            repository.deleteById(deviceId);
-            dataRepository.deleteById(deviceId);
-
-            Notification notification = new Notification();
-            notification.setDeviceId(deviceId);
-            notification.setMessage("Delete device successfully.");
-            notification.setType(Constants.LogType.SUCCESS.toString());
-            notification.setTimestamp(System.currentTimeMillis());
-            notificationService.addNotification(notification);
-        } else {
+        if (device == null) {
             throw new RuntimeException("Device not found");
         }
+
+        if(!device.getUserId().equals(userId)){
+            throw new RuntimeException("Unauthorized access to device");
+        }
+
+        repository.deleteById(deviceId);
+        dataRepository.deleteById(deviceId);
+
+        Notification notification = new Notification();
+        notification.setDeviceId(deviceId);
+        notification.setMessage("Delete device successfully.");
+        notification.setType(Constants.LogType.SUCCESS.toString());
+        notification.setTimestamp(System.currentTimeMillis());
+        notificationService.addNotification(notification);
 
         return deviceId;
     }

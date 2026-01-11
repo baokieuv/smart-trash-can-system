@@ -6,6 +6,8 @@ import com.example.smart_bin_server.dto.UpdateDeviceRequest;
 import com.example.smart_bin_server.service.DeviceService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -20,27 +22,47 @@ public class DeviceController {
     }
 
     @PostMapping
-    public ResponseEntity<Object> createDevice(@RequestBody CreateDeviceRequest request){
-        return ResponseEntity.ok().body(deviceService.createDevice(request));
+    public ResponseEntity<Object> createDevice(
+            @RequestBody CreateDeviceRequest request,
+            @AuthenticationPrincipal Jwt jwt){
+
+        String userId = jwt.getSubject();
+        return ResponseEntity.ok().body(deviceService.createDevice(request, userId));
     }
 
     @GetMapping
-    public ResponseEntity<Object> getDevices(){
-        return ResponseEntity.ok().body(deviceService.getDevices());
+    public ResponseEntity<Object> getDevices(
+            @AuthenticationPrincipal Jwt jwt){
+
+        String userId = jwt.getSubject();
+        return ResponseEntity.ok().body(deviceService.getDevices(userId));
     }
 
     @GetMapping("/{deviceId}")
-    public ResponseEntity<Object> getDeviceById(@PathVariable String deviceId){
-        return ResponseEntity.ok().body(deviceService.getDeviceById(deviceId));
+    public ResponseEntity<Object> getDeviceById(
+            @PathVariable String deviceId,
+            @AuthenticationPrincipal Jwt jwt){
+
+        String userId = jwt.getSubject();
+        return ResponseEntity.ok().body(deviceService.getDeviceById(deviceId, userId));
     }
 
     @PutMapping("/{deviceId}")
-    public ResponseEntity<Object> updateDevice(@PathVariable String deviceId, @Valid @RequestBody UpdateDeviceRequest request){
-        return ResponseEntity.ok().body(deviceService.updateDevice(deviceId, request));
+    public ResponseEntity<Object> updateDevice(
+            @PathVariable String deviceId,
+            @Valid @RequestBody UpdateDeviceRequest request,
+            @AuthenticationPrincipal Jwt jwt){
+
+        String userId = jwt.getSubject();
+        return ResponseEntity.ok().body(deviceService.updateDevice(deviceId, request, userId));
     }
 
     @DeleteMapping("/{deviceId}")
-    public ResponseEntity<Object> deleteDevice(@PathVariable String deviceId){
-        return ResponseEntity.ok().body(deviceService.deleteDevice(deviceId));
+    public ResponseEntity<Object> deleteDevice(
+            @PathVariable String deviceId,
+            @AuthenticationPrincipal Jwt jwt){
+
+        String userId = jwt.getSubject();
+        return ResponseEntity.ok().body(deviceService.deleteDevice(deviceId, userId));
     }
 }

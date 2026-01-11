@@ -25,9 +25,38 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MariaDBDialect
         format_sql: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/smart-bin-realm
+          jwk-set-uri: http://localhost:8080/realms/smart-bin-realm/protocol/openid-connect/certs
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: kieubao2k4@gmail.com
+    password: 12345
+    properties:
+      mail:
+        smtp:
+          auth: true
+          enable: true
+          required: true
 server:
   port: 8888
 
 app:
   ai-server:
     url: http://localhost:8000
+  email:
+    from: kieubao2k4@gmail.com
+    verification:
+      url: http://localhost:8081/api/v1/auth/verify-email
+
+keycloak:
+  server-url: http://localhost:8080
+  realm: smart-bin-realm
+  client-id: smart-bin-client
+  client-secret: smart-bin-1234@
+  admin-user: admin
+  admin-password: admin

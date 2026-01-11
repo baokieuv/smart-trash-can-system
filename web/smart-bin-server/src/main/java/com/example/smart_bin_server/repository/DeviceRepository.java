@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface DeviceRepository extends JpaRepository<Device, String> {
     List<Device> findByStatus(String status);
+    List<Device> findByUserId(String userId);
 }

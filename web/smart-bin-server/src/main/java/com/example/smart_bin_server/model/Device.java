@@ -1,41 +1,31 @@
 package com.example.smart_bin_server.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.*;
+import jakarta.persistence.*;
+import lombok.Data;
 
 @Entity
+@Table(name = "devices")
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class Device {
     @Id
     private String id;
+
+    @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false)
     private String status;
 
-    public String getId() {
-        return id;
-    }
+    @Column(name = "user_id")
+    private String userId;
 
-    public void setId(String id) {
-        this.id = id;
-    }
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private User user;
 
-    public String getName() {
-        return name;
-    }
+    @Column
+    private Long createdAt;
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
+    @Column
+    private Long updatedAt;
 }
