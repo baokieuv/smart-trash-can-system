@@ -1,5 +1,6 @@
 package com.example.smart_bin.fragments;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -14,14 +15,17 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
 
+import com.example.smart_bin.LoginActivity;
 import com.example.smart_bin.databinding.FragmentSettingsBinding;
 import com.example.smart_bin.utils.Constants;
+import com.example.smart_bin.utils.TokenManager;
 
 public class SettingsFragment extends Fragment {
     private static final String TAG = "SettingsFragment";
 
     private FragmentSettingsBinding binding;
     private SharedPreferences preferences;
+    private TokenManager tokenManager;
 
     @Nullable
     @Override
@@ -35,12 +39,19 @@ public class SettingsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         preferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
+        tokenManager = TokenManager.getInstance(requireContext());
 
         setupViews();
         loadSettings();
     }
 
     private void setupViews() {
+        // User Info
+        String userName = tokenManager.getUserFullName();
+        String userEmail = tokenManager.getUserEmail();
+        binding.tvUserName.setText(userName);
+        binding.tvUserEmail.setText(userEmail);
+
         // Theme Setting
         binding.settingTheme.setOnClickListener(v -> showThemeDialog());
 
@@ -53,6 +64,9 @@ public class SettingsFragment extends Fragment {
             String message = isChecked ? "Auto refresh enabled" : "Auto refresh disabled";
             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
         });
+
+        // Logout Button
+        binding.btnLogout.setOnClickListener(v -> showLogoutDialog());
 
         // Server URL
         binding.tvServerUrl.setText(Constants.BASE_URL);
@@ -95,6 +109,24 @@ public class SettingsFragment extends Fragment {
                     Toast.makeText(requireContext(), themes[which], Toast.LENGTH_SHORT).show();
                 })
                 .show();
+    }
+
+    private void showLogoutDialog() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Logout")
+                .setMessage("Are you sure you want to logout?")
+                .setPositiveButton("Logout", (dialog, which) -> performLogout())
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void performLogout() {
+        tokenManager.clearTokens();
+
+        Intent intent = new Intent(requireContext(), LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        requireActivity().finish();
     }
 
     public static boolean isAutoRefreshEnabled(SharedPreferences prefs) {

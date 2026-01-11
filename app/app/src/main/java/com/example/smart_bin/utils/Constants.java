@@ -3,7 +3,7 @@ package com.example.smart_bin.utils;
 public class Constants {
     // API Configuration
     // TODO: Replace with your actual IP address
-    public static final String BASE_URL = "http://kvbhust.site";
+    public static final String BASE_URL = "http://www.kvbhust.site";
     public static final String API_VERSION = "/api/v1";
     public static final String DEVICES_ENDPOINT = BASE_URL + API_VERSION + "/devices";
 

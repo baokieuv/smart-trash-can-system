@@ -52,7 +52,7 @@ app:
   email:
     from: kieubao2k4@gmail.com
     verification:
-      url: http://localhost:8888/api/v1/auth/verify-email
+      url: http://www.kvbhust.site/api/v1/auth/verify-email
 
 keycloak:
   server-url: http://localhost:8080

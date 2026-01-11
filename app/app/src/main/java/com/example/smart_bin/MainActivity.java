@@ -12,11 +12,13 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 
+import com.example.smart_bin.api.ApiService;
 import com.example.smart_bin.databinding.ActivityMainBinding;
 import com.example.smart_bin.fragments.HomeFragment;
 import com.example.smart_bin.fragments.NotificationsFragment;
 import com.example.smart_bin.fragments.SettingsFragment;
 import com.example.smart_bin.utils.Constants;
+import com.example.smart_bin.utils.TokenManager;
 import com.google.android.material.badge.BadgeDrawable;
 
 public class MainActivity extends AppCompatActivity {
@@ -24,16 +26,24 @@ public class MainActivity extends AppCompatActivity {
     private static final String SELECTED_ITEM_ID = "selected_item_id";
 
     private ActivityMainBinding binding;
+    private TokenManager tokenManager;
 
     private int selectedItemId = R.id.navigation_home;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        tokenManager = TokenManager.getInstance(this);
+        ApiService.getInstance(this);
+
+        if (!tokenManager.isLoggedIn()) {
+            navigateToLogin();
+            return;
+        }
+
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-
-        Log.i(TAG, "onCreate: MainActivity with Bottom Navigation");
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -111,6 +121,13 @@ public class MainActivity extends AppCompatActivity {
         binding.bottomNavigation.removeBadge(R.id.navigation_noti);
     }
 
+    private void navigateToLogin() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
+
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -120,7 +137,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // You can update notification badge here from a service or API
-        // updateNotificationBadge(getUnreadNotificationCount());
+        if (!tokenManager.isLoggedIn()) {
+            navigateToLogin();
+        }
     }
 }

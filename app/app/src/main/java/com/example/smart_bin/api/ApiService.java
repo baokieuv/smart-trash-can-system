@@ -1,5 +1,6 @@
 package com.example.smart_bin.api;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -8,6 +9,7 @@ import com.example.smart_bin.model.Device;
 import com.example.smart_bin.model.DeviceData;
 import com.example.smart_bin.model.Notification;
 import com.example.smart_bin.utils.Constants;
+import com.example.smart_bin.utils.TokenManager;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -27,6 +29,7 @@ public class ApiService {
     private static ApiService instance;
     private final ExecutorService executorService;
     private final Handler mainHandler;
+    private Context context;
 
     public interface DevicesCallback{
         void onSuccess(List<Device> devices);
@@ -48,27 +51,54 @@ public class ApiService {
         void onError(String error);
     }
 
-    private ApiService(){
+    private ApiService(Context context){
+        this.context = context.getApplicationContext();
         executorService = Executors.newFixedThreadPool(3);
         mainHandler = new Handler(Looper.getMainLooper());
     }
 
-    public static synchronized ApiService getInstance(){
+    public static synchronized ApiService getInstance(Context context){
         if(instance == null){
-            instance = new ApiService();
+            instance = new ApiService(context);
         }
         return instance;
+    }
+
+    // Deprecated - for backwards compatibility
+    public static synchronized ApiService getInstance(){
+        if(instance == null){
+            throw new IllegalStateException("ApiService must be initialized with context first");
+        }
+        return instance;
+    }
+
+    private HttpURLConnection createAuthenticatedConnection(String endpoint, String method) throws Exception {
+        TokenManager tokenManager = TokenManager.getInstance(context);
+        String token = tokenManager.getAccessToken();
+
+        if (token == null || !tokenManager.isTokenValid()) {
+            throw new Exception("Authentication required");
+        }
+
+        URL url = new URL(endpoint);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod(method);
+        connection.setRequestProperty("Authorization", "Bearer " + token);
+        connection.setRequestProperty("Content-Type", "application/json");
+        connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
+        connection.setReadTimeout(Constants.READ_TIMEOUT);
+
+        return connection;
     }
 
     public void fetchDevices(DevicesCallback callback) {
         Log.i(TAG, "fetchDevices: Fetching devices...");
         executorService.execute(() -> {
             try {
-                URL url = new URL(Constants.DEVICES_ENDPOINT);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
-                connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
-                connection.setReadTimeout(Constants.READ_TIMEOUT);
+                HttpURLConnection connection = createAuthenticatedConnection(
+                        Constants.DEVICES_ENDPOINT,
+                        "GET"
+                );
 
                 int responseCode = connection.getResponseCode();
                 if(responseCode == HttpURLConnection.HTTP_OK){
@@ -85,7 +115,9 @@ public class ApiService {
 
                     List<Device> devices = parseDevices(response.toString());
                     mainHandler.post(() -> callback.onSuccess(devices));
-                }else{
+                } else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                    mainHandler.post(() -> callback.onError("Unauthorized. Please login again."));
+                } else{
                     Log.i(TAG, "fetchDevices: Failed to fetch devices" + responseCode);
                     mainHandler.post(() -> callback.onError("Failed to fetch devices " + responseCode));
                 }
@@ -93,56 +125,55 @@ public class ApiService {
                 connection.disconnect();
             } catch (Exception e) {
                 Log.e(TAG, "Failed to fetch devices", e);
-                mainHandler.post(() -> callback.onError("Failed to fetch devices " + e.getMessage()));
+                mainHandler.post(() -> callback.onError("Failed to fetch devices: " + e.getMessage()));
             }
         });
     }
 
     public void fetchDeviceData(String deviceId, DeviceDataCallback callback){
         executorService.execute(() -> {
-           try{
-               URL url = new URL(Constants.DEVICES_ENDPOINT + "/" + deviceId.replace(":", "_") + "/data");
-               HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-               connection.setRequestMethod("GET");
-               connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
-               connection.setReadTimeout(Constants.READ_TIMEOUT);
+            try{
+                HttpURLConnection connection = createAuthenticatedConnection(
+                        Constants.DEVICES_ENDPOINT + "/" + deviceId.replace(":", "_") + "/data",
+                        "GET"
+                );
 
-               int responseCode = connection.getResponseCode();
-               if(responseCode == HttpURLConnection.HTTP_OK){
-                   BufferedReader reader = new BufferedReader(
-                           new InputStreamReader(connection.getInputStream())
-                   );
-                   StringBuilder response = new StringBuilder();
-                   String line;
+                int responseCode = connection.getResponseCode();
+                if(responseCode == HttpURLConnection.HTTP_OK){
+                    BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(connection.getInputStream())
+                    );
+                    StringBuilder response = new StringBuilder();
+                    String line;
 
-                   while((line = reader.readLine()) != null){
-                       response.append(line);
-                   }
-                   reader.close();
+                    while((line = reader.readLine()) != null){
+                        response.append(line);
+                    }
+                    reader.close();
 
-                   DeviceData data = parseDeviceData(response.toString());
-                   mainHandler.post(() -> callback.onSuccess(data));
-               }else{
-                   mainHandler.post(() -> callback.onError("Failed to fetch device data " + responseCode));
-               }
+                    DeviceData data = parseDeviceData(response.toString());
+                    mainHandler.post(() -> callback.onSuccess(data));
+                } else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                    mainHandler.post(() -> callback.onError("Unauthorized. Please login again."));
+                } else{
+                    mainHandler.post(() -> callback.onError("Failed to fetch device data " + responseCode));
+                }
 
-               connection.disconnect();
-           }catch (Exception e){
-               Log.e(TAG, "Failed to fetch device data", e);
-               mainHandler.post(() -> callback.onError("Failed to fetch device data " + e.getMessage()));
-           }
+                connection.disconnect();
+            }catch (Exception e){
+                Log.e(TAG, "Failed to fetch device data", e);
+                mainHandler.post(() -> callback.onError("Failed to fetch device data: " + e.getMessage()));
+            }
         });
     }
 
     public void createDevice(Device device, DeviceCallback callback){
         executorService.execute(() -> {
             try{
-                URL url = new URL(Constants.DEVICES_ENDPOINT);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("POST");
-                connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
-                connection.setReadTimeout(Constants.READ_TIMEOUT);
-                connection.setRequestProperty("Content-Type", "application/json");
+                HttpURLConnection connection = createAuthenticatedConnection(
+                        Constants.DEVICES_ENDPOINT,
+                        "POST"
+                );
 
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("macAddress", device.getMacAddress());
@@ -155,11 +186,13 @@ public class ApiService {
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     Log.i(TAG, "createDevice: Device created successfully");
                     mainHandler.post(() -> callback.onSuccess(device));
+                } else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                    mainHandler.post(() -> callback.onError("Unauthorized. Please login again."));
                 } else {
                     Log.i(TAG, "createDevice: Failed to create device " + responseCode);
                     mainHandler.post(() -> {
                         try {
-                            callback.onError("Failed to create device." + connection.getResponseMessage());
+                            callback.onError("Failed to create device: " + connection.getResponseMessage());
                         } catch (IOException e) {
                             callback.onError("Failed to create device.");
                         }
@@ -169,7 +202,7 @@ public class ApiService {
                 connection.disconnect();
             }catch (Exception e){
                 Log.e(TAG, "Failed to create device", e);
-                mainHandler.post(() -> callback.onError("Failed to create device" + e.getMessage()));
+                mainHandler.post(() -> callback.onError("Failed to create device: " + e.getMessage()));
             }
         });
     }
@@ -177,11 +210,10 @@ public class ApiService {
     public void getDevice(String deviceId, DeviceCallback callback){
         executorService.execute(() -> {
             try{
-                URL url = new URL(Constants.DEVICES_ENDPOINT + "/" + deviceId.replace(":", "_"));
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
-                connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
-                connection.setReadTimeout(Constants.READ_TIMEOUT);
+                HttpURLConnection connection = createAuthenticatedConnection(
+                        Constants.DEVICES_ENDPOINT + "/" + deviceId.replace(":", "_"),
+                        "GET"
+                );
 
                 int responseCode = connection.getResponseCode();
                 if(responseCode == HttpURLConnection.HTTP_OK){
@@ -199,11 +231,13 @@ public class ApiService {
                     Device device = parseDevice(response.toString());
 
                     mainHandler.post(() -> callback.onSuccess(device));
-                }else{
+                } else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                    mainHandler.post(() -> callback.onError("Unauthorized. Please login again."));
+                } else{
                     mainHandler.post(() -> callback.onError("Failed to get device " + responseCode));
                 }
             }catch (Exception e){
-                mainHandler.post(() -> callback.onError("Failed to get device " + e.getMessage()));
+                mainHandler.post(() -> callback.onError("Failed to get device: " + e.getMessage()));
             }
 
         });
@@ -212,12 +246,10 @@ public class ApiService {
     public void updateDevice(Device device, DeviceCallback callback){
         executorService.execute(() -> {
             try {
-                URL url = new URL(Constants.DEVICES_ENDPOINT + "/" + device.getId().replace(":", "_"));
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("PUT");
-                connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
-                connection.setReadTimeout(Constants.READ_TIMEOUT);
-                connection.setRequestProperty("Content-Type", "application/json");
+                HttpURLConnection connection = createAuthenticatedConnection(
+                        Constants.DEVICES_ENDPOINT + "/" + device.getId().replace(":", "_"),
+                        "PUT"
+                );
 
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put(Constants.KEY_NAME, device.getName());
@@ -229,6 +261,8 @@ public class ApiService {
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     Log.i(TAG, "updateDevice: Device updated successfully");
                     mainHandler.post(() -> callback.onSuccess(device));
+                } else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                    mainHandler.post(() -> callback.onError("Unauthorized. Please login again."));
                 } else {
                     Log.i(TAG, "updateDevice: Failed to update device " + responseCode);
                     mainHandler.post(() -> callback.onError("Failed to update device " + responseCode));
@@ -237,7 +271,7 @@ public class ApiService {
                 connection.disconnect();
             }catch (Exception e){
                 Log.e(TAG, "Failed to update device", e);
-                mainHandler.post(() -> callback.onError("Failed to update device " + e.getMessage()));
+                mainHandler.post(() -> callback.onError("Failed to update device: " + e.getMessage()));
             }
         });
     }
@@ -245,17 +279,18 @@ public class ApiService {
     public void deleteDevice(String deviceId, DeviceCallback callback) {
         executorService.execute(() -> {
             try{
-                URL url = new URL(Constants.DEVICES_ENDPOINT + "/" + deviceId.replace(":", "_"));
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("DELETE");
-                connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
-                connection.setReadTimeout(Constants.READ_TIMEOUT);
+                HttpURLConnection connection = createAuthenticatedConnection(
+                        Constants.DEVICES_ENDPOINT + "/" + deviceId.replace(":", "_"),
+                        "DELETE"
+                );
 
                 int responseCode = connection.getResponseCode();
                 if(responseCode == HttpURLConnection.HTTP_OK){
                     Log.i(TAG, "deleteDevice: Device deleted successfully");
                     mainHandler.post(() -> callback.onSuccess(null));
-                }else{
+                } else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                    mainHandler.post(() -> callback.onError("Unauthorized. Please login again."));
+                } else{
                     Log.i(TAG, "deleteDevice: Failed to delete device " + responseCode);
                     mainHandler.post(() -> callback.onError("Failed to delete device " + responseCode));
                 }
@@ -263,7 +298,7 @@ public class ApiService {
                 connection.disconnect();
             }catch (Exception e){
                 Log.e(TAG, "Failed to delete device", e);
-                mainHandler.post(() -> callback.onError("Failed to delete device " + e.getMessage()));
+                mainHandler.post(() -> callback.onError("Failed to delete device: " + e.getMessage()));
             }
         });
     }
@@ -271,11 +306,10 @@ public class ApiService {
     public void fetchNotifications(NotificationCallback callback){
         executorService.execute(() -> {
             try{
-                URL url = new URL(Constants.BASE_URL + Constants.API_VERSION + "/notifications");
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
-                connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
-                connection.setReadTimeout(Constants.READ_TIMEOUT);
+                HttpURLConnection connection = createAuthenticatedConnection(
+                        Constants.BASE_URL + Constants.API_VERSION + "/notifications",
+                        "GET"
+                );
 
                 int responseCode = connection.getResponseCode();
                 if(responseCode == HttpURLConnection.HTTP_OK){
@@ -292,16 +326,19 @@ public class ApiService {
 
                     List<Notification> notifications = parseNotifications(response.toString());
                     mainHandler.post(() -> callback.onSuccess(notifications));
-                }else{
+                } else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                    mainHandler.post(() -> callback.onError("Unauthorized. Please login again."));
+                } else{
                     Log.e(TAG, "Failed to fetch notifications " + responseCode);
                     mainHandler.post(() -> callback.onError("Failed to fetch notifications " + responseCode));
                 }
             }catch (Exception e){
                 Log.e(TAG, "Failed to fetch notifications", e);
-                mainHandler.post(() -> callback.onError("Failed to fetch notifications " + e.getMessage()));
+                mainHandler.post(() -> callback.onError("Failed to fetch notifications: " + e.getMessage()));
             }
         });
     }
+
     private List<Device> parseDevices(String string) throws Exception {
         List<Device> devices = new ArrayList<>();
         JSONArray jsonArray = new JSONArray(string);
@@ -311,7 +348,6 @@ public class ApiService {
             Device device = new Device();
             device.setId(jsonObject.getString(Constants.KEY_ID).replace("_", ":"));
             device.setName(jsonObject.optString(Constants.KEY_NAME, "Device " + (i + 1)));
-
             device.setMacAddress(jsonObject.getString(Constants.KEY_ID));
             device.setStatus(jsonObject.getString(Constants.KEY_STATUS));
             devices.add(device);
