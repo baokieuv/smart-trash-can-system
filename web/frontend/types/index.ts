@@ -18,3 +18,33 @@ export type ActivityLog = {
   type: string;
   timestamp: number;
 };
+
+// Auth Types
+export type User = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  emailVerified: boolean;
+  createdAt: number;
+};
+
+export type AuthResponse = {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  tokenType: string;
+  user: User;
+};
+
+export type LoginCredentials = {
+  email: string;
+  password: string;
+};
+
+export type RegisterData = {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+};
