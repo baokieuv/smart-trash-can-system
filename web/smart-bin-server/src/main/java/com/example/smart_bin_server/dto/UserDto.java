@@ -6,6 +6,6 @@ public record UserDto(
         String firstName,
         String lastName,
         boolean emailVerified,
-        Long createAt
+        Long createdAt
 ) {
 }
