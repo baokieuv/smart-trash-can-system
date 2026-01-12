@@ -2,23 +2,24 @@ package com.example.smart_bin_server.service;
 
 import com.example.smart_bin_server.dto.LoginRequest;
 import com.example.smart_bin_server.dto.RegisterRequest;
+import com.example.smart_bin_server.dto.TokenResponse;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import okhttp3.*;
 import org.keycloak.admin.client.Keycloak;
-import org.keycloak.representations.idm.CertificateRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class KeycloakService {
+
     private final Keycloak keycloak;
     private final String realm;
     private final OkHttpClient client = new OkHttpClient();
@@ -37,7 +38,7 @@ public class KeycloakService {
         this.realm = keycloakRealm;
     }
 
-    public String createUser(RegisterRequest request){
+    public String createUser(RegisterRequest request) {
         UserRepresentation user = new UserRepresentation();
         user.setEnabled(false);
         user.setUsername(request.email());
@@ -46,42 +47,40 @@ public class KeycloakService {
         user.setLastName(request.lastName());
         user.setEmailVerified(false);
 
-        CredentialRepresentation  credential = new CredentialRepresentation();
+        CredentialRepresentation credential = new CredentialRepresentation();
         credential.setType(CredentialRepresentation.PASSWORD);
         credential.setValue(request.password());
         credential.setTemporary(false);
 
         user.setCredentials(Collections.singletonList(credential));
 
-        try{
+        try {
             var response = keycloak.realm(realm).users().create(user);
 
-            if(response.getStatus() == 201){
+            if (response.getStatus() == 201) {
                 String locationHeader = response.getHeaderString("Location");
-                String userId = locationHeader.substring(locationHeader.lastIndexOf('/') + 1);
-                return userId;
-            }else{
+                return locationHeader.substring(locationHeader.lastIndexOf('/') + 1);
+            } else {
                 throw new RuntimeException("Failed to create user in Keycloak");
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException("Error creating user in Keycloak: " + e.getMessage());
         }
     }
 
-    public void enableUser(String userId){
-        try{
+    public void enableUser(String userId) {
+        try {
             UserRepresentation user = keycloak.realm(realm).users().get(userId).toRepresentation();
-
             user.setEnabled(true);
             user.setEmailVerified(true);
             keycloak.realm(realm).users().get(userId).update(user);
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException("Error enabling user in Keycloak: " + e.getMessage());
         }
     }
 
-    public Map<String, Object> login(LoginRequest request){
-        try{
+    public TokenResponse login(LoginRequest request) {
+        try {
             RequestBody body = new FormBody.Builder()
                     .add("grant_type", "password")
                     .add("client_id", clientId)
@@ -95,41 +94,117 @@ public class KeycloakService {
                     .post(body)
                     .build();
 
-            try (Response response = client.newCall(req).execute()){
-                String responseBody = response.body().string();
+            try (Response response = client.newCall(req).execute()) {
+                String responseBody = Objects.requireNonNull(response.body()).string();
 
-                if(!response.isSuccessful()){
+                if (!response.isSuccessful()) {
                     throw new RuntimeException("Invalid credentials");
                 }
 
                 JsonObject json = new Gson().fromJson(responseBody, JsonObject.class);
 
-                Map<String, Object> result = new HashMap<>();
-                result.put("access_token", json.get("access_token").getAsString());
-                result.put("refresh_token", json.get("refresh_token").getAsString());
-                result.put("expires_in", json.get("expires_in").getAsLong());
-
-                return result;
+                return new TokenResponse(
+                        json.get("access_token").getAsString(),
+                        json.get("refresh_token").getAsString(),
+                        json.get("expires_in").getAsInt(),
+                        json.get("refresh_expires_in").getAsInt(),
+                        json.get("token_type").getAsString()
+                );
             }
-        }catch (Exception e){
+        } catch (IOException e) {
             throw new RuntimeException("Error during login: " + e.getMessage());
         }
     }
 
-    public UserRepresentation getUserByEmail(String email){
-        try{
-            List<UserRepresentation> users = keycloak.realm(realm).users().search(email, true);
+    public TokenResponse refreshAccessToken(String refreshToken) {
+        try {
+            RequestBody body = new FormBody.Builder()
+                    .add("grant_type", "refresh_token")
+                    .add("client_id", clientId)
+                    .add("client_secret", clientSecret)
+                    .add("refresh_token", refreshToken)
+                    .build();
 
-            if(users.isEmpty()) return null;
+            Request req = new Request.Builder()
+                    .url(serverUrl + "/realms/" + realm + "/protocol/openid-connect/token")
+                    .post(body)
+                    .build();
+
+            try (Response response = client.newCall(req).execute()) {
+                String responseBody = Objects.requireNonNull(response.body()).string();
+
+                if (!response.isSuccessful()) {
+                    throw new RuntimeException("Invalid or expired refresh token");
+                }
+
+                JsonObject json = new Gson().fromJson(responseBody, JsonObject.class);
+
+                return new TokenResponse(
+                        json.get("access_token").getAsString(),
+                        json.get("refresh_token").getAsString(),
+                        json.get("expires_in").getAsInt(),
+                        json.get("refresh_expires_in").getAsInt(),
+                        json.get("token_type").getAsString()
+                );
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error refreshing token: " + e.getMessage());
+        }
+    }
+
+    public void logout(String refreshToken) {
+        try {
+            RequestBody body = new FormBody.Builder()
+                    .add("client_id", clientId)
+                    .add("client_secret", clientSecret)
+                    .add("refresh_token", refreshToken)
+                    .build();
+
+            Request req = new Request.Builder()
+                    .url(serverUrl + "/realms/" + realm + "/protocol/openid-connect/logout")
+                    .post(body)
+                    .build();
+
+            try (Response response = client.newCall(req).execute()) {
+                if (!response.isSuccessful()) {
+                    throw new RuntimeException("Failed to logout from Keycloak");
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error during logout: " + e.getMessage());
+        }
+    }
+
+    public void updatePassword(String userId, String newPassword) {
+        try {
+            CredentialRepresentation credential = new CredentialRepresentation();
+            credential.setType(CredentialRepresentation.PASSWORD);
+            credential.setValue(newPassword);
+            credential.setTemporary(false);
+
+            keycloak.realm(realm).users().get(userId).resetPassword(credential);
+        } catch (Exception e) {
+            throw new RuntimeException("Error updating password in Keycloak: " + e.getMessage());
+        }
+    }
+
+    public UserRepresentation getUserByEmail(String email) {
+        try {
+            List<UserRepresentation> users = keycloak.realm(realm)
+                    .users()
+                    .search(email, true);
+
+            if (users.isEmpty()) {
+                return null;
+            }
 
             return users.getFirst();
-
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException("Error fetching user from Keycloak: " + e.getMessage());
         }
     }
 
-    public UserRepresentation getUserById(String userId){
+    public UserRepresentation getUserById(String userId) {
         try {
             return keycloak.realm(realm).users().get(userId).toRepresentation();
         } catch (Exception e) {
@@ -137,7 +212,7 @@ public class KeycloakService {
         }
     }
 
-    public void deleteUser(String userId){
+    public void deleteUser(String userId) {
         try {
             keycloak.realm(realm).users().get(userId).remove();
         } catch (Exception e) {

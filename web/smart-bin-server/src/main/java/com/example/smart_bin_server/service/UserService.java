@@ -1,35 +1,32 @@
 package com.example.smart_bin_server.service;
 
-import com.example.smart_bin_server.dto.AuthResponse;
-import com.example.smart_bin_server.dto.LoginRequest;
-import com.example.smart_bin_server.dto.RegisterRequest;
-import com.example.smart_bin_server.dto.UserDto;
+import com.example.smart_bin_server.dto.*;
 import com.example.smart_bin_server.model.User;
 import com.example.smart_bin_server.repository.UserRepository;
-import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.Serial;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
 public class UserService {
+
     private final UserRepository userRepository;
     private final KeycloakService keycloakService;
     private final EmailService emailService;
 
-    private static final long VERIFICATION_TOKEN_EXPIRY = 24 * 60 * 60 * 1000;
+    private static final long VERIFICATION_TOKEN_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
 
-    public UserService(UserRepository userRepository, KeycloakService keycloakService, EmailService emailService){
+    public UserService(UserRepository userRepository, KeycloakService keycloakService,
+                       EmailService emailService) {
         this.userRepository = userRepository;
         this.keycloakService = keycloakService;
         this.emailService = emailService;
     }
 
-    public UserDto register(RegisterRequest request){
-        if(userRepository.existsByEmail(request.email())){
+    @Transactional
+    public UserDto register(RegisterRequest request) {
+        if (userRepository.existsByEmail(request.email())) {
             throw new RuntimeException("Email already registered");
         }
 
@@ -58,14 +55,15 @@ public class UserService {
     }
 
     @Transactional
-    public String verifyEmail(String token){
-        User user = userRepository.findByVerificationToken(token).orElseThrow(() -> new RuntimeException("Invalid verification token"));
+    public String verifyEmail(String token) {
+        User user = userRepository.findByVerificationToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid verification token"));
 
-        if(user.isEmailVerified()){
+        if (user.isEmailVerified()) {
             throw new RuntimeException("Email already verified");
         }
 
-        if(System.currentTimeMillis() > user.getVerificationTokenExpiry()){
+        if (System.currentTimeMillis() > user.getVerificationTokenExpiry()) {
             throw new RuntimeException("Verification token has expired");
         }
 
@@ -75,14 +73,11 @@ public class UserService {
         user.setUpdatedAt(System.currentTimeMillis());
 
         userRepository.save(user);
-
         keycloakService.enableUser(user.getId());
-
         emailService.sendWelcomeEmail(user.getEmail(), user.getFirstName());
 
         return "Email verified successfully";
     }
-
 
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.email())
@@ -92,15 +87,61 @@ public class UserService {
             throw new RuntimeException("Email not verified. Please check your email for verification link.");
         }
 
-        Map<String, Object> tokens = keycloakService.login(request);
+        // Get tokens from Keycloak
+        TokenResponse tokens = keycloakService.login(request);
 
         return new AuthResponse(
-                (String) tokens.get("access_token"),
-                (String) tokens.get("refresh_token"),
-                (Long) tokens.get("expires_in"),
-                "Bearer",
+                tokens.accessToken(),
+                tokens.refreshToken(),
+                tokens.expiresIn(),
+                tokens.tokenType(),
                 toDto(user)
         );
+    }
+
+    @Transactional
+    public AuthResponse refreshToken(String refreshToken) {
+        // Refresh token through Keycloak
+        TokenResponse tokens = keycloakService.refreshAccessToken(refreshToken);
+
+        // Extract user info from the new access token to return user details
+        // Note: You might want to decode the JWT to get userId, or pass it from the client
+        // For now, we'll return null for user, or you can decode the JWT
+
+        return new AuthResponse(
+                tokens.accessToken(),
+                tokens.refreshToken(),
+                tokens.expiresIn(),
+                tokens.tokenType(),
+                null // You can decode JWT to get userId and fetch user if needed
+        );
+    }
+
+    @Transactional
+    public void logout(String userId, String refreshToken) {
+        if (refreshToken != null && !refreshToken.isEmpty()) {
+            keycloakService.logout(refreshToken);
+        }
+    }
+
+    @Transactional
+    public void changePassword(String userId, String oldPassword, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Verify old password by attempting login
+        try {
+            LoginRequest loginRequest = new LoginRequest(user.getEmail(), oldPassword);
+            keycloakService.login(loginRequest);
+        } catch (Exception e) {
+            throw new RuntimeException("Current password is incorrect");
+        }
+
+        // Update password in Keycloak
+        keycloakService.updatePassword(userId, newPassword);
+
+        user.setUpdatedAt(System.currentTimeMillis());
+        userRepository.save(user);
     }
 
     public UserDto getCurrentUser(String userId) {
@@ -140,5 +181,4 @@ public class UserService {
                 user.getCreatedAt()
         );
     }
-
 }

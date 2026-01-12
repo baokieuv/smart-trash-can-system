@@ -1,11 +1,8 @@
 package com.example.smart_bin_server.controller;
 
-import com.example.smart_bin_server.dto.AuthResponse;
-import com.example.smart_bin_server.dto.LoginRequest;
-import com.example.smart_bin_server.dto.RegisterRequest;
-import com.example.smart_bin_server.dto.UserDto;
-import com.example.smart_bin_server.model.User;
+import com.example.smart_bin_server.dto.*;
 import com.example.smart_bin_server.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,9 +14,10 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
+
     private final UserService userService;
 
-    public AuthController(UserService userService){
+    public AuthController(UserService userService) {
         this.userService = userService;
     }
 
@@ -43,6 +41,76 @@ public class AuthController {
         try {
             AuthResponse response = userService.login(request);
             return ResponseEntity.ok().body(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", e.getMessage()
+            ));
+        }
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<Object> refreshToken(@RequestBody Map<String, String> request) {
+        try {
+            String refreshToken = request.get("refreshToken");
+            if (refreshToken == null || refreshToken.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "error", "Refresh token is required"
+                ));
+            }
+
+            AuthResponse response = userService.refreshToken(refreshToken);
+            return ResponseEntity.ok().body(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", e.getMessage()
+            ));
+        }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Object> logout(@RequestBody Map<String, String> request,
+                                         @AuthenticationPrincipal Jwt jwt) {
+        try {
+            String userId = jwt.getSubject();
+            String refreshToken = request.get("refreshToken");
+
+            userService.logout(userId, refreshToken);
+
+            return ResponseEntity.ok().body(Map.of(
+                    "message", "Logged out successfully"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", e.getMessage()
+            ));
+        }
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<Object> changePassword(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        try {
+            // Validate passwords match
+            if (!request.passwordsMatch()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "error", "New passwords do not match"
+                ));
+            }
+
+            // Validate new password is different from old
+            if (request.currentPassword().equals(request.newPassword())) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "error", "New password must be different from current password"
+                ));
+            }
+
+            String userId = jwt.getSubject();
+            userService.changePassword(userId, request.currentPassword(), request.newPassword());
+
+            return ResponseEntity.ok().body(Map.of(
+                    "message", "Password changed successfully. Please login again with your new password."
+            ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of(
                     "error", e.getMessage()
@@ -91,5 +159,4 @@ public class AuthController {
             ));
         }
     }
-
 }

@@ -15,7 +15,6 @@ spring:
       max-lifetime: 1200000
       idle-timeout: 300000
       leak-detection-threshold: 60000
-
   jpa:
     database-platform: org.hibernate.dialect.MariaDBDialect
     hibernate:
@@ -45,6 +44,7 @@ spring:
           trust: smtp.gmail.com
 server:
   port: 8888
+
 
 app:
   ai-server:
