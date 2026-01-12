@@ -2,8 +2,9 @@
 
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, Lock } from 'lucide-react';
 import { useState } from 'react';
+import Link from 'next/link';
 
 export default function DashboardLayout({
   children,
@@ -62,9 +63,21 @@ export default function DashboardLayout({
                           )}
                         </div>
                       </div>
+                      
+                      {/* Change Password Link */}
+                      <Link
+                        href="/dashboard/change-password"
+                        onClick={() => setShowUserMenu(false)}
+                        className="w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors flex items-center gap-3 text-slate-700"
+                      >
+                        <Lock size={18} />
+                        <span className="font-medium">Change Password</span>
+                      </Link>
+
+                      {/* Logout Button */}
                       <button
                         onClick={logout}
-                        className="w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors flex items-center gap-3 text-red-600"
+                        className="w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors flex items-center gap-3 text-red-600 border-t border-slate-200"
                       >
                         <LogOut size={18} />
                         <span className="font-medium">Logout</span>
