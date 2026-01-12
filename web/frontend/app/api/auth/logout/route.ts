@@ -3,20 +3,33 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   try {
-    const token = req.headers.get('authorization')?.replace('Bearer ', '');
 
-    if (!token) {
+    const body = await req.json();
+    const { refreshToken } = body;
+
+    if (!refreshToken) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
+        { error: 'Refresh token is required' },
+        { status: 400 }
       );
     }
+
+    // const token = req.headers.get('authorization')?.replace('Bearer ', '');
+
+    // if (!token) {
+    //   return NextResponse.json(
+    //     { error: 'Unauthorized' },
+    //     { status: 401 }
+    //   );
+    // }
 
     const response = await fetch('http://localhost:8888/api/v1/auth/logout', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        // 'Authorization': `Bearer ${token}`,
+         'Content-Type': 'application/json' 
       },
+      body: JSON.stringify({ refreshToken })
     });
 
     if (!response.ok) {

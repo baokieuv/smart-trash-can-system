@@ -171,12 +171,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       const token = localStorage.getItem('accessToken');
+      const refreshToken = localStorage.getItem('refreshToken');
       if (token) {
         await fetch('/api/auth/logout', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json' 
           },
+          body: JSON.stringify({ refreshToken }),
         });
       }
     } catch (error) {
