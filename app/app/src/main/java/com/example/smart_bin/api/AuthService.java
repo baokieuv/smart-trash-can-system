@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.example.smart_bin.model.AuthResponse;
 import com.example.smart_bin.model.User;
@@ -312,6 +313,65 @@ public class AuthService {
                 connection.disconnect();
             } catch (Exception e) {
                 Log.e(TAG, "Resend verification error", e);
+                mainHandler.post(() -> callback.onError("Network error: " + e.getMessage()));
+            }
+        });
+    }
+
+    public void changePassword(String currentPassword, String newPassword, String confirmPassword, MessageCallback callback) {
+        executorService.execute(() -> {
+            try {
+                TokenManager tokenManager = TokenManager.getInstance(context);
+                String accessToken = tokenManager.getAccessToken();
+
+                if (accessToken == null) {
+                    mainHandler.post(() -> {
+                        callback.onError("Unauthorized");
+                    });
+                    return;
+                }
+
+                URL url = new URL("http://kvbhust.site/api/v1/auth/change-password");
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("POST");
+                connection.setRequestProperty("Content-Type", "application/json");
+                connection.setRequestProperty("Authorization", "Bearer " + accessToken);
+                connection.setConnectTimeout(15000);
+                connection.setReadTimeout(15000);
+                connection.setDoOutput(true);
+
+                JSONObject jsonBody = new JSONObject();
+                jsonBody.put("currentPassword", currentPassword);
+                jsonBody.put("newPassword", newPassword);
+                jsonBody.put("confirmPassword", confirmPassword);
+
+                OutputStream os = connection.getOutputStream();
+                os.write(jsonBody.toString().getBytes());
+                os.flush();
+                os.close();
+
+                int responseCode = connection.getResponseCode();
+
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    mainHandler.post(() -> callback.onSuccess("Password changed successfully"));
+                } else {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line);
+                    }
+                    reader.close();
+
+                    JSONObject errorResponse = new JSONObject(response.toString());
+                    String error = errorResponse.optString("error", "Failed to change password");
+
+                    mainHandler.post(() -> callback.onError(error));
+                }
+
+                connection.disconnect();
+            } catch (Exception e) {
+                Log.e(TAG, "Change password error", e);
                 mainHandler.post(() -> callback.onError("Network error: " + e.getMessage()));
             }
         });

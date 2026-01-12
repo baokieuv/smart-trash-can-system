@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
 
+import com.example.smart_bin.ChangePasswordActivity;
 import com.example.smart_bin.LoginActivity;
 import com.example.smart_bin.api.AuthService;
 import com.example.smart_bin.databinding.FragmentSettingsBinding;
@@ -66,6 +67,12 @@ public class SettingsFragment extends Fragment {
             preferences.edit().putBoolean(Constants.KEY_PREF_AUTO_REFRESH, isChecked).apply();
             String message = isChecked ? "Auto refresh enabled" : "Auto refresh disabled";
             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+        });
+
+        // Change Password Setting
+        binding.settingChangePassword.setOnClickListener(v -> {
+            Intent intent = new Intent(requireContext(), ChangePasswordActivity.class);
+            startActivity(intent);
         });
 
         // Logout Button
