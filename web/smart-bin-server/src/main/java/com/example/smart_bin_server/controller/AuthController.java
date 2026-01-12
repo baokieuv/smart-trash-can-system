@@ -68,13 +68,11 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Object> logout(@RequestBody Map<String, String> request,
-                                         @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<Object> logout(@RequestBody Map<String, String> request) {
         try {
-            String userId = jwt.getSubject();
             String refreshToken = request.get("refreshToken");
 
-            userService.logout(userId, refreshToken);
+            userService.logout(refreshToken);
 
             return ResponseEntity.ok().body(Map.of(
                     "message", "Logged out successfully"

@@ -118,7 +118,7 @@ public class UserService {
     }
 
     @Transactional
-    public void logout(String userId, String refreshToken) {
+    public void logout(String refreshToken) {
         if (refreshToken != null && !refreshToken.isEmpty()) {
             keycloakService.logout(refreshToken);
         }
