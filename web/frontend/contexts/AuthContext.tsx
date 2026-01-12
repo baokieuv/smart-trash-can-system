@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User, AuthResponse, LoginCredentials, RegisterData } from '@/types';
 import { useRouter } from 'next/navigation';
 
@@ -11,6 +11,7 @@ interface AuthContextType {
   register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
+  refreshAccessToken: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,25 +19,96 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
+
+  const clearAuth = useCallback(() => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    localStorage.removeItem('tokenExpiry');
+    setUser(null);
+  }, []);
+
+  const refreshAccessToken = useCallback(async (): Promise<boolean> => {
+    if (refreshing) return false;
+    
+    setRefreshing(true);
+    const refreshToken = localStorage.getItem('refreshToken');
+
+    if (!refreshToken) {
+      clearAuth();
+      setRefreshing(false);
+      return false;
+    }
+
+    try {
+      const response = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        clearAuth();
+        router.push('/login');
+        return false;
+      }
+
+      // Save new tokens
+      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
+      // localStorage.setItem('user', JSON.stringify(data.user));
+      
+      // Calculate and save token expiry time
+      const expiryTime = Date.now() + (data.expiresIn * 1000) - 60000; // Refresh 1 min before expiry
+      localStorage.setItem('tokenExpiry', expiryTime.toString());
+      
+      // setUser(data.user);
+      setRefreshing(false);
+      return true;
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      clearAuth();
+      router.push('/login');
+      setRefreshing(false);
+      return false;
+    }
+  }, [refreshing, clearAuth, router]);
 
   useEffect(() => {
     checkAuth();
-  }, []);
+    
+    // Setup auto-refresh interval
+    const interval = setInterval(() => {
+      const tokenExpiry = localStorage.getItem('tokenExpiry');
+      if (tokenExpiry && Date.now() >= parseInt(tokenExpiry)) {
+        refreshAccessToken();
+      }
+    }, 30000); // Check every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [refreshAccessToken]);
 
   const checkAuth = () => {
     const token = localStorage.getItem('accessToken');
     const userData = localStorage.getItem('user');
+    const tokenExpiry = localStorage.getItem('tokenExpiry');
     
     if (token && userData) {
       try {
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
+
+        // Check if token is expired or about to expire
+        if (tokenExpiry && Date.now() >= parseInt(tokenExpiry)) {
+          refreshAccessToken();
+        }
       } catch (error) {
         console.error('Error parsing user data:', error);
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
+        clearAuth();
       }
     }
     setLoading(false);
@@ -60,6 +132,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
       localStorage.setItem('user', JSON.stringify(data.user));
+      
+      // Calculate and save token expiry time (refresh 1 min before actual expiry)
+      const expiryTime = Date.now() + (data.expiresIn * 1000) - 60000;
+      localStorage.setItem('tokenExpiry', expiryTime.toString());
       
       setUser(data.user);
       router.push('/dashboard');
@@ -92,12 +168,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
-    setUser(null);
-    router.push('/login');
+  const logout = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      clearAuth();
+      router.push('/login');
+    }
   };
 
   return (
@@ -109,6 +196,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         register,
         logout,
         isAuthenticated: !!user,
+        refreshAccessToken,
       }}
     >
       {children}
