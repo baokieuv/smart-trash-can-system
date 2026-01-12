@@ -88,7 +88,7 @@ public class RegisterActivity extends AppCompatActivity {
 
         showLoading(true);
 
-        AuthService.getInstance().register(email, password, firstName, lastName, new AuthService.MessageCallback() {
+        AuthService.getInstance(this).register(email, password, firstName, lastName, new AuthService.MessageCallback() {
             @Override
             public void onSuccess(String message) {
                 showLoading(false);

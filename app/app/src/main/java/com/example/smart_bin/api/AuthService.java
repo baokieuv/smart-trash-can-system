@@ -1,5 +1,6 @@
 package com.example.smart_bin.api;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -7,6 +8,7 @@ import android.util.Log;
 import com.example.smart_bin.model.AuthResponse;
 import com.example.smart_bin.model.User;
 import com.example.smart_bin.utils.Constants;
+import com.example.smart_bin.utils.TokenManager;
 
 import org.json.JSONObject;
 
@@ -23,7 +25,7 @@ public class AuthService {
     private static AuthService instance;
     private final ExecutorService executorService;
     private final Handler mainHandler;
-
+    private Context context;
 
     public interface AuthCallback {
         void onSuccess(AuthResponse response);
@@ -35,21 +37,27 @@ public class AuthService {
         void onError(String error);
     }
 
-    private AuthService() {
+    public interface RefreshCallback {
+        void onSuccess();
+        void onError(String error);
+    }
+
+    private AuthService(Context context) {
+        this.context = context.getApplicationContext();
         executorService = Executors.newFixedThreadPool(2);
         mainHandler = new Handler(Looper.getMainLooper());
     }
 
-    public static synchronized AuthService getInstance() {
+    public static synchronized AuthService getInstance(Context context) {
         if (instance == null) {
-            instance = new AuthService();
+            instance = new AuthService(context);
         }
         return instance;
     }
 
-    public void register(String email, String password, String firstName, String lastName, MessageCallback callback){
+    public void register(String email, String password, String firstName, String lastName, MessageCallback callback) {
         executorService.execute(() -> {
-            try{
+            try {
                 URL url = new URL(Constants.BASE_URL + Constants.API_VERSION + "/auth/register");
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("POST");
@@ -83,7 +91,7 @@ public class AuthService {
                     String message = jsonResponse.optString("message", "Registration successful");
 
                     mainHandler.post(() -> callback.onSuccess(message));
-                }else{
+                } else {
                     BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
                     StringBuilder response = new StringBuilder();
                     String line;
@@ -97,14 +105,14 @@ public class AuthService {
 
                     mainHandler.post(() -> callback.onError(error));
                 }
+
                 connection.disconnect();
-            }catch (Exception e){
+            } catch (Exception e) {
                 Log.e(TAG, "Register error", e);
                 mainHandler.post(() -> callback.onError("Network error: " + e.getMessage()));
             }
         });
     }
-
 
     public void login(String email, String password, AuthCallback callback) {
         executorService.execute(() -> {
@@ -157,6 +165,110 @@ public class AuthService {
             } catch (Exception e) {
                 Log.e(TAG, "Login error", e);
                 mainHandler.post(() -> callback.onError("Network error: " + e.getMessage()));
+            }
+        });
+    }
+
+    public void refreshToken(RefreshCallback callback) {
+        executorService.execute(() -> {
+            try {
+                TokenManager tokenManager = TokenManager.getInstance(context);
+                String refreshToken = tokenManager.getRefreshToken();
+
+                if (refreshToken == null) {
+                    mainHandler.post(() -> callback.onError("No refresh token available"));
+                    return;
+                }
+
+                URL url = new URL(Constants.BASE_URL + Constants.API_VERSION + "/auth/refresh");
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("POST");
+                connection.setRequestProperty("Content-Type", "application/json");
+                connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
+                connection.setReadTimeout(Constants.READ_TIMEOUT);
+                connection.setDoOutput(true);
+
+                JSONObject jsonBody = new JSONObject();
+                jsonBody.put("refreshToken", refreshToken);
+
+                OutputStream os = connection.getOutputStream();
+                os.write(jsonBody.toString().getBytes());
+                os.flush();
+                os.close();
+
+                int responseCode = connection.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line);
+                    }
+                    reader.close();
+
+                    AuthResponse authResponse = parseAuthResponse(response.toString());
+
+                    // Update tokens in TokenManager
+                    User user = authResponse.getUser();
+                    tokenManager.saveAuthResponse(
+                            authResponse.getAccessToken(),
+                            authResponse.getRefreshToken(),
+                            authResponse.getExpiresIn(),
+                            user.getId(),
+                            user.getEmail(),
+                            user.getFirstName(),
+                            user.getLastName(),
+                            user.isEmailVerified()
+                    );
+
+                    mainHandler.post(callback::onSuccess);
+                } else {
+                    mainHandler.post(() -> callback.onError("Token refresh failed"));
+                }
+
+                connection.disconnect();
+            } catch (Exception e) {
+                Log.e(TAG, "Refresh token error", e);
+                mainHandler.post(() -> callback.onError("Network error: " + e.getMessage()));
+            }
+        });
+    }
+
+    public void logout(MessageCallback callback) {
+        executorService.execute(() -> {
+            try {
+                TokenManager tokenManager = TokenManager.getInstance(context);
+                String accessToken = tokenManager.getAccessToken();
+
+                if (accessToken == null) {
+                    mainHandler.post(() -> {
+                        tokenManager.clearTokens();
+                        callback.onSuccess("Logged out");
+                    });
+                    return;
+                }
+
+                URL url = new URL(Constants.BASE_URL + Constants.API_VERSION + "/auth/logout");
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("POST");
+                connection.setRequestProperty("Authorization", "Bearer " + accessToken);
+                connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
+                connection.setReadTimeout(Constants.READ_TIMEOUT);
+
+                int responseCode = connection.getResponseCode();
+                connection.disconnect();
+
+                mainHandler.post(() -> {
+                    tokenManager.clearTokens();
+                    callback.onSuccess("Logged out successfully");
+                });
+
+            } catch (Exception e) {
+                Log.e(TAG, "Logout error", e);
+                mainHandler.post(() -> {
+                    TokenManager.getInstance(context).clearTokens();
+                    callback.onSuccess("Logged out");
+                });
             }
         });
     }

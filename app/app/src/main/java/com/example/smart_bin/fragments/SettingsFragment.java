@@ -16,6 +16,7 @@ import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
 
 import com.example.smart_bin.LoginActivity;
+import com.example.smart_bin.api.AuthService;
 import com.example.smart_bin.databinding.FragmentSettingsBinding;
 import com.example.smart_bin.utils.Constants;
 import com.example.smart_bin.utils.TokenManager;
@@ -56,7 +57,9 @@ public class SettingsFragment extends Fragment {
         binding.settingTheme.setOnClickListener(v -> showThemeDialog());
 
         // Notifications Setting
-        binding.settingNotifications.setOnClickListener(v -> Toast.makeText(requireContext(), "Notification settings coming soon", Toast.LENGTH_SHORT).show());
+        binding.settingNotifications.setOnClickListener(v ->
+                Toast.makeText(requireContext(), "Notification settings coming soon", Toast.LENGTH_SHORT).show()
+        );
 
         // Auto Refresh Switch
         binding.switchAutoRefresh.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -82,7 +85,6 @@ public class SettingsFragment extends Fragment {
                 themeMode == AppCompatDelegate.MODE_NIGHT_YES ? "Dark Mode" : "System Default";
         binding.tvTheme.setText(themeText);
         AppCompatDelegate.setDefaultNightMode(themeMode);
-
     }
 
     private void showThemeDialog() {
@@ -100,7 +102,7 @@ public class SettingsFragment extends Fragment {
                             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                             preferences.edit().putInt(Constants.KEY_PREF_THEME_MODE, AppCompatDelegate.MODE_NIGHT_YES).apply();
                             break;
-                        case 3:
+                        case 2:
                             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
                             preferences.edit().putInt(Constants.KEY_PREF_THEME_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM).apply();
                             break;
@@ -121,12 +123,28 @@ public class SettingsFragment extends Fragment {
     }
 
     private void performLogout() {
-        tokenManager.clearTokens();
+        binding.btnLogout.setEnabled(false);
 
-        Intent intent = new Intent(requireContext(), LoginActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        requireActivity().finish();
+        AuthService.getInstance(requireContext()).logout(new AuthService.MessageCallback() {
+            @Override
+            public void onSuccess(String message) {
+                Intent intent = new Intent(requireContext(), LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                requireActivity().finish();
+            }
+
+            @Override
+            public void onError(String error) {
+                // Still logout locally even if server call fails
+                tokenManager.clearTokens();
+
+                Intent intent = new Intent(requireContext(), LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                requireActivity().finish();
+            }
+        });
     }
 
     public static boolean isAutoRefreshEnabled(SharedPreferences prefs) {

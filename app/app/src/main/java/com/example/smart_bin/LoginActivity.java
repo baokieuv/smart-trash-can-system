@@ -62,7 +62,7 @@ public class LoginActivity extends AppCompatActivity {
 
         showLoading(true);
 
-        AuthService.getInstance().login(email, password, new AuthService.AuthCallback() {
+        AuthService.getInstance(this).login(email, password, new AuthService.AuthCallback() {
 
             @Override
             public void onSuccess(AuthResponse response) {
@@ -109,7 +109,7 @@ public class LoginActivity extends AppCompatActivity {
 
         showLoading(true);
 
-        AuthService.getInstance().resendVerification(email, new AuthService.MessageCallback() {
+        AuthService.getInstance(this).resendVerification(email, new AuthService.MessageCallback() {
             @Override
             public void onSuccess(String message) {
                 showLoading(false);

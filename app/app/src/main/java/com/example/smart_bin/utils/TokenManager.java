@@ -17,12 +17,15 @@ public class TokenManager {
     private static TokenManager instance;
     private SharedPreferences prefs;
 
+    // Buffer time before actual expiry to refresh token (1 minute)
+    private static final long REFRESH_BUFFER_TIME = 60 * 1000;
+
     private TokenManager(Context context) {
-        prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        prefs = context.getApplicationContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
     }
 
     public static synchronized TokenManager getInstance(Context context) {
-        if(instance == null) {
+        if (instance == null) {
             instance = new TokenManager(context);
         }
         return instance;
@@ -33,13 +36,31 @@ public class TokenManager {
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(KEY_ACCESS_TOKEN, accessToken);
         editor.putString(KEY_REFRESH_TOKEN, refreshToken);
-        editor.putLong(KEY_TOKEN_EXPIRY, System.currentTimeMillis() + (expiresIn * 1000));
+
+        // Calculate expiry time with buffer
+        long expiryTime = System.currentTimeMillis() + (expiresIn * 1000) - REFRESH_BUFFER_TIME;
+        editor.putLong(KEY_TOKEN_EXPIRY, expiryTime);
+
         editor.putString(KEY_USER_ID, userId);
         editor.putString(KEY_USER_EMAIL, email);
         editor.putString(KEY_USER_FIRST_NAME, firstName);
         editor.putString(KEY_USER_LAST_NAME, lastName);
         editor.putBoolean(KEY_EMAIL_VERIFIED, emailVerified);
         editor.apply();
+    }
+
+    public void updateAccessToken(String accessToken, long expiresIn) {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(KEY_ACCESS_TOKEN, accessToken);
+
+        long expiryTime = System.currentTimeMillis() + (expiresIn * 1000) - REFRESH_BUFFER_TIME;
+        editor.putLong(KEY_TOKEN_EXPIRY, expiryTime);
+
+        editor.apply();
+    }
+
+    public void updateRefreshToken(String refreshToken) {
+        prefs.edit().putString(KEY_REFRESH_TOKEN, refreshToken).apply();
     }
 
     public String getAccessToken() {
@@ -55,8 +76,16 @@ public class TokenManager {
         return System.currentTimeMillis() < expiry;
     }
 
+    public boolean needsRefresh() {
+        long expiry = prefs.getLong(KEY_TOKEN_EXPIRY, 0);
+        // Check if token expires in less than 2 minutes
+        return System.currentTimeMillis() + (2 * 60 * 1000) >= expiry;
+    }
+
     public boolean isLoggedIn() {
-        return getAccessToken() != null && isTokenValid();
+        String accessToken = getAccessToken();
+        String refreshToken = getRefreshToken();
+        return accessToken != null && refreshToken != null;
     }
 
     public String getUserId() {
