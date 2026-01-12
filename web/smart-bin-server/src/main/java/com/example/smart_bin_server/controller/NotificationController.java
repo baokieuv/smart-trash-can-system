@@ -2,6 +2,8 @@ package com.example.smart_bin_server.controller;
 
 import com.example.smart_bin_server.service.NotificationService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,7 +16,13 @@ public class NotificationController {
     }
 
     @GetMapping
-    public ResponseEntity<Object> getLogs(){
-        return ResponseEntity.ok().body(service.getNotifications());
+    public ResponseEntity<Object> getNotifications(@AuthenticationPrincipal Jwt jwt){
+        String userId = jwt.getSubject();
+        return ResponseEntity.ok().body(service.getNotificationsByUserId(userId));
     }
+
+//    @GetMapping
+//    public ResponseEntity<Object> getLogs(){
+//        return ResponseEntity.ok().body(service.getNotifications());
+//    }
 }

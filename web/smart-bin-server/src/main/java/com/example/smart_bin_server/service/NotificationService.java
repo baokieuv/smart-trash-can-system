@@ -27,15 +27,43 @@ public class NotificationService {
         return parseToDto(repository.save(notification));
     }
 
-    public List<NotificationDto> getNotifications() {
+    public List<NotificationDto> getNotificationsByUserId(String userId) {
+        // Get all devices owned by user
+        List<Device> userDevices = deviceRepository.findByUserId(userId);
+
+        // Get device IDs
+        List<String> deviceIds = userDevices.stream()
+                .map(Device::getId)
+                .toList();
+
+        // Get all notifications
         Pageable pageable = PageRequest.of(
-                0, 20, Sort.by(Sort.Direction.DESC, "id")
+                0, 50, Sort.by(Sort.Direction.DESC, "id")
         );
-        return repository.findAll(pageable).getContent()
-                .stream()
+        List<Notification> allNotifications = repository.findAll(pageable).getContent();
+
+        // Filter notifications for user's devices or system notifications
+        return allNotifications.stream()
+                .filter(notification -> {
+                    String deviceId = notification.getDeviceId();
+                    // Include system notifications or notifications for user's devices
+                    return deviceId == null ||
+                            "system".equals(deviceId) ||
+                            deviceIds.contains(deviceId);
+                })
                 .map(this::parseToDto)
                 .collect(Collectors.toList());
     }
+
+//    public List<NotificationDto> getNotifications() {
+//        Pageable pageable = PageRequest.of(
+//                0, 20, Sort.by(Sort.Direction.DESC, "id")
+//        );
+//        return repository.findAll(pageable).getContent()
+//                .stream()
+//                .map(this::parseToDto)
+//                .collect(Collectors.toList());
+//    }
 
     private NotificationDto parseToDto(Notification notification){
         Device device = deviceRepository.findById(notification.getDeviceId()).orElse(null);
