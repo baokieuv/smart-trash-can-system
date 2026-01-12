@@ -239,6 +239,7 @@ public class AuthService {
             try {
                 TokenManager tokenManager = TokenManager.getInstance(context);
                 String accessToken = tokenManager.getAccessToken();
+                String refreshToken = tokenManager.getRefreshToken();
 
                 if (accessToken == null) {
                     mainHandler.post(() -> {
@@ -251,9 +252,18 @@ public class AuthService {
                 URL url = new URL(Constants.BASE_URL + Constants.API_VERSION + "/auth/logout");
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("POST");
-                connection.setRequestProperty("Authorization", "Bearer " + accessToken);
+                connection.setRequestProperty("Content-Type", "application/json");
+//                connection.setRequestProperty("Authorization", "Bearer " + accessToken);
                 connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
                 connection.setReadTimeout(Constants.READ_TIMEOUT);
+
+                JSONObject jsonBody = new JSONObject();
+                jsonBody.put("refreshToken", refreshToken);
+
+                OutputStream os = connection.getOutputStream();
+                os.write(jsonBody.toString().getBytes());
+                os.flush();
+                os.close();
 
                 int responseCode = connection.getResponseCode();
                 connection.disconnect();
