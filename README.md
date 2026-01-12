@@ -56,21 +56,21 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        SMART BIN SYSTEM                          │
+│                        SMART BIN SYSTEM                         │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌──────────────┐          ┌──────────────┐          ┌──────────────┐
 │              │          │              │          │              │
-│   Next.js    │◄────────►│  Spring Boot │◄────────►│   FastAPI    │
-│  (Web App)   │  REST API│   Backend    │  HTTP    │  (AI Model)  │
-│              │          │              │          │              │
-└──────────────┘          └──────┬───────┘          └──────────────┘
-                                 │                          │
-                                 │                          │
-                          ┌──────▼───────┐          ┌──────▼───────┐
-                          │              │          │              │
-                          │   MariaDB    │          │ YOLOv11n-cls │
-                          │  (Database)  │          │ ONNX Model   │
+│   Next.js    │          │   MariaDB    │    ┌────►│   FastAPI    │
+│  (Web App)   │          │  (Database)  │    |     │  (AI Model)  │
+│              │          │              │    |     │              │
+└──────────────┘          └──────┬───────┘    |     └──────────────┘
+        ▲                        │            |            │
+        |                        │            |            │
+        |                 ┌──────▼───────┐    |     ┌──────▼───────┐
+        |   REST API      │              │    |     │              │
+        ─────────────────►│  Spring Boot │────┘     │ YOLOv11n-cls │
+                          │   Backend    │          │ ONNX Model   │
                           │              │          │              │
                           └──────────────┘          └──────────────┘
                                  ▲
@@ -91,7 +91,7 @@
 
 ### Luồng hoạt động chính:
 
-1. **Web/Mobile**: User upload ảnh → Spring Boot → FastAPI → Nhận diện → Lưu DB
+1. **Web/Mobile**: User sử dụng web/app → Spring Boot → Tương tác DB
 2. **ESP32-CAM**: Chụp ảnh → Gửi server → Nhận kết quả → Điều khiển servo mở nắp thùng tương ứng
 3. **Authentication**: Tất cả request đều được xác thực qua Keycloak (OAuth2/JWT)
 
@@ -111,16 +111,6 @@
 ---
 
 ## 💻 Yêu cầu hệ thống
-
-### Development Environment
-
-| Component | Requirement |
-|-----------|-------------|
-| **OS** | Windows 10+, macOS 12+, Ubuntu 20.04+ |
-| **RAM** | 8GB minimum (16GB recommended) |
-| **Storage** | 10GB free space |
-| **CPU** | 4 cores recommended |
-| **GPU** | Optional (tăng tốc inference) |
 
 ### Software Dependencies
 
@@ -152,7 +142,6 @@
 | **TypeScript** | Type-safe development |
 | **Tailwind CSS** | Utility-first CSS framework |
 | **shadcn/ui** | UI component library |
-| **Axios** | HTTP client |
 
 ### Mobile
 
@@ -162,7 +151,6 @@
 | **Java** | Programming language |
 | **XML** | UI layouts |
 | **Material Design** | UI/UX guidelines |
-| **Retrofit** | HTTP client (nếu dùng) |
 
 ### Backend
 
@@ -187,7 +175,6 @@
 | Technology | Description |
 |------------|-------------|
 | **MariaDB** | Relational database |
-| **Redis** | Cache & session storage (nếu dùng) |
 
 ### DevOps
 
@@ -203,8 +190,6 @@
 
 ### 🌐 Web Application (Next.js)
 
-- ✅ Upload ảnh để phân loại rác
-- ✅ Xem lịch sử phân loại
 - ✅ Dashboard thống kê theo thời gian
 - ✅ Quản lý thiết bị (devices)
 - ✅ Xem thông báo (notifications)
@@ -260,12 +245,9 @@
 smart-bin-system/
 │
 ├── model-fastapi/              # AI Model Service (Python + FastAPI)
-│   ├── app/
-│   │   ├── main.py            # FastAPI entry point
-│   │   ├── model.py           # ONNX model loader
-│   │   └── utils.py           # Image preprocessing
-│   ├── models/
-│   │   └── yolov11n-cls.onnx # Trained model
+│   ├── server.py               # FastAPI entry point
+│   ├── model.py                # ONNX model loader
+│   ├── best.onnx               # Trained model
 │   ├── requirements.txt
 │   ├── Dockerfile
 │   └── README.md
@@ -280,7 +262,7 @@ smart-bin-system/
 │   │       ├── model/         # Entity models
 │   │       └── dto/           # Data transfer objects
 │   ├── src/main/resources/
-│   │   └── application.properties
+│   │   └── application.yaml
 │   ├── pom.xml
 │   ├── Dockerfile
 │   └── README.md
@@ -309,11 +291,20 @@ smart-bin-system/
 │   ├── build.gradle
 │   └── README.md
 │
-├── esp32-cam/                  # Firmware cho ESP32-CAM (Arduino C++)
-│   ├── smart_bin_esp32/
-│   │   ├── smart_bin_esp32.ino
-│   │   ├── config.h           # WiFi & server config
-│   │   └── servo_control.h    # Servo control logic
+├── esp32-cam/                  # Firmware cho ESP32-CAM (ESP-IDF C)
+│   ├── main/
+│   │   └── main.c    
+│   ├── components/
+│   │   ├── bluetooth
+│   │   ├── camera  
+│   │   ├── common  
+│   │   ├── gpio          
+│   │   ├── http  
+│   │   ├── ota  
+│   │   ├── sensors  
+│   │   ├── storage
+│   │   ├── waste_manager 
+│   │   └── wifi  
 │   └── README.md
 │
 ├── docker-compose.yml          # Multi-container setup
@@ -340,9 +331,9 @@ smart-bin-system/
 
 | Service | URL | Description |
 |---------|-----|-------------|
-| Spring Boot | `http://localhost:8080` | Main API |
+| Spring Boot | `http://localhost:8888` | Main API |
 | FastAPI | `http://localhost:8000` | AI Model API |
-| Keycloak | `http://localhost:8081` | Auth Server |
+| Keycloak | `http://localhost:8080` | Auth Server |
 
 ---
 
@@ -964,7 +955,7 @@ ESP32-CAM Pinout:
 ### 1. Clone repository
 
 ```bash
-git clone https://github.com/your-username/smart-bin-system.git
+git clone https://github.com/baokieuv/smart-bin-system.git
 cd smart-bin-system
 ```
 
@@ -1003,92 +994,8 @@ yarn install
 
 #### 2.5. ESP32-CAM
 
-- Cài Arduino IDE hoặc PlatformIO
-- Cài thư viện: `ESP32`, `WiFi`, `HTTPClient`, `Servo`
+- Cài ESP-IDF
 - Upload code lên ESP32-CAM
-
----
-
-## ⚙️ Biến môi trường
-
-### Backend (Spring Boot)
-
-Tạo file `backend-springboot/src/main/resources/application.properties`:
-
-```properties
-# Server
-server.port=8080
-
-# Database
-spring.datasource.url=jdbc:mariadb://localhost:3306/smart_bin_db
-spring.datasource.username=root
-spring.datasource.password=your_password
-spring.jpa.hibernate.ddl-auto=update
-
-# Keycloak
-keycloak.server-url=http://localhost:8081
-keycloak.realm=smart-bin-realm
-keycloak.client-id=smart-bin-client
-keycloak.client-secret=your_keycloak_secret
-keycloak.admin-username=admin
-keycloak.admin-password=admin
-
-spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:8081/realms/smart-bin-realm
-
-# Redis (nếu dùng)
-spring.redis.host=localhost
-spring.redis.port=6379
-
-# Email
-spring.mail.host=smtp.gmail.com
-spring.mail.port=587
-spring.mail.username=your_email@gmail.com
-spring.mail.password=your_app_password
-spring.mail.properties.mail.smtp.auth=true
-spring.mail.properties.mail.smtp.starttls.enable=true
-
-app.email.from=noreply@smartbin.com
-app.email.verification.url=http://localhost:3000/verify-email
-
-# FastAPI URL
-app.ai-server.url=http://localhost:8000
-```
-
-### Frontend (Next.js)
-
-Tạo file `frontend-nextjs/.env.local`:
-
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8080
-NEXT_PUBLIC_KEYCLOAK_URL=http://localhost:8081
-NEXT_PUBLIC_KEYCLOAK_REALM=smart-bin-realm
-NEXT_PUBLIC_KEYCLOAK_CLIENT_ID=smart-bin-client
-```
-
-### Android App
-
-File `android-app/app/src/main/java/com/example/smart_bin/utils/Constants.java`:
-
-```java
-public class Constants {
-    public static final String BASE_URL = "http://YOUR_SERVER_IP:8080";
-    // ... other constants
-}
-```
-
-### ESP32-CAM
-
-File `esp32-cam/smart_bin_esp32/config.h`:
-
-```cpp
-// WiFi credentials
-const char* ssid = "YOUR_WIFI_SSID";
-const char* password = "YOUR_WIFI_PASSWORD";
-
-// Server URL
-const char* serverUrl = "http://YOUR_SERVER_IP:8080";
-const char* deviceId = "AA_BB_CC_DD_EE_FF";
-```
 
 ---
 
@@ -1096,34 +1003,18 @@ const char* deviceId = "AA_BB_CC_DD_EE_FF";
 
 ### Option 1: Chạy thủ công (Development)
 
-#### 1. Start MariaDB
+#### 1. Start MariaDB and Keycloak
 
 ```bash
 # Docker
-docker run -d \
-  --name mariadb \
-  -p 3306:3306 \
-  -e MYSQL_ROOT_PASSWORD=root \
-  -e MYSQL_DATABASE=smart_bin_db \
-  mariadb:10.6
-```
-
-#### 2. Start Keycloak
-
-```bash
-docker run -d \
-  --name keycloak \
-  -p 8081:8080 \
-  -e KEYCLOAK_ADMIN=admin \
-  -e KEYCLOAK_ADMIN_PASSWORD=admin \
-  quay.io/keycloak/keycloak:23.0 \
-  start-dev
+cd docker
+docker-compose run -d
 ```
 
 **Cấu hình Keycloak:**
 - Truy cập: http://localhost:8081
 - Login: admin/admin
-- Tạo realm: `smart-bin-realm`
+- Tạo realm: `smart-bin`
 - Tạo client: `smart-bin-client`
 - Enable service accounts & authorization
 - Lấy client secret
@@ -1133,7 +1024,7 @@ docker run -d \
 ```bash
 cd model-fastapi
 source venv/bin/activate
-uvicorn app.main:app --reload --port 8000
+python server.py
 ```
 
 #### 4. Start Spring Boot
@@ -1161,181 +1052,6 @@ npm run dev
 - Kết nối ESP32-CAM qua FTDI
 - Upload code từ Arduino IDE
 - Monitor Serial để debug
-
----
-
-### Option 2: Chạy với Docker Compose
-
-#### 1. Tạo file `docker-compose.yml`
-
-```yaml
-version: '3.8'
-
-services:
-  mariadb:
-    image: mariadb:10.6
-    container_name: smart-bin-mariadb
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: smart_bin_db
-    ports:
-      - "3306:3306"
-    volumes:
-      - mariadb_data:/var/lib/mysql
-    networks:
-      - smart-bin-network
-
-  keycloak:
-    image: quay.io/keycloak/keycloak:23.0
-    container_name: smart-bin-keycloak
-    environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-    ports:
-      - "8081:8080"
-    command: start-dev
-    networks:
-      - smart-bin-network
-
-  fastapi:
-    build: ./model-fastapi
-    container_name: smart-bin-fastapi
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./model-fastapi/models:/app/models
-    networks:
-      - smart-bin-network
-
-  backend:
-    build: ./backend-springboot
-    container_name: smart-bin-backend
-    depends_on:
-      - mariadb
-      - keycloak
-      - fastapi
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/smart_bin_db
-      KEYCLOAK_SERVER_URL: http://keycloak:8080
-      AI_SERVER_URL: http://fastapi:8000
-    ports:
-      - "8080:8080"
-    networks:
-      - smart-bin-network
-
-  frontend:
-    build: ./frontend-nextjs
-    container_name: smart-bin-frontend
-    environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8080
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
-    networks:
-      - smart-bin-network
-
-volumes:
-  mariadb_data:
-
-networks:
-  smart-bin-network:
-    driver: bridge
-```
-
-#### 2. Chạy tất cả services
-
-```bash
-docker-compose up -d
-```
-
-#### 3. Kiểm tra logs
-
-```bash
-docker-compose logs -f
-```
-
-#### 4. Dừng services
-
-```bash
-docker-compose down
-```
-
----
-
-## 🌐 Deployment
-
-### Deploy lên VPS (Ubuntu)
-
-#### 1. Cài đặt Docker & Docker Compose
-
-```bash
-sudo apt update
-sudo apt install docker.io docker-compose -y
-sudo systemctl enable docker
-sudo systemctl start docker
-```
-
-#### 2. Clone repository
-
-```bash
-git clone https://github.com/your-username/smart-bin-system.git
-cd smart-bin-system
-```
-
-#### 3. Cấu hình environment variables
-
-```bash
-cp .env.example .env
-nano .env  # Chỉnh sửa các biến môi trường
-```
-
-#### 4. Build & Run
-
-```bash
-docker-compose up -d --build
-```
-
-#### 5. Cấu hình Nginx Reverse Proxy (Optional)
-
-```nginx
-# /etc/nginx/sites-available/smartbin
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    location /api {
-        proxy_pass http://localhost:8080;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-
-    location /auth {
-        proxy_pass http://localhost:8081;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
-```
-
-#### 6. Enable HTTPS với Let's Encrypt
-
-```bash
-sudo apt install certbot python3-certbot-nginx -y
-sudo certbot --nginx -d your-domain.com
-```
-
----
-
-### Deploy trên Cloud (AWS/GCP/Azure)
-
-**TODO**: Hướng dẫn chi tiết deploy lên cloud provider
 
 ---
 

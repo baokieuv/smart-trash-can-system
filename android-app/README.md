@@ -89,29 +89,13 @@ Smart Bin Android App là ứng dụng di động cho phép người dùng:
 
 ---
 
-## 📱 Yêu cầu
-
-### Minimum Requirements
-- **Android Version**: 7.0 (API 24) trở lên
-- **RAM**: 2GB
-- **Storage**: 50MB free space
-- **Bluetooth**: Bluetooth Classic support
-- **Network**: WiFi hoặc Mobile Data
-
-### Recommended
-- **Android Version**: 10.0 (API 29) trở lên
-- **RAM**: 4GB
-- **Bluetooth**: Bluetooth 5.0+
-
----
-
 ## 🛠️ Cài đặt
 
 ### 1. Clone repository
 
 ```bash
-git clone https://github.com/your-username/smart-bin-system.git
-cd smart-bin-system/android-app
+git clone https://github.com/baokieuv/smart-trash-can-system.git
+cd smart-trash-can-system/android-app
 ```
 
 ### 2. Mở project trong Android Studio
@@ -170,49 +154,6 @@ File: `app/src/main/AndroidManifest.xml`
 ```
 
 Hoặc trong Android Studio: **Build → Make Project**
-
----
-
-## ⚙️ Cấu hình
-
-### Network Security Config
-
-File: `app/src/main/res/xml/network_security_config.xml`
-
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<network-security-config>
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">YOUR_SERVER_IP</domain>
-        <domain includeSubdomains="true">localhost</domain>
-    </domain-config>
-</network-security-config>
-```
-
-### Gradle Dependencies
-
-File: `app/build.gradle`
-
-```gradle
-dependencies {
-    // AndroidX
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.11.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.recyclerview:recyclerview:1.3.2'
-    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
-    
-    // Preferences
-    implementation 'androidx.preference:preference:1.2.1'
-    
-    // JSON parsing
-    implementation 'com.google.code.gson:gson:2.10.1'
-    
-    // Optional: Retrofit (nếu muốn dùng thay OkHttp)
-    // implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-    // implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
-}
-```
 
 ---
 
@@ -491,59 +432,6 @@ scanner.startScan(new WiFiScanner.ScanCallback() {
 ```
 
 Output: `app/build/outputs/apk/debug/app-debug.apk`
-
-### Release Build
-
-#### 1. Tạo keystore
-
-```bash
-keytool -genkey -v -keystore smartbin-release.jks \
-  -keyalg RSA -keysize 2048 -validity 10000 \
-  -alias smartbin
-```
-
-#### 2. Cấu hình signing
-
-File: `app/build.gradle`
-
-```gradle
-android {
-    signingConfigs {
-        release {
-            storeFile file("../smartbin-release.jks")
-            storePassword "your_store_password"
-            keyAlias "smartbin"
-            keyPassword "your_key_password"
-        }
-    }
-    
-    buildTypes {
-        release {
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 
-                         'proguard-rules.pro'
-            signingConfig signingConfigs.release
-        }
-    }
-}
-```
-
-#### 3. Build release
-
-```bash
-./gradlew assembleRelease
-```
-
-Output: `app/build/outputs/apk/release/app-release.apk`
-
-#### 4. Upload lên Google Play Store
-
-- Tạo listing trên [Google Play Console](https://play.google.com/console)
-- Upload APK hoặc AAB
-- Điền thông tin app
-- Submit for review
-
----
 
 ## 🐛 Common Issues
 

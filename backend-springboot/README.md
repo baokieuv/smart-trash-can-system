@@ -104,8 +104,8 @@ Spring Boot backend là core API server của Smart Bin System, cung cấp:
 ### 1. Clone repository
 
 ```bash
-git clone https://github.com/your-username/smart-bin-system.git
-cd smart-bin-system/backend-springboot
+git clone https://github.com/baokieuv/smart-trash-can-system.git
+cd smart-trash-can-system/backend-springboot
 ```
 
 ### 2. Install dependencies
@@ -115,126 +115,23 @@ cd smart-bin-system/backend-springboot
 # Windows: mvnw.cmd clean install
 ```
 
-### 3. Setup MariaDB
+### 3. Setup MariaDB and Keycloak
 
 ```bash
+cd smart-trash-can-system/docker
 # Docker
-docker run -d \
-  --name mariadb \
-  -p 3306:3306 \
-  -e MYSQL_ROOT_PASSWORD=root \
-  -e MYSQL_DATABASE=smart_bin_db \
-  mariadb:10.6
-
-# Hoặc cài local
-mysql -u root -p
-CREATE DATABASE smart_bin_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-### 4. Setup Keycloak
-
-```bash
-docker run -d \
-  --name keycloak \
-  -p 8081:8080 \
-  -e KEYCLOAK_ADMIN=admin \
-  -e KEYCLOAK_ADMIN_PASSWORD=admin \
-  quay.io/keycloak/keycloak:23.0 \
-  start-dev
+docker-compose run -d 
 ```
 
 **Cấu hình Keycloak:**
-1. Login: http://localhost:8081 (admin/admin)
-2. Create realm: `smart-bin-realm`
+1. Login: http://localhost:8080 (admin/admin)
+2. Create realm: `smart-bin`
 3. Create client: `smart-bin-client`
    - Client authentication: ON
    - Standard flow: ON
    - Direct access grants: ON
    - Service accounts roles: ON
 4. Copy Client Secret từ Credentials tab
-
----
-
-## ⚙️ Cấu hình
-
-### application.properties
-
-File: `src/main/resources/application.properties`
-
-```properties
-# ========== Server ==========
-server.port=8080
-
-# ========== Database ==========
-spring.datasource.url=jdbc:mariadb://localhost:3306/smart_bin_db?useUnicode=true&characterEncoding=UTF-8
-spring.datasource.username=root
-spring.datasource.password=your_password
-spring.datasource.driver-class-name=org.mariadb.jdbc.Driver
-
-# JPA/Hibernate
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=false
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MariaDBDialect
-spring.jpa.properties.hibernate.format_sql=true
-
-# ========== Keycloak Admin Client ==========
-keycloak.server-url=http://localhost:8081
-keycloak.realm=smart-bin-realm
-keycloak.client-id=smart-bin-client
-keycloak.client-secret=YOUR_CLIENT_SECRET_FROM_KEYCLOAK
-keycloak.admin-username=admin
-keycloak.admin-password=admin
-
-# ========== OAuth2 Resource Server ==========
-spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:8081/realms/smart-bin-realm
-spring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://localhost:8081/realms/smart-bin-realm/protocol/openid-connect/certs
-
-# ========== Email Configuration ==========
-spring.mail.host=smtp.gmail.com
-spring.mail.port=587
-spring.mail.username=your_email@gmail.com
-spring.mail.password=your_app_password
-spring.mail.properties.mail.smtp.auth=true
-spring.mail.properties.mail.smtp.starttls.enable=true
-spring.mail.properties.mail.smtp.starttls.required=true
-
-# Email settings
-app.email.from=noreply@smartbin.com
-app.email.verification.url=http://localhost:3000/verify-email
-
-# ========== FastAPI AI Server ==========
-app.ai-server.url=http://localhost:8000
-
-# ========== Logging ==========
-logging.level.root=INFO
-logging.level.com.example.smart_bin_server=DEBUG
-logging.pattern.console=%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
-```
-
-### Environment Variables (Optional)
-
-Thay vì hardcode trong `application.properties`, có thể dùng env vars:
-
-```bash
-export DB_URL=jdbc:mariadb://localhost:3306/smart_bin_db
-export DB_USERNAME=root
-export DB_PASSWORD=your_password
-export KEYCLOAK_SERVER_URL=http://localhost:8081
-export KEYCLOAK_CLIENT_SECRET=your_secret
-export SMTP_USERNAME=your_email@gmail.com
-export SMTP_PASSWORD=your_app_password
-```
-
-Sau đó trong `application.properties`:
-
-```properties
-spring.datasource.url=${DB_URL}
-spring.datasource.username=${DB_USERNAME}
-spring.datasource.password=${DB_PASSWORD}
-keycloak.client-secret=${KEYCLOAK_CLIENT_SECRET}
-spring.mail.username=${SMTP_USERNAME}
-spring.mail.password=${SMTP_PASSWORD}
-```
 
 ---
 
@@ -246,8 +143,7 @@ src/main/java/com/example/smart_bin_server/
 ├── config/                         # Configuration classes
 │   ├── Constants.java             # App constants
 │   ├── KeycloakConfig.java        # Keycloak admin client
-│   ├── SecurityConfig.java        # Spring Security & OAuth2
-│   └── RedisConfig.java           # Redis (nếu dùng)
+│   └── SecurityConfig.java        # Spring Security & OAuth2
 │
 ├── controller/                     # REST Controllers
 │   ├── AuthController.java        # /api/v1/auth/*
@@ -263,8 +159,7 @@ src/main/java/com/example/smart_bin_server/
 │   ├── DeviceDataService.java     # Device data management
 │   ├── NotificationService.java   # Notification management
 │   ├── EmailService.java          # Email sending
-│   ├── ClassificationService.java # Call FastAPI
-│   └── RefreshTokenService.java   # (Deprecated - dùng Keycloak)
+│   └── ClassificationService.java # Call FastAPI
 │
 ├── repository/                     # JPA Repositories
 │   ├── UserRepository.java
@@ -541,42 +436,6 @@ public void checkDevicesStatus() {
 # With profile
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
-
-### Production Mode
-
-```bash
-# Build JAR
-./mvnw clean package -DskipTests
-
-# Run JAR
-java -jar target/smart-bin-server-0.0.1-SNAPSHOT.jar
-
-# With env vars
-export SPRING_PROFILES_ACTIVE=prod
-export DB_PASSWORD=secure_password
-java -jar target/smart-bin-server-0.0.1-SNAPSHOT.jar
-```
-
-### Docker
-
-```dockerfile
-FROM eclipse-temurin:17-jdk-alpine
-WORKDIR /app
-COPY target/*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
-```
-
-Build & Run:
-
-```bash
-docker build -t smart-bin-backend .
-docker run -p 8080:8080 \
-  -e DB_URL=jdbc:mariadb://host.docker.internal:3306/smart_bin_db \
-  -e DB_PASSWORD=your_password \
-  smart-bin-backend
-```
-
 ---
 
 ## 🐛 Troubleshooting
