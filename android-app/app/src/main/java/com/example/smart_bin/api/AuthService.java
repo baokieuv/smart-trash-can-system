@@ -79,28 +79,21 @@ public class AuthService {
                 os.close();
 
                 int responseCode = connection.getResponseCode();
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                    StringBuilder response = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        response.append(line);
-                    }
-                    reader.close();
 
+                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                reader.close();
+
+                if (responseCode == HttpURLConnection.HTTP_OK) {
                     JSONObject jsonResponse = new JSONObject(response.toString());
                     String message = jsonResponse.optString("message", "Registration successful");
 
                     mainHandler.post(() -> callback.onSuccess(message));
                 } else {
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
-                    StringBuilder response = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        response.append(line);
-                    }
-                    reader.close();
-
                     JSONObject errorResponse = new JSONObject(response.toString());
                     String error = errorResponse.optString("error", "Registration failed");
 
@@ -136,26 +129,19 @@ public class AuthService {
                 os.close();
 
                 int responseCode = connection.getResponseCode();
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                    StringBuilder response = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        response.append(line);
-                    }
-                    reader.close();
 
+                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                reader.close();
+
+                if (responseCode == HttpURLConnection.HTTP_OK) {
                     AuthResponse authResponse = parseAuthResponse(response.toString());
                     mainHandler.post(() -> callback.onSuccess(authResponse));
                 } else {
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
-                    StringBuilder response = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        response.append(line);
-                    }
-                    reader.close();
-
                     JSONObject errorResponse = new JSONObject(response.toString());
                     String error = errorResponse.optString("error", "Login failed");
 
@@ -372,6 +358,55 @@ public class AuthService {
                 connection.disconnect();
             } catch (Exception e) {
                 Log.e(TAG, "Change password error", e);
+                mainHandler.post(() -> callback.onError("Network error: " + e.getMessage()));
+            }
+        });
+    }
+
+    public void forgotPassword(String email, MessageCallback callback){
+        executorService.execute(() -> {
+            try{
+                URL url = new URL(Constants.BASE_URL + Constants.API_VERSION + "/auth/forgot-password");
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("POST");
+                connection.setRequestProperty("Content-Type", "application/json");
+                connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
+                connection.setReadTimeout(Constants.READ_TIMEOUT);
+                connection.setDoOutput(true);
+
+                JSONObject jsonBody = new JSONObject();
+                jsonBody.put("email", email);
+
+                OutputStream os = connection.getOutputStream();
+                os.write(jsonBody.toString().getBytes());
+                os.flush();
+                os.close();
+
+                int responseCode = connection.getResponseCode();
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                reader.close();
+
+                if(responseCode == HttpURLConnection.HTTP_OK){
+                    JSONObject jsonResponse = new JSONObject(response.toString());
+                    String message = jsonResponse.optString("message", "Password reset email sent");
+
+                    mainHandler.post(() -> callback.onSuccess(message));
+                }else{
+                    JSONObject errorResponse = new JSONObject(response.toString());
+                    String error = errorResponse.optString("error", "Password reset failed");
+
+                    mainHandler.post(() -> callback.onError(error));
+                }
+
+                connection.disconnect();
+            }catch (Exception e){
+                Log.e(TAG, "Forgot password error", e);
                 mainHandler.post(() -> callback.onError("Network error: " + e.getMessage()));
             }
         });

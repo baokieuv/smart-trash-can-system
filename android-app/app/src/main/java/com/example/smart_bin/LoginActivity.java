@@ -45,6 +45,11 @@ public class LoginActivity extends AppCompatActivity {
             startActivity(intent);
         });
         binding.tvResendVerification.setOnClickListener(v -> handleResendVerification());
+
+        binding.tvForgotPassword.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ForgotPasswordActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void handleLogin(){
