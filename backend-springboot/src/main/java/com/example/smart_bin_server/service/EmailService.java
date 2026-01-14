@@ -2,7 +2,6 @@ package com.example.smart_bin_server.service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import jakarta.validation.constraints.Email;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -39,6 +38,7 @@ public class EmailService {
             throw new RuntimeException("Failed to send verification email", ex);
         }
     }
+
 
     private String buildVerificationEmailHtml(String firstName, String token){
         String verifyLink = verificationUrl + "?token=" + token;
@@ -140,4 +140,106 @@ public class EmailService {
             </html>
             """.formatted(firstName);
     }
+
+    public void sendPasswordResetEmail(String toEmail, String firstName, String newPassword){
+        try{
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail);
+            helper.setTo(toEmail);
+            helper.setSubject("Smart Bin - Password Reset");
+
+            String htmlContent = buildPasswordResetEmailHtml(firstName, newPassword, toEmail);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+        }catch (MessagingException e){
+            throw new RuntimeException("Failed to send password reset email", e);
+        }
+    }
+
+
+    private String buildPasswordResetEmailHtml(String firstName, String newPassword, String toEmail) {
+        return """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background-color: #EF4444; color: white; padding: 20px; text-align: center; }
+                        .content { background-color: #f9f9f9; padding: 20px; }
+                        .password-box { 
+                            background-color: #FEF2F2; 
+                            border: 2px solid #EF4444; 
+                            border-radius: 8px;
+                            padding: 20px; 
+                            text-align: center;
+                            margin: 20px 0;
+                        }
+                        .password-text { 
+                            font-size: 24px; 
+                            font-weight: bold; 
+                            color: #EF4444;
+                            letter-spacing: 2px;
+                            font-family: 'Courier New', monospace;
+                        }
+                        .warning { 
+                            background-color: #FEF3C7; 
+                            border-left: 4px solid #F59E0B;
+                            padding: 12px;
+                            margin: 20px 0;
+                        }
+                        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>🔐 Password Reset</h1>
+                        </div>
+                        <div class="content">
+                            <h2>Hello %s,</h2>
+                            <p>You requested to reset your password for your Smart Bin account.</p>
+                            
+                            <p>Your new temporary password is:</p>
+                            
+                            <div class="password-box">
+                                <p class="password-text">%s</p>
+                            </div>
+                            
+                            <div class="warning">
+                                <strong>⚠️ Important Security Notice:</strong>
+                                <ul style="margin: 10px 0; padding-left: 20px;">
+                                    <li>Please login with this temporary password immediately</li>
+                                    <li>Change your password after logging in for security</li>
+                                    <li>Do not share this password with anyone</li>
+                                    <li>This password was generated automatically</li>
+                                </ul>
+                            </div>
+                            
+                            <p><strong>Steps to login:</strong></p>
+                            <ol>
+                                <li>Go to the Smart Bin login page</li>
+                                <li>Enter your email: <strong>%s</strong></li>
+                                <li>Enter the temporary password above</li>
+                                <li>Go to Settings → Change Password</li>
+                                <li>Set a new secure password</li>
+                            </ol>
+                            
+                            <p style="color: #EF4444; font-weight: bold;">
+                                If you didn't request this password reset, please contact us immediately.
+                            </p>
+                        </div>
+                        <div class="footer">
+                            <p>&copy; 2026 Smart Bin System. All rights reserved.</p>
+                            <p>This is an automated email, please do not reply.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                """.formatted(firstName, newPassword, toEmail);
+    }
+
 }

@@ -145,6 +145,20 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Object> resetPassword(@Valid @RequestBody ForgotPasswordRequest request){
+        try {
+            String message = userService.resetPassword(request.email());
+            return ResponseEntity.ok().body(Map.of(
+                    "message", message
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", e.getMessage()
+            ));
+        }
+    }
+
     @GetMapping("/me")
     public ResponseEntity<Object> getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
         try {
