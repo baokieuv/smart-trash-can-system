@@ -10,6 +10,7 @@ interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<{ success: boolean; error?: string }>;
   register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
+  forgotPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
   isAuthenticated: boolean;
   refreshAccessToken: () => Promise<boolean>;
 }
@@ -189,6 +190,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const forgotPassword = async (email: string) => {
+    try{
+      const response = await fetch("/api/auth/forgot-password", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: result.error || 'Reset password failed' };
+      }
+
+      return { success: true, error: result.message || 'Password reset successful. Please check your email for the new password.' };
+    }catch (error){
+      console.error('Logout error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -197,6 +221,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        forgotPassword,
         isAuthenticated: !!user,
         refreshAccessToken,
       }}

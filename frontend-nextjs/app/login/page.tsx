@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Trash2, Mail, Lock, AlertCircle } from 'lucide-react';
+import { Trash2, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export default function LoginPage() {
@@ -10,11 +10,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
-
+  const [successMessage, setSuccessMessage] = useState('');
+  const { login, forgotPassword } = useAuth();
+  const [isResetting, setIsResetting] = useState(false);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
     setLoading(true);
 
     const result = await login({ email, password });
@@ -25,6 +28,28 @@ export default function LoginPage() {
       setError(result.error || 'Login failed');
     }
   };
+
+  const handleForgotPassword = async () => {
+    // e.preventDefault();
+    // 1. Validate Email
+    if (!email) {
+      setError('Please enter your email first to reset password');
+      return;
+    }
+
+    setError('');
+    setSuccessMessage('');
+    setIsResetting(true);
+
+    const result = await forgotPassword(email);
+
+    setIsResetting(false);
+    if(!result.success){
+      setError(result.error || 'Reset password failed');
+    }else{
+      setSuccessMessage(result.error || 'Password reset successful. Please check your email for the new password.');
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 flex items-center justify-center p-4">
@@ -60,6 +85,16 @@ export default function LoginPage() {
               </div>
             )}
 
+            {/* Success Message */}
+            {successMessage && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3 animate-fade-in">
+                <CheckCircle className="text-green-600 flex-shrink-0" size={20} />
+                <div className="flex-1">
+                  <p className="text-sm text-green-800">{successMessage}</p>
+                </div>
+              </div>
+            )}
+
             {/* Email Input */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
@@ -71,10 +106,10 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                  className="w-full pl-11 pr-4 py-3 border-2 border-slate-300 rounded-xl text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none transition-colors font-medium"
                   placeholder="your@email.com"
                   required
-                  disabled={loading}
+                  disabled={loading || isResetting}
                 />
               </div>
             </div>
@@ -90,11 +125,23 @@ export default function LoginPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                  className="w-full pl-11 pr-4 py-3 border-2 border-slate-300 rounded-xl text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none transition-colors font-medium"
                   placeholder="••••••••"
                   required
-                  disabled={loading}
+                  disabled={loading || isResetting}
                 />
+              </div>
+
+              {/* Forgot password Input */}
+              <div className="flex justify-end mt-2">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={loading || isResetting}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isResetting ? 'Sending...' : 'Forgot Password?'}
+                </button>
               </div>
             </div>
 
