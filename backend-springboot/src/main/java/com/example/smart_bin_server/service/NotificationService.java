@@ -1,6 +1,7 @@
 package com.example.smart_bin_server.service;
 
 import com.example.smart_bin_server.dto.NotificationDto;
+import com.example.smart_bin_server.dto.UpdateNotiStatus;
 import com.example.smart_bin_server.model.Device;
 import com.example.smart_bin_server.model.Notification;
 import com.example.smart_bin_server.repository.DeviceRepository;
@@ -55,6 +56,14 @@ public class NotificationService {
                 .collect(Collectors.toList());
     }
 
+    public NotificationDto changeStatusNotification(Long notiId, UpdateNotiStatus request){
+        Notification noti = repository.findById(notiId).orElseThrow(()
+                -> new RuntimeException("Notification not found"));
+
+        noti.setRead(request.status());
+
+        return parseToDto(repository.save(noti));
+    }
 //    public List<NotificationDto> getNotifications() {
 //        Pageable pageable = PageRequest.of(
 //                0, 20, Sort.by(Sort.Direction.DESC, "id")

@@ -17,6 +17,8 @@ public class Notification {
 
     private Long timestamp;
 
+    private Boolean isRead = false;
+
     public Long getId() {
         return id;
     }
@@ -55,5 +57,13 @@ public class Notification {
 
     public void setTimestamp(Long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public Boolean getRead() {
+        return isRead;
+    }
+
+    public void setRead(Boolean read) {
+        isRead = read;
     }
 }
