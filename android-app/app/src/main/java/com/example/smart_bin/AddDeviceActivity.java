@@ -16,7 +16,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.smart_bin.api.ApiService;
+import com.example.smart_bin.api.DeviceService;
 import com.example.smart_bin.bluetooth.BLEManager;
 import com.example.smart_bin.databinding.ActivityAddDeviceBinding;
 import com.example.smart_bin.model.Device;
@@ -283,7 +283,7 @@ public class AddDeviceActivity extends AppCompatActivity {
         device.setMacAddress(receivedMacAddress);
         device.setStatus(Constants.STATUS_OFFLINE);
 
-        ApiService.getInstance().createDevice(device, new ApiService.DeviceCallback() {
+        DeviceService.getInstance().createDevice(device, new DeviceService.DeviceCallback() {
             @Override
             public void onSuccess(Device device) {
                 runOnUiThread(() -> {

@@ -13,6 +13,8 @@ public class Notification {
 
     private Long timestamp;
 
+    private Boolean isRead;
+
     public Notification(){
 
     }
@@ -63,5 +65,13 @@ public class Notification {
 
     public void setTimestamp(Long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public Boolean getRead() {
+        return isRead;
+    }
+
+    public void setRead(Boolean read) {
+        isRead = read;
     }
 }

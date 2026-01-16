@@ -14,13 +14,16 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceManager;
 
-import com.example.smart_bin.api.ApiService;
+import com.example.smart_bin.api.DeviceDataService;
+import com.example.smart_bin.api.DeviceService;
 import com.example.smart_bin.databinding.ActivityDeviceControlBinding;
 import com.example.smart_bin.fragments.SettingsFragment;
 import com.example.smart_bin.model.Device;
 import com.example.smart_bin.model.DeviceData;
 import com.example.smart_bin.utils.Constants;
 import com.example.smart_bin.utils.NetworkUtils;
+
+import java.util.Objects;
 
 @SuppressLint("SetTextI18n")
 public class DeviceControlActivity extends AppCompatActivity {
@@ -41,7 +44,7 @@ public class DeviceControlActivity extends AppCompatActivity {
         binding = ActivityDeviceControlBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        deviceId = getIntent().getStringExtra(Constants.EXTRA_DEVICE_ID);
+        deviceId = Objects.requireNonNull(getIntent().getStringExtra(Constants.EXTRA_DEVICE_ID)).replace("_", ":");
         deviceName = getIntent().getStringExtra(Constants.EXTRA_DEVICE_NAME);
         status = getIntent().getStringExtra(Constants.EXTRA_DEVICE_STATUS);
 
@@ -80,7 +83,7 @@ public class DeviceControlActivity extends AppCompatActivity {
     private void loadDeviceData() {
         binding.progressBar.setVisibility(View.VISIBLE);
 
-        ApiService.getInstance().fetchDeviceData(deviceId, new ApiService.DeviceDataCallback() {
+        DeviceDataService.getInstance().getDeviceData(deviceId, new DeviceDataService.DeviceDataCallback() {
             @Override
             public void onSuccess(DeviceData data) {
                 updateUI(data);
@@ -97,7 +100,7 @@ public class DeviceControlActivity extends AppCompatActivity {
             }
         });
 
-        ApiService.getInstance().getDevice(deviceId, new ApiService.DeviceCallback() {
+        DeviceService.getInstance().getDevice(deviceId, new DeviceService.DeviceCallback() {
             @Override
             public void onSuccess(Device device) {
                 status = device.getStatus();

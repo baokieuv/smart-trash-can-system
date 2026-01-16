@@ -6,6 +6,7 @@ public record NotificationDto(
         String deviceName,
         String message,
         String type,
+        Boolean isRead,
         Long timestamp
 ) {
 }

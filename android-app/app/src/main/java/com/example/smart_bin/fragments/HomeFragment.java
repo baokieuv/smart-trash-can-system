@@ -20,7 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.smart_bin.DeviceControlActivity;
 import com.example.smart_bin.adapter.DeviceAdapter;
-import com.example.smart_bin.api.ApiService;
+import com.example.smart_bin.api.DeviceService;
 import com.example.smart_bin.databinding.FragmentHomeBinding;
 import com.example.smart_bin.model.Device;
 import com.example.smart_bin.utils.Constants;
@@ -103,7 +103,7 @@ public class HomeFragment extends Fragment implements DeviceAdapter.OnDeviceClic
     private void loadDevices() {
         Log.i(TAG, "Loading devices...");
         binding.progressBar.setVisibility(View.VISIBLE);
-        ApiService.getInstance().fetchDevices(new ApiService.DevicesCallback() {
+        DeviceService.getInstance().getDevices(new DeviceService.DevicesCallback() {
             @Override
             public void onSuccess(List<Device> devices) {
                 if (!isAdded()) return;
@@ -191,7 +191,7 @@ public class HomeFragment extends Fragment implements DeviceAdapter.OnDeviceClic
                     String newName = input.getText().toString().trim();
                     if (!newName.isEmpty()) {
                         device.setName(newName);
-                        ApiService.getInstance().updateDevice(device, new ApiService.DeviceCallback() {
+                        DeviceService.getInstance().updateDevice(device, new DeviceService.DeviceCallback() {
                             @Override
                             public void onSuccess(Device device) {
                                 if (!isAdded()) return;
@@ -217,24 +217,22 @@ public class HomeFragment extends Fragment implements DeviceAdapter.OnDeviceClic
         new AlertDialog.Builder(requireContext())
                 .setTitle("Delete Device")
                 .setMessage("Are you sure you want to delete " + device.getName() + "?")
-                .setPositiveButton("Delete", (dialog, which) -> {
-                    ApiService.getInstance().deleteDevice(device.getId(), new ApiService.DeviceCallback() {
-                        @Override
-                        public void onSuccess(Device device) {
-                            if (!isAdded()) return;
-                            Toast.makeText(requireContext(), "Device deleted", Toast.LENGTH_SHORT).show();
-                            loadDevices();
-                            Log.i(TAG, "Device deleted successfully");
-                        }
+                .setPositiveButton("Delete", (dialog, which) -> DeviceService.getInstance().deleteDevice(device.getId(), new DeviceService.DeviceCallback() {
+                    @Override
+                    public void onSuccess(Device device) {
+                        if (!isAdded()) return;
+                        Toast.makeText(requireContext(), "Device deleted", Toast.LENGTH_SHORT).show();
+                        loadDevices();
+                        Log.i(TAG, "Device deleted successfully");
+                    }
 
-                        @Override
-                        public void onError(String error) {
-                            if (!isAdded()) return;
-                            Toast.makeText(requireContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
-                            Log.e(TAG, "Error deleting device: " + error);
-                        }
-                    });
-                })
+                    @Override
+                    public void onError(String error) {
+                        if (!isAdded()) return;
+                        Toast.makeText(requireContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, "Error deleting device: " + error);
+                    }
+                }))
                 .setNegativeButton("Cancel", null)
                 .show();
     }

@@ -1,5 +1,6 @@
 package com.example.smart_bin.fragments;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,8 +17,9 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.smart_bin.DeviceControlActivity;
+import com.example.smart_bin.MainActivity;
 import com.example.smart_bin.adapter.NotificationAdapter;
-import com.example.smart_bin.api.ApiService;
+import com.example.smart_bin.api.NotificationService;
 import com.example.smart_bin.databinding.FragmentNotificationsBinding;
 import com.example.smart_bin.model.Notification;
 import com.example.smart_bin.utils.Constants;
@@ -96,7 +98,7 @@ public class NotificationsFragment extends Fragment implements NotificationAdapt
         Log.i(TAG, "Loading notifications...");
         binding.progressBar.setVisibility(View.VISIBLE);
 
-        ApiService.getInstance().fetchNotifications(new ApiService.NotificationCallback() {
+        NotificationService.getInstance().getNotifications(new NotificationService.NotificationCallback() {
             @Override
             public void onSuccess(List<Notification> notifications) {
                 notificationList = notifications;
@@ -118,6 +120,7 @@ public class NotificationsFragment extends Fragment implements NotificationAdapt
     }
 
 
+    @SuppressLint("SetTextI18n")
     private void updateUI(List<Notification> notifications) {
         binding.setHasNotifications(notifications != null && !notifications.isEmpty());
 
@@ -138,6 +141,24 @@ public class NotificationsFragment extends Fragment implements NotificationAdapt
     @Override
     public void onNotificationClick(Notification notification) {
         if (notification.getDeviceId() != null && !notification.getDeviceId().equals("system")) {
+            notification.setRead(true);
+
+            adapter.notifyDataSetChanged();
+
+            NotificationService.getInstance().updateNotificationStatus(notification, new NotificationService.NotificationCallback() {
+                @Override
+                public void onSuccess(List<Notification> notifications) {
+                    if (getActivity() instanceof MainActivity){
+                        ((MainActivity) getActivity()).getNumOfNoti();
+                    }
+                }
+
+                @Override
+                public void onError(String error) {
+                    Toast.makeText(requireContext(), "Error updating notification status: " + error, Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Error updating notification status:");
+                }
+            });
             Intent intent = new Intent(requireContext(), DeviceControlActivity.class);
             intent.putExtra(Constants.EXTRA_DEVICE_ID, notification.getDeviceId());
             intent.putExtra(Constants.EXTRA_DEVICE_NAME, notification.getDeviceName());

@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
+        <import type="android.graphics.Typeface" />
         <variable
             name="notification"
             type="com.example.smart_bin.model.Notification" />
@@ -60,6 +61,7 @@
                 android:layout_marginTop="4dp"
                 android:text="@{notification.message}"
                 android:textColor="#64748B"
+                android:typeface="@{notification.read ? Typeface.DEFAULT : Typeface.DEFAULT_BOLD}"
                 android:textSize="13sp"
                 android:maxLines="2"
                 android:ellipsize="end" />

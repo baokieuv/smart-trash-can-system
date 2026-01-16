@@ -1,9 +1,12 @@
 package com.example.smart_bin;
 
+import static androidx.core.content.ContentProviderCompat.requireContext;
+
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,14 +15,18 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 
-import com.example.smart_bin.api.ApiService;
+import com.example.smart_bin.api.DeviceDataService;
+import com.example.smart_bin.api.DeviceService;
+import com.example.smart_bin.api.NotificationService;
 import com.example.smart_bin.databinding.ActivityMainBinding;
 import com.example.smart_bin.fragments.HomeFragment;
 import com.example.smart_bin.fragments.NotificationsFragment;
 import com.example.smart_bin.fragments.SettingsFragment;
-import com.example.smart_bin.utils.Constants;
+import com.example.smart_bin.model.Notification;
 import com.example.smart_bin.utils.TokenManager;
 import com.google.android.material.badge.BadgeDrawable;
+
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -35,7 +42,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         tokenManager = TokenManager.getInstance(this);
-        ApiService.getInstance(this);
+        DeviceService.getInstance(this);
+        DeviceDataService.getInstance(this);
+        NotificationService.getInstance(this);
 
         if (!tokenManager.isLoggedIn()) {
             navigateToLogin();
@@ -73,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
             } else if (itemId == R.id.navigation_noti) {
                 selectedFragment = new NotificationsFragment();
                 // Clear notification badge when opening
-                clearNotificationBadge();
+//                clearNotificationBadge();
             } else if (itemId == R.id.navigation_setting) {
                 selectedFragment = new SettingsFragment();
             }
@@ -90,7 +99,8 @@ public class MainActivity extends AppCompatActivity {
         binding.bottomNavigation.setSelectedItemId(selectedItemId);
 
         // Setup notification badge (example)
-        updateNotificationBadge(5); // Mock 5 unread notifications
+//        updateNotificationBadge(5); // Mock 5 unread notifications
+        getNumOfNoti();
     }
 
     private void setupFab() {
@@ -126,6 +136,28 @@ public class MainActivity extends AppCompatActivity {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
+    }
+
+    public void getNumOfNoti(){
+        NotificationService.getInstance().getNotifications(new NotificationService.NotificationCallback() {
+            @Override
+            public void onSuccess(List<Notification> notifications) {
+                runOnUiThread(()->{
+                    int count = notifications.stream()
+                            .filter(item -> item.getRead() != null && !item.getRead())
+                            .mapToInt(item -> 1)
+                            .sum();
+                    updateNotificationBadge(count);
+//                    updateNotificationBadge(notifications.stream().filter())
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                Toast.makeText(MainActivity.this, "Error: " + error, Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Error loading notifications: " + error);
+            }
+        });
     }
 
     @Override

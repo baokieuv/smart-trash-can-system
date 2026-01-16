@@ -78,6 +78,6 @@ public class NotificationService {
         Device device = deviceRepository.findById(notification.getDeviceId()).orElse(null);
         String deviceId = device == null ? "system" : device.getId();
         String deviceName = device == null ? "Unknown device" : device.getName();
-        return new NotificationDto(notification.getId(), deviceId ,deviceName, notification.getMessage(), notification.getType(), notification.getTimestamp());
+        return new NotificationDto(notification.getId(), deviceId ,deviceName, notification.getMessage(), notification.getType(), notification.getRead(), notification.getTimestamp());
     }
 }

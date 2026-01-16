@@ -4,7 +4,8 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 
 import com.example.smart_bin.model.AuthResponse;
 import com.example.smart_bin.model.User;
@@ -14,6 +15,8 @@ import com.example.smart_bin.utils.TokenManager;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -26,7 +29,7 @@ public class AuthService {
     private static AuthService instance;
     private final ExecutorService executorService;
     private final Handler mainHandler;
-    private Context context;
+    private final Context context;
 
     public interface AuthCallback {
         void onSuccess(AuthResponse response);
@@ -59,12 +62,7 @@ public class AuthService {
     public void register(String email, String password, String firstName, String lastName, MessageCallback callback) {
         executorService.execute(() -> {
             try {
-                URL url = new URL(Constants.BASE_URL + Constants.API_VERSION + "/auth/register");
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("POST");
-                connection.setRequestProperty("Content-Type", "application/json");
-                connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
-                connection.setReadTimeout(Constants.READ_TIMEOUT);
+                HttpURLConnection connection = getHttpURLConnection("/auth/register");
                 connection.setDoOutput(true);
 
                 JSONObject jsonBody = new JSONObject();
@@ -80,20 +78,16 @@ public class AuthService {
 
                 int responseCode = connection.getResponseCode();
 
-                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
-                StringBuilder response = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    response.append(line);
-                }
-                reader.close();
-
                 if (responseCode == HttpURLConnection.HTTP_OK) {
+                    StringBuilder response = getMessage(connection.getInputStream());
+
                     JSONObject jsonResponse = new JSONObject(response.toString());
                     String message = jsonResponse.optString("message", "Registration successful");
 
                     mainHandler.post(() -> callback.onSuccess(message));
                 } else {
+                    StringBuilder response = getMessage(connection.getErrorStream());
+
                     JSONObject errorResponse = new JSONObject(response.toString());
                     String error = errorResponse.optString("error", "Registration failed");
 
@@ -111,12 +105,7 @@ public class AuthService {
     public void login(String email, String password, AuthCallback callback) {
         executorService.execute(() -> {
             try {
-                URL url = new URL(Constants.BASE_URL + Constants.API_VERSION + "/auth/login");
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("POST");
-                connection.setRequestProperty("Content-Type", "application/json");
-                connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
-                connection.setReadTimeout(Constants.READ_TIMEOUT);
+                HttpURLConnection connection = getHttpURLConnection("/auth/login");
                 connection.setDoOutput(true);
 
                 JSONObject jsonBody = new JSONObject();
@@ -130,18 +119,22 @@ public class AuthService {
 
                 int responseCode = connection.getResponseCode();
 
-                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
-                StringBuilder response = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    response.append(line);
-                }
-                reader.close();
+//                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+//                StringBuilder response = new StringBuilder();
+//                String line;
+//                while ((line = reader.readLine()) != null) {
+//                    response.append(line);
+//                }
+//                reader.close();
 
                 if (responseCode == HttpURLConnection.HTTP_OK) {
+                    StringBuilder response = getMessage(connection.getInputStream());
+
                     AuthResponse authResponse = parseAuthResponse(response.toString());
                     mainHandler.post(() -> callback.onSuccess(authResponse));
                 } else {
+                    StringBuilder response = getMessage(connection.getErrorStream());
+
                     JSONObject errorResponse = new JSONObject(response.toString());
                     String error = errorResponse.optString("error", "Login failed");
 
@@ -167,12 +160,7 @@ public class AuthService {
                     return;
                 }
 
-                URL url = new URL(Constants.BASE_URL + Constants.API_VERSION + "/auth/refresh");
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("POST");
-                connection.setRequestProperty("Content-Type", "application/json");
-                connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
-                connection.setReadTimeout(Constants.READ_TIMEOUT);
+                HttpURLConnection connection = getHttpURLConnection("/auth/refresh");
                 connection.setDoOutput(true);
 
                 JSONObject jsonBody = new JSONObject();
@@ -185,13 +173,14 @@ public class AuthService {
 
                 int responseCode = connection.getResponseCode();
                 if (responseCode == HttpURLConnection.HTTP_OK) {
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                    StringBuilder response = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        response.append(line);
-                    }
-                    reader.close();
+//                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+//                    StringBuilder response = new StringBuilder();
+//                    String line;
+//                    while ((line = reader.readLine()) != null) {
+//                        response.append(line);
+//                    }
+//                    reader.close();
+                    StringBuilder response = getMessage(connection.getInputStream());
 
                     AuthResponse authResponse = parseAuthResponse(response.toString());
 
@@ -236,13 +225,7 @@ public class AuthService {
                     return;
                 }
 
-                URL url = new URL(Constants.BASE_URL + Constants.API_VERSION + "/auth/logout");
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("POST");
-                connection.setRequestProperty("Content-Type", "application/json");
-//                connection.setRequestProperty("Authorization", "Bearer " + accessToken);
-                connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
-                connection.setReadTimeout(Constants.READ_TIMEOUT);
+                HttpURLConnection connection = getHttpURLConnection("/auth/logout");
 
                 JSONObject jsonBody = new JSONObject();
                 jsonBody.put("refreshToken", refreshToken);
@@ -273,12 +256,7 @@ public class AuthService {
     public void resendVerification(String email, MessageCallback callback) {
         executorService.execute(() -> {
             try {
-                URL url = new URL(Constants.BASE_URL + Constants.API_VERSION + "/auth/resend-verification");
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("POST");
-                connection.setRequestProperty("Content-Type", "application/json");
-                connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
-                connection.setReadTimeout(Constants.READ_TIMEOUT);
+                HttpURLConnection connection = getHttpURLConnection("/auth/resend-verification");
                 connection.setDoOutput(true);
 
                 JSONObject jsonBody = new JSONObject();
@@ -311,13 +289,12 @@ public class AuthService {
                 String accessToken = tokenManager.getAccessToken();
 
                 if (accessToken == null) {
-                    mainHandler.post(() -> {
-                        callback.onError("Unauthorized");
-                    });
+                    mainHandler.post(() -> callback.onError("Unauthorized"));
                     return;
                 }
 
-                URL url = new URL("http://kvbhust.site/api/v1/auth/change-password");
+
+                URL url = new URL(Constants.BASE_URL + Constants.API_VERSION + "/auth/change-password");
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("POST");
                 connection.setRequestProperty("Content-Type", "application/json");
@@ -341,13 +318,14 @@ public class AuthService {
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     mainHandler.post(() -> callback.onSuccess("Password changed successfully"));
                 } else {
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
-                    StringBuilder response = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        response.append(line);
-                    }
-                    reader.close();
+//                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+//                    StringBuilder response = new StringBuilder();
+//                    String line;
+//                    while ((line = reader.readLine()) != null) {
+//                        response.append(line);
+//                    }
+//                    reader.close();
+                    StringBuilder response = getMessage(connection.getErrorStream());
 
                     JSONObject errorResponse = new JSONObject(response.toString());
                     String error = errorResponse.optString("error", "Failed to change password");
@@ -366,12 +344,7 @@ public class AuthService {
     public void forgotPassword(String email, MessageCallback callback){
         executorService.execute(() -> {
             try{
-                URL url = new URL(Constants.BASE_URL + Constants.API_VERSION + "/auth/forgot-password");
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("POST");
-                connection.setRequestProperty("Content-Type", "application/json");
-                connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
-                connection.setReadTimeout(Constants.READ_TIMEOUT);
+                HttpURLConnection connection = getHttpURLConnection("/auth/forgot-password");
                 connection.setDoOutput(true);
 
                 JSONObject jsonBody = new JSONObject();
@@ -384,20 +357,16 @@ public class AuthService {
 
                 int responseCode = connection.getResponseCode();
 
-                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
-                StringBuilder response = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    response.append(line);
-                }
-                reader.close();
-
                 if(responseCode == HttpURLConnection.HTTP_OK){
+                    StringBuilder response = getMessage(connection.getInputStream());
+
                     JSONObject jsonResponse = new JSONObject(response.toString());
                     String message = jsonResponse.optString("message", "Password reset email sent");
 
                     mainHandler.post(() -> callback.onSuccess(message));
                 }else{
+                    StringBuilder response = getMessage(connection.getErrorStream());
+
                     JSONObject errorResponse = new JSONObject(response.toString());
                     String error = errorResponse.optString("error", "Password reset failed");
 
@@ -432,6 +401,29 @@ public class AuthService {
 
         authResponse.setUser(user);
         return authResponse;
+    }
+
+    @NonNull
+    private static HttpURLConnection getHttpURLConnection(String path) throws IOException {
+        URL url = new URL(Constants.BASE_URL + Constants.API_VERSION + path);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("Content-Type", "application/json");
+//                connection.setRequestProperty("Authorization", "Bearer " + accessToken);
+        connection.setConnectTimeout(Constants.CONNECTION_TIMEOUT);
+        connection.setReadTimeout(Constants.READ_TIMEOUT);
+        return connection;
+    }
+
+    private static StringBuilder getMessage(InputStream inputStream) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        StringBuilder response = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            response.append(line);
+        }
+        reader.close();
+        return response;
     }
 
     public void shutdown() {
