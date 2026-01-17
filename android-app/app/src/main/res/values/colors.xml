@@ -26,10 +26,10 @@
     <color name="gradientGreenEnd">#059669</color>
 
     <!-- Alert Colors -->
-    <color name="success">#10B981</color>
-    <color name="warning">#F59E0B</color>
-    <color name="error">#EF4444</color>
-    <color name="info">#3B82F6</color>
+<!--    <color name="success">#10B981</color>-->
+<!--    <color name="warning">#F59E0B</color>-->
+<!--    <color name="error">#EF4444</color>-->
+<!--    <color name="info">#3B82F6</color>-->
 
     <!-- Waste Type Colors -->
     <color name="recycled">#166534</color>
@@ -46,4 +46,38 @@
     <color name="bottom_nav_bar">#2563EB</color>
     <color name="bottom_nav_bar_selected">#94A3B8</color>
 
+    <!-- Primary Colors - Tông xanh nhẹ nhàng -->
+    <color name="primary">#4F46E5</color>
+    <color name="primary_dark">#3730A3</color>
+    <color name="primary_light">#818CF8</color>
+    <color name="primary_variant">#6366F1</color>
+
+    <!-- Surface & Background - Màu nền -->
+    <color name="background">#F9FAFB</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_variant">#F3F4F6</color>
+
+    <!-- Text Colors - Màu chữ -->
+    <color name="text_primary">#111827</color>
+    <color name="text_secondary">#6B7280</color>
+    <color name="text_hint">#9CA3AF</color>
+
+    <!-- Status Colors - Màu trạng thái -->
+    <color name="success">#10B981</color>
+    <color name="success_light">#D1FAE5</color>
+    <color name="warning">#F59E0B</color>
+    <color name="warning_light">#FEF3C7</color>
+    <color name="error">#EF4444</color>
+    <color name="error_light">#FEE2E2</color>
+    <color name="info">#3B82F6</color>
+    <color name="info_light">#DBEAFE</color>
+
+    <!-- Divider & Border -->
+    <color name="divider">#E5E7EB</color>
+    <color name="border">#D1D5DB</color>
+
+    <!-- Other -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="transparent">#00000000</color>
 </resources>
