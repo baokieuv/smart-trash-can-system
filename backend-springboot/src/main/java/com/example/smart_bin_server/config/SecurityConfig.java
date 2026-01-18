@@ -30,6 +30,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/classify-image/**").permitAll()
 
                         // Protected endpoints - require authentication
+                        .requestMatchers(HttpMethod.POST, "/api/v1/devices/*/data").permitAll()
                         .requestMatchers("/api/v1/devices/**").authenticated()
                         .requestMatchers("/api/v1/notifications/**").authenticated()
                         .requestMatchers("/api/v1/users/**").authenticated()
