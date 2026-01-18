@@ -1,6 +1,7 @@
 /venv
 /temp
-/docker
+/docker/mariadb_data
+/docker/postgres_data
 /__pycache__
 /result/
 **/result/

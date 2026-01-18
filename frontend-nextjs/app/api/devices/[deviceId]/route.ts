@@ -1,9 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { Device } from '@/types';
+import { BACKEND_API_BASE } from '../../config';
 
-export async function PUT(req: Request, { params }: { params: { deviceId: string } }) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ deviceId: string }> }
+) {
   const { deviceId } = await params;
-  const BASE_URL = `http://localhost:8888/api/v1/devices/${deviceId}`;
+  const BASE_URL = `${BACKEND_API_BASE}/devices/${deviceId}`;
   
   try {
     const token = req.headers.get('authorization')?.replace('Bearer ', '');
@@ -50,9 +54,12 @@ export async function PUT(req: Request, { params }: { params: { deviceId: string
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { deviceId: string } }) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ deviceId: string }> }
+) {
   const { deviceId } = await params;
-  const BASE_URL = `http://localhost:8888/api/v1/devices/${deviceId}`;
+  const BASE_URL = `${BACKEND_API_BASE}/devices/${deviceId}`;
   
   try {
     const token = req.headers.get('authorization')?.replace('Bearer ', '');

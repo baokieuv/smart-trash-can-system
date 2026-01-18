@@ -10,6 +10,7 @@ interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<{ success: boolean; error?: string }>;
   register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
+  resendVerification: (email: string) => Promise<{ success: boolean; error?: string }>;
   forgotPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
   isAuthenticated: boolean;
   refreshAccessToken: () => Promise<boolean>;
@@ -190,6 +191,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const resendVerification = async (email: string) => {
+    try{
+      const response = await fetch("/api/auth/resend-verification", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: result.error || 'Resend verification failed' };
+      }
+
+      return { success: true, error: result.message || 'Verification email sent successfully.' };
+    }catch(error){
+      console.error('Resend verification error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
+
   const forgotPassword = async (email: string) => {
     try{
       const response = await fetch("/api/auth/forgot-password", {
@@ -221,6 +245,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        resendVerification,
         forgotPassword,
         isAuthenticated: !!user,
         refreshAccessToken,

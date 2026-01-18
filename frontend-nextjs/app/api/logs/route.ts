@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { ActivityLog } from '@/types';
+import { BACKEND_API_BASE } from '../config';
 
 
 export async function GET(req: Request) {
-  const BASE_URL = "http://localhost:8888/api/v1/notifications";
+  const BASE_URL = `${BACKEND_API_BASE}/notifications`;
 
   try {
     const token = req.headers.get('authorization')?.replace('Bearer ', '');

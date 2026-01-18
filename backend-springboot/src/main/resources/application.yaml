@@ -3,9 +3,10 @@ spring:
     name: smart-bin-server
 
   datasource:
-    url: jdbc:mariadb://localhost:3333/smart-bin
-    username: admin
-    password: admin
+    # URL động: thay đổi host và port tùy môi trường
+    url: ${SPRING_DATASOURCE_URL:jdbc:mariadb://localhost:3333/smart-bin}
+    username: ${SPRING_DATASOURCE_USERNAME:admin}
+    password: ${SPRING_DATASOURCE_PASSWORD:admin}
     driver-class-name: org.mariadb.jdbc.Driver
     type: com.zaxxer.hikari.HikariDataSource
     hikari:
@@ -18,46 +19,51 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.MariaDBDialect
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update} 
+    show-sql: ${SHOW_SQL:true}
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MariaDBDialect
         format_sql: true
+
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/smart-bin
-          jwk-set-uri: http://localhost:8080/realms/smart-bin/protocol/openid-connect/certs
+          # Keycloak Host phải dynamic
+          issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:http://localhost:8080/realms/smart-bin}
+          jwk-set-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI:http://localhost:8080/realms/smart-bin/protocol/openid-connect/certs}
+
   mail:
-    host: smtp.gmail.com
-    port: 465
-    username: kieubao2k4@gmail.com
-    password: srmg hvpl rebq hrpn
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:465}
+    username: ${SPRING_MAIL_USERNAME:kieubao2k4@gmail.com}
+    password: ${SPRING_MAIL_PASSWORD} 
     properties:
       mail:
         smtp:
           auth: true
           ssl:
             enable: true
-          trust: smtp.gmail.com
-server:
-  port: 8888
+          trust: ${SPRING_MAIL_HOST:smtp.gmail.com}
 
+server:
+  port: ${SERVER_PORT:8888}
 
 app:
   ai-server:
-    url: http://localhost:8000
+    # Service AI (FastAPI) cũng cần dynamic host
+    url: ${APP_AI_SERVER_URL:http://localhost:8000}
   email:
-    from: kieubao2k4@gmail.com
+    from: ${APP_EMAIL_FROM:kieubao2k4@gmail.com}
     verification:
-      url: http://www.kvbhust.site/api/v1/auth/verify-email
+      # Domain trả về cho user click cần đúng với domain thực tế (kvbhust.site)
+      url: ${APP_EMAIL_VERIFICATION_URL:http://localhost:8888/api/v1/auth/verify-email}
 
 keycloak:
-  server-url: http://localhost:8080
-  realm: smart-bin
-  client-id: smart-bin-client
-  client-secret: wYhiGkc0Pgw1vrS6HRcuZ6ChzH9GmT3Y
-  admin-username: admin
-  admin-password: admin
+  server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8080}
+  realm: ${KEYCLOAK_REALM:smart-bin}
+  client-id: ${KEYCLOAK_CLIENT_ID:smart-bin-client}
+  client-secret: ${KEYCLOAK_CLIENT_SECRET} # Ẩn secret
+  admin-username: ${KEYCLOAK_ADMIN_USERNAME:admin}
+  admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin}

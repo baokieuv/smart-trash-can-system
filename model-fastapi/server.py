@@ -3,6 +3,8 @@ import model
 from fastapi import FastAPI, HTTPException, File, UploadFile
 from datetime import datetime
 from pydantic import BaseModel
+import numpy as np
+import cv2
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "best.onnx")
@@ -29,16 +31,19 @@ async def classify(image: UploadFile = File(...)):
     try:
         contents = await image.read()
         
-        result_dir = os.path.join(BASE_DIR, "result")
-        os.makedirs(result_dir, exist_ok=True)
+        # result_dir = os.path.join(BASE_DIR, "result")
+        # os.makedirs(result_dir, exist_ok=True)
         
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        temp_path = os.path.join(result_dir, f"{timestamp}_{image.filename}")
-        with open(temp_path, "wb") as f:
-            f.write(contents)
+        # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        # temp_path = os.path.join(result_dir, f"{timestamp}_{image.filename}")
+        # with open(temp_path, "wb") as f:
+        #     f.write(contents)
+        nparr = np.frombuffer(contents, np.uint8)
+        frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         
-        label, conf = model_cls.detect_and_save(temp_path)
+        # label, conf = model_cls.detect_and_save(temp_path)
 
+        label, conf = model_cls.detect_from_frame(frame)
         # os.remove(temp_path)
         
         if label in recyclable:
@@ -63,6 +68,8 @@ async def classify(image: UploadFile = File(...)):
     except Exception as e:
         # 500 - Internal server error
         raise HTTPException(status_code=500, detail=f"Unexpected error: {type(e).__name__}: {e}")
+    # finally:
+    #     os.remove(temp_path)
     
 if __name__ == "__main__":
     import uvicorn

@@ -1,5 +1,6 @@
 
 import { NextResponse } from 'next/server';
+import { BACKEND_API_BASE } from '../../config';
 
 export async function POST(req: Request) {
   try {
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
     //   );
     // }
 
-    const response = await fetch('http://localhost:8888/api/v1/auth/logout', {
+    const response = await fetch(`${BACKEND_API_BASE}/auth/logout`, {
       method: 'POST',
       headers: {
         // 'Authorization': `Bearer ${token}`,

@@ -11,7 +11,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const { login, forgotPassword } = useAuth();
+  const { login, forgotPassword, resendVerification } = useAuth();
   const [isResetting, setIsResetting] = useState(false);
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,6 +29,26 @@ export default function LoginPage() {
     }
   };
 
+  const handleResendVerification = async () => {
+    if (!email) {
+      setError('Please enter your email first to resend verification');
+      return;
+    }
+
+    setError('');
+    setSuccessMessage('');
+    setLoading(true);
+
+    const result = await resendVerification(email);
+    
+    setLoading(false);
+    
+    if (!result.success) {
+      setError(result.error || 'Resend verification failed');
+    }else{
+      setSuccessMessage(result.error || 'Verification email sent successfully. Please check your mail.');
+    }
+  }
   const handleForgotPassword = async () => {
     // e.preventDefault();
     // 1. Validate Email
@@ -76,7 +96,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       className="text-sm text-blue-600 hover:text-blue-700 font-semibold mt-2"
-                      onClick={() => {/* TODO: Resend verification */}}
+                      onClick={handleResendVerification}
                     >
                       Resend verification email
                     </button>

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Device } from '@/types';
 import { cookies } from 'next/headers';
+import { BACKEND_API_BASE } from '../config';
 
 interface DeviceBasic {
   id: string;
@@ -23,7 +24,7 @@ function getAuthToken(): string | null {
 }
 
 export async function GET(req: Request) {
-  const BASE_URL = "http://localhost:8888/api/v1/devices";
+  const BASE_URL = `${BACKEND_API_BASE}/devices`;
 
   try {
     // Get token from request headers

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { BACKEND_API_BASE } from '../../config';
 
 export async function POST(req: Request) {
   try {
@@ -12,7 +13,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const response = await fetch('http://localhost:8888/api/v1/auth/refresh', {
+    const response = await fetch(`${BACKEND_API_BASE}/auth/refresh`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

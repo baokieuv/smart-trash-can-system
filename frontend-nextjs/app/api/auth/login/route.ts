@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
+import { BACKEND_API_BASE } from "../../config";
 
 export async function POST(req: Request) {
     try{
         const body = await req.json();
         const { email, password } = body;
 
-        const response = await fetch('http://localhost:8888/api/v1/auth/login', {
+        const response = await fetch(`${BACKEND_API_BASE}/auth/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

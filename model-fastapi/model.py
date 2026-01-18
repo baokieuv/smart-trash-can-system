@@ -72,6 +72,16 @@ class Yolov11_Onnx:
         print(f"Label: {label}, Conf: {conf}")
         
         return label, conf
+    
+    def detect_from_frame(self, frame):
+        if frame is None:
+            raise ValueError("Empty frame")
+            
+        input_tensor = self._preprocessing(frame)
+        input_name = self.session.get_inputs()[0].name
+        output = self.session.run(None, {input_name: input_tensor})
+        label, conf = self._postprocessing(output)
+        return label, conf
         
 # def main():
 #     model: Yolov11_Onnx = Yolov11_Onnx("D:/HUST/soict/project3/best.onnx", label_list=["battery", "biological", "cardboard", "clothes", "glass", "metal", "paper", "plastic", "shoes", "trash"])
