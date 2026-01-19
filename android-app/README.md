@@ -234,195 +234,111 @@ app/src/main/res/
 
 ## 🏗️ Architecture
 
-### Pattern: MVC + Repository
+**Pattern**: MVC + Service Layer
 
-```
-┌─────────────┐
-│   Activity  │ ◄─── User interactions
-│  / Fragment │
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│   Service   │ ◄─── Business logic
-│  (ApiService│      (Auth, Device CRUD)
-│  AuthService)
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│  Repository │ ◄─── Data source
-│   (Network  │      (HTTP calls)
-│    + Cache) │
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│    Model    │ ◄─── Data objects
-│ (POJO/DTO)  │
-└─────────────┘
-```
+### Layers:
+- **Activities/Fragments**: UI và user interactions
+- **Service Layer** (tách riêng theo domain):
+  - `AuthService`: Authentication APIs (login, register, refresh token)
+  - `DeviceService`: Device CRUD operations
+  - `DeviceDataService`: Device data/statistics
+  - `NotificationService`: Notification management
+- **Models**: Data objects (Device, DeviceData, Notification, User)
+- **Utils**: TokenManager, Constants, NetworkUtils
+- **Bluetooth**: BLEManager (Bluetooth Classic connection)
+- **WiFi**: WiFiScanner (WiFi network scanning)
 
-### Token Management Flow
-
-```
-1. User login → AuthService.login()
-2. Server returns: accessToken + refreshToken
-3. TokenManager.saveAuthResponse() → SharedPreferences
-4. Every API call:
-   - Check token expiry
-   - If expired → call AuthService.refreshToken()
-   - Retry original request with new token
-5. If refresh fails → Navigate to LoginActivity
-```
+### Token Management:
+- Login → Lưu access/refresh token vào SharedPreferences
+- Mỗi API call → Auto check expiry → Refresh nếu cần
+- Refresh fail → Navigate về LoginActivity
+- Mỗi Service có built-in token refresh logic
 
 ---
 
 ## 📡 API Integration
 
-### ApiService.java
+API Layer được tách thành các Service riêng biệt, mỗi Service xử lý một domain cụ thể.
 
-Xử lý tất cả API calls liên quan đến devices và data.
+### DeviceService.java
+**Package**: `com.example.smart_bin.api`
 
-#### Các method chính:
+**Chức năng**:
+- `fetchDevices(DevicesCallback)`: Lấy danh sách devices
+- `createDevice(Device, DeviceCallback)`: Tạo device mới
+- `getDevice(String deviceId, DeviceCallback)`: Lấy thông tin 1 device
+- `updateDevice(Device, DeviceCallback)`: Cập nhật device
+- `deleteDevice(String deviceId, DeviceCallback)`: Xóa device
 
-```java
-// Device APIs
-public void fetchDevices(DevicesCallback callback)
-public void createDevice(Device device, DeviceCallback callback)
-public void getDevice(String deviceId, DeviceCallback callback)
-public void updateDevice(Device device, DeviceCallback callback)
-public void deleteDevice(String deviceId, DeviceCallback callback)
+**Features**:
+- Auto token refresh nếu expired
+- Singleton pattern
+- Async execution với ExecutorService
 
-// Device Data
-public void fetchDeviceData(String deviceId, DeviceDataCallback callback)
+### DeviceDataService.java
+**Package**: `com.example.smart_bin.api`
 
-// Notifications
-public void fetchNotifications(NotificationCallback callback)
-```
+**Chức năng**:
+- `fetchDeviceData(String deviceId, DeviceDataCallback)`: Lấy device data (waste counts, fill level, battery)
 
-#### Ví dụ sử dụng:
+### NotificationService.java
+**Package**: `com.e
+**Package**: `com.example.smart_bin.bluetooth`
 
-```java
-ApiService.getInstance(context).fetchDevices(new ApiService.DevicesCallback() {
-    @Override
-    public void onSuccess(List<Device> devices) {
-        // Update UI với danh sách devices
-        adapter.setDevices(devices);
-    }
+**Chức năng**:
+- Scan và list paired Bluetooth devices
+- Kết nối với ESP32-CAM qua **Bluetooth Classic** (SPP profile)
+- Gửi WiFi credentials (SSID + password) format: `WIFI:ssid:password`
+- Nhận response từ ESP32 (success/error)
+- Auto disconnect sau khi gửi
 
-    @Override
-    public void onError(String error) {
-        Toast.makeText(context, "Error: " + error, Toast.LENGTH_SHORT).show();
-    }
-});
-```
+**Methods**:
+- `getPairedDevices()`: Lấy danh sách paired devices
+- `connectToDevice(BluetoothDevice, BLECallback)`: Kết nối
+- `sendWifiCredentials(String ssid, String password)`: Gửi WiFi info
+- `disconnect()`: Ngắt kết nối
 
-### AuthService.java
+### WiFiScanner.java
+**Package**: `com.example.smart_bin.wifi`
 
-Xử lý authentication APIs.
+**Chức năng**:
+- Scan các WiFi networks khả dụng (cần permission ACCESS_FINE_LOCATION)
+- Show danh sách SSID để user chọn
+- Truyền SSID đã chọn qua Bluetooth cho ESP32
 
-#### Các method chính:
-
-```java
-public void register(String email, String password, String firstName, 
-                    String lastName, MessageCallback callback)
-public void login(String email, String password, AuthCallback callback)
-public void refreshToken(RefreshCallback callback)
-public void logout(MessageCallback callback)
-public void changePassword(String currentPassword, String newPassword, 
-                          String confirmPassword, MessageCallback callback)
-public void resendVerification(String email, MessageCallback callback)
-```
+**Methods**:
+- `startScan(ScanCallback)`: Bắt đầu scan WiFi
+- Callback trả về `List<String>` SSIDs
+- `refreshToken()`: Refresh access token
+- `logout()`: Đăng xuất
+- `changePassword()`: Đổi mật khẩu
+- `resendVerification()`: Gửi lại email xác thực
 
 ### TokenManager.java
+**Package**: `com.example.smart_bin.utils`
 
-Quản lý JWT tokens trong SharedPreferences.
-
-```java
-// Save tokens after login
-tokenManager.saveAuthResponse(accessToken, refreshToken, expiresIn, 
-                              userId, email, firstName, lastName, emailVerified);
-
-// Check if logged in
-boolean isLoggedIn = tokenManager.isLoggedIn();
-
-// Check if token needs refresh
-boolean needsRefresh = tokenManager.needsRefresh();
-
-// Get access token
-String token = tokenManager.getAccessToken();
-
-// Clear tokens (logout)
-tokenManager.clearTokens();
-```
+**Chức năng**:
+- Lưu/lấy access/refresh token từ SharedPreferences
+- `isTokenValid()`: Check token còn hợp lệ
+- `needsRefresh()`: Check cần refresh (expire trong < 5 phút)
+- `clearTokens()`: Xóa tokens khi logout
 
 ---
 
 ## 📶 Bluetooth Integration
 
-### BLEManager.java
+### BLEManager.java - Bluetooth Classic
+**Chức năng**:
+- Scan và list paired Bluetooth devices
+- Kết nối với ESP32-CAM qua Bluetooth Classic (SPP)
+- Gửi WiFi credentials (SSID + password)
+- Nhận response từ ESP32
 
-Quản lý Bluetooth Classic connection với ESP32-CAM.
-
-#### Kết nối device:
-
-```java
-BLEManager bleManager = new BLEManager(context);
-
-// Get paired devices
-Set<BluetoothDevice> pairedDevices = bleManager.getPairedDevices();
-
-// Connect to device
-bleManager.connectToDevice(device, new BLEManager.BLECallback() {
-    @Override
-    public void onConnected() {
-        // Device connected
-    }
-
-    @Override
-    public void onDisconnected() {
-        // Device disconnected
-    }
-
-    @Override
-    public void onDataSentSuccess() {
-        // WiFi credentials sent
-    }
-
-    @Override
-    public void onError(String error) {
-        Log.e(TAG, "Error: " + error);
-    }
-});
-```
-
-#### Gửi WiFi credentials:
-
-```java
-bleManager.sendWifiCredentials(ssid, password);
-```
-
-### WiFiScanner.java
-
-Scan WiFi networks để chọn khi config ESP32.
-
-```java
-WiFiScanner scanner = new WiFiScanner(context);
-
-scanner.startScan(new WiFiScanner.ScanCallback() {
-    @Override
-    public void onScanCompleted(List<String> networks) {
-        // Show networks in dialog
-        showNetworkSelectionDialog(networks);
-    }
-
-    @Override
-    public void onScanFailed(String error) {
-        Toast.makeText(context, error, Toast.LENGTH_SHORT).show();
-    }
-});
-```
+### WiFiScanner.java - WiFi Scanning
+**Chức năng**:
+- Scan các WiFi networks khả dụng
+- Show danh sách để user chọn
+- Truyền thông tin WiFi qua Bluetooth cho ESP32
 
 ---
 
@@ -445,11 +361,107 @@ scanner.startScan(new WiFiScanner.ScanCallback() {
 
 ### Debug Build
 
+**Command line:**
 ```bash
 ./gradlew assembleDebug
 ```
 
-Output: `app/build/outputs/apk/debug/app-debug.apk`
+**Android Studio:**
+- Build → Build Bundle(s) / APK(s) → Build APK(s)
+
+**Output**: `app/build/outputs/apk/debug/app-debug.apk`
+
+### Release Build (Signed)
+
+1. **Tạo Keystore** (lần đầu):
+```bash
+keytool -genkey -v -keystore smart-bin-release.keystore \
+  -alias smart-bin -keyalg RSA -keysize 2048 -validity 10000
+```
+
+2. **Cấu hình signing trong `app/build.gradle.kts`**:
+```kotlin
+android {
+    signingConfigs {
+        create("release") {
+            storeFile = file("../smart-bin-release.keystore")
+            storePassword = "your_password"
+            keyAlias = "smart-bin"
+            keyPassword = "your_password"
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
+}
+```
+
+3. **Build Release APK**:
+```bash
+./gradlew assembleRelease
+```
+
+**Output**: `app/build/outputs/apk/release/app-release.apk`
+
+### Install APK
+
+**Via ADB:**
+```bash
+adb install app/build/outputs/apk/debug/app-debug.apk
+```
+
+**Via Android Studio:**
+- Run → Run 'app' → Chọn device/emulator
+
+**Direct Install:**
+- Copy APK file vào device
+- Mở file → Install (enable "Install from Unknown Sources")
+
+---
+
+## 🧪 Testing
+
+### Run on Emulator
+
+1. **Tạo AVD** (Android Virtual Device):
+   - Tools → Device Manager → Create Device
+   - Chọn hardware (Pixel 6)
+   - Chọn system image (API 34 - Android 14)
+   - Finish
+
+2. **Run app**:
+   - Run → Run 'app'
+   - Chọn emulator vừa tạo
+
+### Run on Physical Device
+
+1. **Enable Developer Options** trên device:
+   - Settings → About Phone → Tap "Build number" 7 lần
+
+2. **Enable USB Debugging**:
+   - Settings → Developer Options → USB Debugging → ON
+
+3. **Connect device**:
+   - Cắm USB cable
+   - Chấp nhận "Allow USB debugging"
+
+4. **Run app**:
+   - Run → Run 'app'
+   - Chọn device
+
+### Test Bluetooth Connection
+
+1. **Pair ESP32** trước:
+   - Settings → Bluetooth → Scan → Pair với "SmartBin_XXXXXX"
+
+2. **Test trong app**:
+   - Add Device → Chọn ESP32 từ paired devices
+   - Nhập WiFi credentials
+   - Check ESP32 serial monitor xem có nhận được
+
+---
 
 ## 🐛 Common Issues
 

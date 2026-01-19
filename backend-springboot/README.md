@@ -16,6 +16,7 @@ API server chính của hệ thống Smart Bin, xử lý authentication, device 
 - [API Endpoints](#-api-endpoints)
 - [Database Schema](#-database-schema)
 - [Keycloak Integration](#-keycloak-integration)
+- [MinIO Storage](#-minio-storage)
 - [Email Service](#-email-service)
 - [Scheduled Tasks](#-scheduled-tasks)
 - [Chạy ứng dụng](#-chạy-ứng-dụng)
@@ -67,6 +68,12 @@ Spring Boot backend là core API server của Smart Bin System, cung cấp:
 - ✅ Call FastAPI để classify images
 - ✅ Multipart file upload
 - ✅ Return label, confidence, category
+
+### 📦 Storage (MinIO)
+- ✅ Upload images to object storage
+- ✅ Generate presigned URLs
+- ✅ Image metadata management
+- ✅ Bucket management
 
 ---
 
@@ -126,14 +133,57 @@ docker-compose run -d
 ```
 
 **Cấu hình Keycloak:**
-1. Login: http://localhost:8080 (admin/admin)
-2. Create realm: `smart-bin`
-3. Create client: `smart-bin-client`
+
+1. **Login admin console**: http://localhost:8080
+   - Username: `admin`
+   - Password: `admin`
+
+2. **Create Realm**: `smart-bin-realm`
+   - Click "Create realm" button
+   - Name: `smart-bin-realm`
+   - Enabled: ON
+   - Click "Create"
+
+3. **Create Client**: `smart-bin-client`
+   - Client type: OpenID Connect
+   - Client ID: `smart-bin-client`
+   - Name: `Smart Bin Client`
+   - Always display in UI: OFF
    - Client authentication: ON
-   - Standard flow: ON
-   - Direct access grants: ON
-   - Service accounts roles: ON
-4. Copy Client Secret từ Credentials tab
+   - Authorization: OFF
+   - Authentication flow:
+     - Standard flow: ON
+     - Direct access grants: ON (for password grant)
+     - Implicit flow: OFF
+     - Service accounts roles: ON
+   - Valid redirect URIs:
+     - `http://localhost:3000/*`
+     - `http://localhost:8888/*`
+   - Web origins: `*` (development only)
+   - Click "Save"
+
+4. **Copy Client Secret**
+   - Go to "Credentials" tab
+   - Copy "Client secret"
+   - Paste vào `application.properties`: `keycloak.client-secret=xxx`
+
+5. **Configure Token Settings** (Optional)
+   - Realm Settings → Tokens tab
+   - Access Token Lifespan: 5 minutes (300s)
+   - Refresh Token Max Reuse: 0
+   - SSO Session Idle: 30 minutes
+   - SSO Session Max: 10 hours
+
+6. **Email Settings** (for verification)
+   - Realm Settings → Email tab
+   - From: `noreply@smartbin.com`
+   - From display name: `Smart Bin System`
+   - Host: `smtp.gmail.com`
+   - Port: `587`
+   - Enable StartTLS: ON
+   - Enable Authentication: ON
+   - Username: your Gmail
+   - Password: Gmail App Password
 
 ---
 
@@ -221,7 +271,31 @@ src/main/java/com/example/smart_bin_server/
 | `/api/v1/notifications` | GET | ✅ | Lấy notifications |
 | `/api/v1/classify-image` | POST | ❌ | Classify ảnh |
 
-Chi tiết xem [API Documentation](../README.md#-api-documentation) ở root README.
+### Test API
+
+Sau khi chạy server, test các endpoint:
+
+**Register:**
+```bash
+curl -X POST http://localhost:8888/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"pass123","firstName":"Test","lastName":"User"}'
+```
+
+**Login:**
+```bash
+curl -X POST http://localhost:8888/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"pass123"}'
+```
+
+**Get Devices (with token):**
+```bash
+curl http://localhost:8888/api/v1/devices \
+  -H "Authorization: Bearer {your_access_token}"
+```
+
+📝 **Chi tiết API**: Xem Swagger UI tại http://localhost:8888/swagger-ui.html hoặc test bằng Postman collection
 
 ---
 
@@ -289,84 +363,92 @@ CREATE TABLE notifications (
 
 ## 🔐 Keycloak Integration
 
-### KeycloakConfig.java
+### Vai trò
 
-Tạo Keycloak admin client để quản lý users.
+- **Identity Provider**: Quản lý users, authentication
+- **OAuth2 Server**: Cấp access token & refresh token
+- **JWT Issuer**: Spring Boot verify JWT từ Keycloak
 
-```java
-@Bean
-public Keycloak keycloak() {
-    return KeycloakBuilder.builder()
-            .serverUrl(serverUrl)
-            .realm("master")
-            .grantType(OAuth2Constants.PASSWORD)
-            .clientId("admin-cli")
-            .username(adminUsername)
-            .password(adminPassword)
-            .build();
-}
-```
+### Các service chính
 
-### KeycloakService.java
+**KeycloakService.java** - Quản lý users:
+- `createUser()` - Đăng ký user mới (disabled)
+- `enableUser()` - Enable sau khi verify email
+- `login()` - Lấy access token
+- `refreshAccessToken()` - Refresh token
+- `logout()` - Revoke token
+- `updatePassword()` - Đổi mật khẩu
 
-Các method chính:
-
-```java
-// Tạo user trong Keycloak (disabled)
-public String createUser(RegisterRequest request)
-
-// Enable user sau khi verify email
-public void enableUser(String userId)
-
-// Login → lấy access + refresh token từ Keycloak
-public TokenResponse login(LoginRequest request)
-
-// Refresh access token
-public TokenResponse refreshAccessToken(String refreshToken)
-
-// Logout → revoke token
-public void logout(String refreshToken)
-
-// Đổi password
-public void updatePassword(String userId, String newPassword)
-
-// Lấy user từ Keycloak
-public UserRepresentation getUserById(String userId)
-public UserRepresentation getUserByEmail(String email)
-```
-
-### SecurityConfig.java
-
-Cấu hình Spring Security:
-
-```java
-@Bean
-public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http
-        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-        .csrf(csrf -> csrf.disable())
-        .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/api/v1/auth/**").permitAll()
-            .requestMatchers("/api/v1/classify-image/**").permitAll()
-            .requestMatchers("/api/v1/devices/**").authenticated()
-            .anyRequest().authenticated()
-        )
-        .oauth2ResourceServer(oauth2 -> oauth2
-            .jwt(jwt -> jwt
-                .jwtAuthenticationConverter(jwtAuthenticationConverter())
-            )
-        )
-        .sessionManagement(session -> session
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        );
-    
-    return http.build();
-}
+**SecurityConfig.java** - Spring Security:
+- Public endpoints: `/api/v1/auth/**`, `/api/v1/classify-image/**`
+- Protected endpoints: `/api/v1/devices/**` (cần JWT)
+- OAuth2 Resource Server với JWT validation
+- CORS configuration
 ```
 
 ---
 
-## 📧 Email Service
+## � MinIO Storage
+
+### Giới thiệu
+
+MinIO là object storage service tương tự AWS S3, dùng để lưu trữ ảnh từ ESP32-CAM và web/mobile upload.
+
+### Cấu hình MinIO
+
+**application.properties:**
+```properties
+# MinIO Configuration
+minio.url=http://localhost:9000
+minio.access-key=minioadmin
+minio.secret-key=minioadmin
+minio.bucket-name=smart-bin
+minio.image-folder=images/
+```
+
+**Docker Compose:**
+```yaml
+minio:
+  image: minio/minio:latest
+  container_name: smart-bin-minio
+  ports:
+    - "9000:9000"      # API port
+    - "9001:9001"      # Console UI
+  environment:
+    MINIO_ROOT_USER: minioadmin
+    MINIO_ROOT_PASSWORD: minioadmin
+  command: server /data --console-address ":9001"
+  volumes:
+    - ./minio_data:/data
+```
+
+### MinIO Console
+
+Truy cập: http://localhost:9001
+- Username: `minioadmin`
+- Password: `minioadmin`
+
+**Tạo Bucket:**
+1. Login MinIO Console
+2. Buckets → Create Bucket
+3. Bucket Name: `smart-bin`
+4. Versioning: OFF
+5. Object Locking: OFF
+6. Quota: None
+7. Retention: None
+8. Access Policy: Custom (hoặc Public for testing)
+
+### Tính năng MinIO
+
+- Upload ảnh từ ESP32/Web/Mobile
+- Tạo presigned URLs (temporary access)
+- Tự động tạo bucket nếu chưa tồn tại
+- Quản lý ảnh theo deviceId
+- S3-compatible (dễ migrate lên AWS S3)
+
+---
+
+## �📧 Email Service
 
 ### EmailService.java
 
@@ -397,33 +479,18 @@ Nếu dùng Gmail, cần tạo App Password:
 
 ## ⏰ Scheduled Tasks
 
-### DeviceService.java
+### Device Status Monitor
 
-Check device status mỗi 10 giây:
+**Chức năng:** Tự động kiểm tra device status mỗi 10 giây
 
+**Logic:**
+- Nếu device không gửi data trong 60 giây → Set status = `OFFLINE`
+- Tạo notification cảnh báo `Device disconnected`
+
+**Config trong DeviceService.java:**
 ```java
-@Scheduled(fixedRate = 10000)
-public void checkDevicesStatus() {
-    List<Device> onlineDevices = repository.findByStatus("ONLINE");
-    long now = System.currentTimeMillis();
-    
-    for (Device device : onlineDevices) {
-        DeviceData data = dataRepository.findById(device.getId()).orElse(null);
-        
-        // Nếu không nhận data trong 60s → set OFFLINE
-        if (data != null && now - data.getTimestamp() > 60000) {
-            device.setStatus("OFFLINE");
-            
-            Notification notification = new Notification();
-            notification.setDeviceId(device.getId());
-            notification.setType("WARNING");
-            notification.setMessage("Device disconnected.");
-            notificationService.addNotification(notification);
-        }
-    }
-    
-    repository.saveAll(onlineDevices);
-}
+@Scheduled(fixedRate = 10000) // 10 seconds
+public void checkDevicesStatus() { ... }
 ```
 
 ---

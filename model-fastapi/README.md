@@ -42,7 +42,6 @@ Smart Bin AI Model là một REST API server được xây dựng bằng FastAPI
 
 ### 🚀 API Features
 - ✅ RESTful API endpoint
-- ✅ Auto-generated OpenAPI documentation (Swagger UI)
 - ✅ CORS enabled (cross-origin requests)
 - ✅ Error handling với HTTP status codes
 - ✅ Input validation
@@ -78,7 +77,7 @@ Smart Bin AI Model là một REST API server được xây dựng bằng FastAPI
 |-----------|-------|
 | **Model Type** | Classification |
 | **Architecture** | YOLOv11n (nano variant) |
-| **Input Size** | 224x224 (RGB) |
+| **Input Size** | 640x640 (RGB) |
 | **Output** | 10 classes |
 | **Format** | ONNX |
 | **Parameters** | ~2.5M |
@@ -256,31 +255,6 @@ print(response.json())
   "detail": "Unexpected error: ..."
 }
 ```
-
-### 2. Health Check / Root
-
-**Endpoint:** `GET /`
-
-```bash
-curl http://localhost:8000/
-```
-
-**Response:**
-
-```json
-{
-  "message": "Smart Bin Classification API",
-  "version": "1.0",
-  "model": "YOLOv11n-cls"
-}
-```
-
-### 3. API Documentation
-
-**Swagger UI:** `http://localhost:8000/docs`
-
-**ReDoc:** `http://localhost:8000/redoc`
-
 ---
 
 ## 🔧 Chạy ứng dụng
@@ -314,8 +288,6 @@ docker run -d -p 8000:8000 --name smart-bin-model smart-bin-model
 ### Verify Server is Running
 
 ```bash
-# Check health
-curl http://localhost:8000/
 
 # Test classification
 curl -X POST "http://localhost:8000/classify" \
@@ -410,7 +382,7 @@ Model được train trên dataset gồm 10 classes:
 ### Training Configuration
 
 - **Base Model**: YOLOv11n-cls
-- **Input Size**: 224x224
+- **Input Size**: 640x640
 - **Epochs**: 100+
 - **Optimizer**: AdamW
 - **Data Augmentation**: Yes (rotation, flip, crop, color jitter)
@@ -431,14 +403,6 @@ model.export(format="onnx")
 
 ## 📊 Performance
 
-### Inference Speed
-
-| Device | Inference Time | Throughput |
-|--------|---------------|------------|
-| **CPU (Intel i5)** | ~80ms | ~12 FPS |
-| **CPU (AMD Ryzen)** | ~70ms | ~14 FPS |
-| **GPU (NVIDIA)** | ~20ms | ~50 FPS |
-
 ### Model Accuracy
 
 | Metric | Value |
@@ -447,12 +411,7 @@ model.export(format="onnx")
 | **Top-3 Accuracy** | ~98% |
 | **Average Confidence** | 0.85+ |
 
-### API Response Time
 
-- **Image Upload**: ~10ms
-- **Preprocessing**: ~5ms
-- **Inference**: ~70ms
-- **Total**: ~85ms
 
 ---
 

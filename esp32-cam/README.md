@@ -79,8 +79,8 @@ Smart Bin ESP32-CAM firmware là phần mềm nhúng chạy trên ESP32-S3 CAM m
 | Component | Model | Quantity | Purpose |
 |-----------|-------|----------|---------|
 | **ESP32-S3 CAM** | ESP32-S3-DevKitC-1 | 1 | Main controller + Camera |
-| **Ultrasonic Sensor** | HC-SR04 | 1 | Distance measurement |
-| **Servo Motor** | SG90 | 3 | Lid control |
+| **Ultrasonic Sensor** | HC-SR04 | 2 | Distance measurement |
+| **Servo Motor** | SG90 | 2 | Lid control |
 | **LED** | Red LED | 1 | Status indicator |
 | **Buzzer** | Active Buzzer | 1 | Sound alerts |
 | **Push Button** | Tactile Switch | 1 | Mode control |
@@ -104,36 +104,22 @@ Smart Bin ESP32-CAM firmware là phần mềm nhúng chạy trên ESP32-S3 CAM m
 // ... (more camera pins)
 
 // Servo Motors (PWM)
-#define SERVO_1_PIN     GPIO_NUM_12  // Recyclable
-#define SERVO_2_PIN     GPIO_NUM_13  // Compostable
-#define SERVO_3_PIN     GPIO_NUM_14  // Non-recyclable
+#define SERVO_180_GPIO          GPIO_NUM_1
+#define SERVO_360_GPIO          GPIO_NUM_2
 
 // Ultrasonic Sensor (HC-SR04)
-#define TRIG_PIN        GPIO_NUM_2
-#define ECHO_PIN        GPIO_NUM_3
+#define ULTRASONIC1_ECHO_PIN        GPIO_NUM_45
+#define ULTRASONIC1_TRIG_PIN        GPIO_NUM_47
+
+#define ULTRASONIC_ECHO_SHARED_PIN  GPIO_NUM_39
+#define ULTRASONIC2_TRIG_PIN        GPIO_NUM_40
 
 // LED & Buzzer
-#define LED_PIN         GPIO_NUM_1
-#define BUZZER_PIN      GPIO_NUM_16
+#define LED_STATUS_PIN          GPIO_NUM_14
+#define BUZZER_PIN              GPIO_NUM_21
 
 // Button (with internal pull-up)
-#define BTN_CONFIG_PIN  GPIO_NUM_0
-```
-
-### Wiring Diagram
-
-```
-ESP32-S3 CAM
-├── GPIO 12 → Servo 1 (Recyclable)
-├── GPIO 13 → Servo 2 (Compostable)
-├── GPIO 14 → Servo 3 (Non-recyclable)
-├── GPIO 2  → HC-SR04 Trig
-├── GPIO 3  → HC-SR04 Echo
-├── GPIO 1  → LED (with 220Ω resistor)
-├── GPIO 16 → Buzzer
-├── GPIO 0  → Button (with 10kΩ pull-up)
-├── 5V      → VCC (Servo, HC-SR04, Buzzer)
-└── GND     → GND (All components)
+#define BTN_CONFIG_PIN          GPIO_NUM_0 
 ```
 
 ---
@@ -303,17 +289,7 @@ idf.py -p COM3 flash monitor
 
 ## 📡 WiFi Setup
 
-### Method 1: Hardcode trong code (for testing)
-
-Sửa trong `main.c`:
-
-```c
-// Hardcode WiFi credentials (for development only)
-#define WIFI_SSID "Your_WiFi_Name"
-#define WIFI_PASS "Your_WiFi_Password"
-```
-
-### Method 2: Bluetooth Configuration (recommended)
+### Method 1: Bluetooth Configuration (recommended)
 
 1. **Kích hoạt Config Mode**:
    - Double-click button trên ESP32

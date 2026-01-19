@@ -44,7 +44,7 @@ Smart Bin Web Frontend là ứng dụng web responsive cho phép người dùng:
 - ✅ Đăng ký tài khoản mới
 - ✅ Email verification
 - ✅ Đăng nhập với Keycloak OAuth2
-- ✅ Quên mật khẩu (TODO)
+- ✅ Quên mật khẩu
 - ✅ Đổi mật khẩu
 - ✅ Auto refresh token
 - ✅ Persistent login với localStorage
@@ -52,7 +52,6 @@ Smart Bin Web Frontend là ứng dụng web responsive cho phép người dùng:
 
 ### 🎛️ Device Management
 - ✅ Xem danh sách devices
-- ✅ Thêm device mới
 - ✅ Cập nhật thông tin device
 - ✅ Xóa device
 - ✅ Xem chi tiết device (realtime data)
@@ -210,69 +209,6 @@ export default function DashboardLayout({
         <div className="p-6">{children}</div>
       </main>
     </div>
-  )
-}
-```
-
----
-
-## 🎨 Styling
-
-### Tailwind + shadcn/ui
-
-Components sử dụng Tailwind CSS và shadcn/ui:
-
-```tsx
-import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-
-export function DeviceCard({ device }: { device: Device }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{device.name}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center gap-2">
-          <div className={`h-2 w-2 rounded-full ${
-            device.status === 'ONLINE' ? 'bg-green-500' : 'bg-gray-400'
-          }`} />
-          <span className="text-sm text-muted-foreground">
-            {device.status}
-          </span>
-        </div>
-        <Button className="mt-4 w-full">View Details</Button>
-      </CardContent>
-    </Card>
-  )
-}
-```
-
-### Dark Mode
-
-File `src/app/layout.tsx`:
-
-```typescript
-import { ThemeProvider } from '@/components/theme-provider'
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <html lang="en" suppressHydrationWarning>
-      <body>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
-      </body>
-    </html>
   )
 }
 ```
