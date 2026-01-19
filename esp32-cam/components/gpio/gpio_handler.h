@@ -26,6 +26,7 @@ void beep_pattern(int count, int duration);
 
 void blink_led(int times);
 
+void led_status(void *param);
 //void indicate_waste_category(waste_category_t category);
 
 #endif // GPIO_HANDLER_H

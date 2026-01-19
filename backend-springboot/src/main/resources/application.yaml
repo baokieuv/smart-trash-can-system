@@ -67,3 +67,9 @@ keycloak:
   client-secret: ${KEYCLOAK_CLIENT_SECRET} # Ẩn secret
   admin-username: ${KEYCLOAK_ADMIN_USERNAME:admin}
   admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
+
+minio:
+  url: ${MINIO_SERVER_URL:http://localhost:9000}
+  bucket: ${MINIO_BUCKET:smart-bin}
+  access_key: ${MINIO_ACCESS_KEY}
+  secret_key: ${MINIO_SECRET_KEY}

@@ -75,9 +75,9 @@ public class NotificationService {
 //    }
 
     private NotificationDto parseToDto(Notification notification){
-        Device device = deviceRepository.findById(notification.getDeviceId()).orElse(null);
-        String deviceId = device == null ? "system" : device.getId();
-        String deviceName = device == null ? "Unknown device" : device.getName();
-        return new NotificationDto(notification.getId(), deviceId ,deviceName, notification.getMessage(), notification.getType(), notification.getRead(), notification.getTimestamp());
+//        Device device = deviceRepository.findById(notification.getDeviceId()).orElse(null);
+//        String deviceId = device == null ? "system" : device.getId();
+//        String deviceName = device == null ? "Unknown device" : device.getName();
+        return new NotificationDto(notification.getId(), notification.getDeviceId(), notification.getDeviceName(), notification.getMessage(), notification.getType(), notification.getRead(), notification.getTimestamp());
     }
 }

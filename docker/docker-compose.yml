@@ -1,6 +1,18 @@
-version: "3.9"
-
 services:
+  minio:
+    image: minio/minio
+    ports:
+        - "9000:9000"
+        - "9001:9001"
+    environment:
+        MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+        MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    volumes:
+        - ./minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - smart_bin_network
+
   postgres:
     image: postgres:16
     restart: unless-stopped
@@ -101,6 +113,11 @@ services:
       SPRING_MAIL_PORT: ${SPRING_MAIL_PORT}
       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+
+      MINIO_SERVER_URL: ${MINIO_SERVER_URL}
+      MINIO_BUCKET: ${MINIO_BUCKET}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       
       SERVER_PORT: 8888
     depends_on:

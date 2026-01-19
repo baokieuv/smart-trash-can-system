@@ -254,6 +254,8 @@ static void start_sensor_tasks(void){
                     HTTP_TASK_STACK_SIZE, NULL, 5, NULL);
     xTaskCreate(heartbeat_task, "heartbeat_task", 
                     HEARTBEAT_TASK_STACK_SIZE, NULL, 5, NULL);
+    xTaskCreate(led_status, "led_status_task", 
+                    LED_STATUS_TASK_STACK_SIZE, NULL, 6, NULL);
 }
 
 static esp_err_t start_normal_mode(void){

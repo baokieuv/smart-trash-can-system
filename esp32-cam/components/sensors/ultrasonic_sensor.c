@@ -119,7 +119,7 @@ static float ultrasonic_sensor_read_distance(uint8_t trig_pin, uint8_t echo_pin)
     
     // Return median
     float median = readings[valid_count / 2];
-    ESP_LOGD(TAG, "Distance: %.2f cm (from %d valid readings)", median, valid_count);
+    ESP_LOGI(TAG, "Distance: %.2f cm (from %d valid readings)", median, valid_count);
     
     return median;
 }

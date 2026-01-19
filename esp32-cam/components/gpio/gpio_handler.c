@@ -98,6 +98,17 @@ void blink_led(int times) {
     }
 }
 
+void led_status(void *param){
+    while(1){
+        if(xEventGroupGetBits(g_event_group) & WIFI_CONNECTED_BIT){
+            gpio_set_level(LED_STATUS_PIN, 1);
+        }else{
+            gpio_set_level(LED_STATUS_PIN, 0);
+        }
+        vTaskDelay(pdMS_TO_TICKS(200));
+    }
+}
+
 // void indicate_waste_category(waste_category_t category) {
     // Turn off all LEDs first
 //     gpio_set_level(LED_RECYCLABLE_PIN, 0);

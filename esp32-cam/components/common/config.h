@@ -48,8 +48,8 @@
 // #define ULTRASONIC3_TRIG_PIN        GPIO_NUM_48
 // #define ULTRASONIC4_TRIG_PIN        GPIO_NUM_39
 
-#define DISTANCE_THRESHOLD_CM   15   // Waste detected if distance < 15cm
-#define BIN_HEIGHT_CM           50   // Total bin height
+#define DISTANCE_THRESHOLD_CM   5   // Waste detected if distance < 15cm
+#define BIN_HEIGHT_CM           20   // Total bin height
 #define BIN_FULL_THRESHOLD      80   // Alert when 80% full
 
 #define CAM_PIN_PWDN            -1
@@ -73,6 +73,7 @@
 #define HTTP_TASK_STACK_SIZE        (4 * 1024)
 #define SENSOR_TASK_STACK_SIZE      (4 * 1024)
 #define HEARTBEAT_TASK_STACK_SIZE   (3 * 1024)
+#define LED_STATUS_TASK_STACK_SIZE  (1 * 1024)
 
 #define IMAGE_QUEUE_LENGTH          2
 #define TRIGGER_QUEUE_LENGTH        5

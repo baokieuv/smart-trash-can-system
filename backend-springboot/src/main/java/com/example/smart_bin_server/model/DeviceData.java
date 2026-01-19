@@ -1,6 +1,8 @@
 package com.example.smart_bin_server.model;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.*;
 
@@ -10,6 +12,9 @@ import lombok.*;
 @NoArgsConstructor
 public class DeviceData {
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
     private String deviceId;
     private int recycledWasteCount;
     private int nonRecycledWasteCount;
@@ -17,6 +22,14 @@ public class DeviceData {
     private int fillLevel;
     private boolean isFull;
     private long timestamp;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getDeviceId() {
         return deviceId;

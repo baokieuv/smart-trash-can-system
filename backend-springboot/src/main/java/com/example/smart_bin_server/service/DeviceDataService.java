@@ -11,6 +11,8 @@ import com.example.smart_bin_server.repository.DeviceDataRepository;
 import com.example.smart_bin_server.repository.DeviceRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class DeviceDataService {
     private final DeviceRepository repository;
@@ -50,7 +52,9 @@ public class DeviceDataService {
     }
 
     public DeviceDataDto getData(String deviceId){
-        DeviceData data = dataRepository.findById(deviceId).orElse(null);
+        DeviceData data = dataRepository
+                .findFirstByDeviceIdOrderByTimestampDesc(deviceId)
+                .orElseThrow(() -> new RuntimeException("Device not found"));
         if(data == null){
             throw new RuntimeException("Device not found");
         }
