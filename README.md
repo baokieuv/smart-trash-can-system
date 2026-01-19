@@ -3,10 +3,10 @@
 > Hệ thống phân loại rác thông minh sử dụng AI (YOLOv11n-cls) để tự động nhận diện và phân loại rác thải
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![Next.js](https://img.shields.io/badge/Next.js-14.x-black.svg)](https://nextjs.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg)](https://fastapi.tiangolo.com/)
-[![Android](https://img.shields.io/badge/Android-Java-green.svg)](https://developer.android.com/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Next.js](https://img.shields.io/badge/Next.js-16.x-black.svg)](https://nextjs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Latest-009688.svg)](https://fastapi.tiangolo.com/)
+[![Android](https://img.shields.io/badge/Android-7.0+-green.svg)](https://developer.android.com/)
 
 ---
 
@@ -14,19 +14,11 @@
 
 - [Giới thiệu](#-giới-thiệu)
 - [Kiến trúc hệ thống](#-kiến-trúc-hệ-thống)
-- [Demo & Screenshots](#-demo--screenshots)
-- [Yêu cầu hệ thống](#-yêu-cầu-hệ-thống)
 - [Công nghệ sử dụng](#-công-nghệ-sử-dụng)
-- [Tính năng](#-tính-năng)
+- [Tính năng chính](#-tính-năng-chính)
 - [Cấu trúc dự án](#-cấu-trúc-dự-án)
-- [API Documentation](#-api-documentation)
-- [Authentication & Authorization](#-authentication--authorization)
-- [Hardware Flow](#-hardware-flow)
-- [Cài đặt](#-cài-đặt)
-- [Biến môi trường](#-biến-môi-trường)
-- [Chạy ứng dụng](#-chạy-ứng-dụng)
-- [Deployment](#-deployment)
-- [Troubleshooting](#-troubleshooting)
+- [Quick Start](#-quick-start)
+- [Documentation](#-documentation)
 - [Contributing](#-contributing)
 - [License](#-license)
 
@@ -34,21 +26,21 @@
 
 ## 🎯 Giới thiệu
 
-**Smart Bin System** là một giải pháp IoT toàn diện giúp tự động hóa việc phân loại rác thải thông minh sử dụng Deep Learning. Hệ thống nhận diện 10 loại rác khác nhau và tự động phân loại vào 3 nhóm chính:
+**Smart Bin System** là giải pháp IoT toàn diện giúp tự động hóa việc phân loại rác thải sử dụng AI. Hệ thống nhận diện 10 loại rác và tự động phân loại vào 3 nhóm chính:
 
 ### 🔹 Nhóm phân loại
 
 | Nhóm | Loại rác | Mô tả |
 |------|----------|-------|
-| **♻️ Recyclable (Tái chế)** | `cardboard`, `paper`, `plastic` | Có thể tái chế |
-| **🌱 Organic (Hữu cơ)** | `clothes`, `shoes`, `foods` | Phân hủy sinh học |
-| **🚫 Non-recyclable** | `battery`, `trash`, `metal`, `glass` | Không tái chế được |
+| **♻️ Recyclable** | `cardboard`, `paper`, `plastic`, `metal`, `glass` | Có thể tái chế |
+| **🌱 Compostable** | `biological`, `clothes`, `shoes` | Phân hủy sinh học |
+| **🚫 Non-recyclable** | `battery`, `trash` | Không tái chế được |
 
 ### 🎯 Đối tượng sử dụng
 
-- Người dùng phổ thông mọi lứa tuổi
-- Trường học, văn phòng, khu dân cư
-- Không dành cho trẻ em (yêu cầu giám sát)
+- Người dùng cá nhân, hộ gia đình
+- Trường học, văn phòng, khu công cộng
+- Cơ quan, tổ chức muốn phân loại rác tự động
 
 ---
 
@@ -60,75 +52,34 @@
 └─────────────────────────────────────────────────────────────────┘
 
 ┌──────────────┐          ┌──────────────┐          ┌──────────────┐
-│              │          │              │          │              │
 │   Next.js    │          │   MariaDB    │    ┌────►│   FastAPI    │
-│  (Web App)   │          │  (Database)  │    |     │  (AI Model)  │
-│              │          │              │    |     │              │
-└──────────────┘          └──────┬───────┘    |     └──────────────┘
-        ▲                        │            |            │
-        |                        │            |            │
-        |                 ┌──────▼───────┐    |     ┌──────▼───────┐
-        |   REST API      │              │    |     │              │
-        ─────────────────►│  Spring Boot │────┘     │ YOLOv11n-cls │
+│  (Web App)   │          │  (Database)  │    │     │  (AI Model)  │
+└──────┬───────┘          └──────┬───────┘    │     └──────┬───────┘
+       │                         │            │            │
+       │   REST API       ┌──────▼───────┐    │     ┌──────▼───────┐
+       └─────────────────►│ Spring Boot  │────┘     │ YOLOv11n-cls │
                           │   Backend    │          │ ONNX Model   │
-                          │              │          │              │
-                          └──────────────┘          └──────────────┘
-                                 ▲
+                          └──────┬───────┘          └──────────────┘
                                  │
                     ┌────────────┴────────────┐
                     │                         │
             ┌───────▼────────┐       ┌───────▼────────┐
-            │                │       │                │
             │  Android App   │       │   ESP32-CAM    │
-            │   (Mobile)     │       │  + Servo Motor │
-            │                │       │                │
+            │   (Mobile)     │       │  + Hardware    │
             └────────────────┘       └────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
-│                      KEYCLOAK (Auth Server)                      │
+│                   KEYCLOAK (OAuth2 Server)                       │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Luồng hoạt động chính:
+### Luồng hoạt động:
 
-1. **Web/Mobile**: User sử dụng web/app → Spring Boot → Tương tác DB
-2. **ESP32-CAM**: Chụp ảnh → Gửi server → Nhận kết quả → Điều khiển servo mở nắp thùng tương ứng
-3. **Authentication**: Tất cả request đều được xác thực qua Keycloak (OAuth2/JWT)
-
----
-
-## 📸 Demo & Screenshots
-
-> TODO: Thêm ảnh/video demo
-
-```
-[Hình ảnh giao diện Web]
-[Hình ảnh giao diện Mobile]
-[Video demo ESP32-CAM]
-[Sơ đồ phần cứng]
-```
-
----
-
-## 💻 Yêu cầu hệ thống
-
-### Software Dependencies
-
-| Software | Version | Purpose |
-|----------|---------|---------|
-| **Java** | 17+ | Spring Boot backend |
-| **Node.js** | 18.x+ | Next.js frontend |
-| **Python** | 3.9+ | FastAPI model server |
-| **Docker** | 20.10+ | Containerization |
-| **MariaDB** | 10.6+ | Database |
-| **Keycloak** | 23.x+ | Authentication |
-
-### Hardware (cho ESP32-CAM)
-
-- ESP32-CAM module
-- Servo motor SG90 (x3)
-- Nguồn 5V/2A
-- Breadboard & jumper wires
+1. **ESP32-CAM**: Phát hiện rác → Chụp ảnh → Gửi lên Backend
+2. **Backend**: Nhận ảnh → Gọi FastAPI → Nhận kết quả phân loại → Lưu DB
+3. **ESP32-CAM**: Nhận kết quả → Mở nắp thùng tương ứng (servo motor)
+4. **Web/Mobile**: Xem thống kê, quản lý thiết bị, nhận thông báo
+5. **Authentication**: Tất cả API bảo mật qua Keycloak OAuth2/JWT
 
 ---
 
@@ -136,106 +87,108 @@
 
 ### Frontend
 
-| Technology | Description |
-|------------|-------------|
-| **Next.js 14** | React framework với App Router |
-| **TypeScript** | Type-safe development |
-| **Tailwind CSS** | Utility-first CSS framework |
-| **shadcn/ui** | UI component library |
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **Next.js** | 16.0.7 | React framework với App Router |
+| **React** | 19.2.0 | UI library |
+| **TypeScript** | 5.x | Type-safe development |
+| **Tailwind CSS** | 4.x | Styling |
 
 ### Mobile
 
-| Technology | Description |
-|------------|-------------|
-| **Android SDK** | API Level 24+ (Android 7.0+) |
-| **Java** | Programming language |
-| **XML** | UI layouts |
-| **Material Design** | UI/UX guidelines |
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **Android SDK** | 24-36 | Platform (Android 7.0-15) |
+| **Java** | 11 | Programming language |
+| **Material Design** | 3.x | UI components |
+| **Gson** | 2.10.1 | JSON parsing |
 
 ### Backend
 
-| Technology | Description |
-|------------|-------------|
-| **Spring Boot 3.x** | Main API server |
-| **Spring Security** | OAuth2 Resource Server |
-| **Spring Data JPA** | Database ORM |
-| **FastAPI** | Python API cho AI model |
-| **Keycloak** | Identity & Access Management |
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **Spring Boot** | 4.0.0 | API server (Java 21) |
+| **Spring Security** | Latest | OAuth2 + JWT |
+| **Spring Data JPA** | Latest | Database ORM |
+| **Keycloak** | 23.0.3 | Identity provider |
+| **MariaDB** | 10.6+ | Database |
+| **MinIO** | 8.6.0 | Object storage |
 
 ### AI/ML
 
-| Technology | Description |
-|------------|-------------|
-| **YOLOv11n-cls** | Classification model |
-| **ONNX Runtime** | Model inference engine |
-| **Ultralytics** | YOLO framework |
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **FastAPI** | Latest | API framework |
+| **YOLOv11n-cls** | Latest | Classification model |
+| **ONNX Runtime** | Latest | Model inference |
+| **OpenCV** | Latest | Image processing |
 
-### Database & Cache
+### Hardware
 
-| Technology | Description |
-|------------|-------------|
-| **MariaDB** | Relational database |
-
-### DevOps
-
-| Technology | Description |
-|------------|-------------|
-| **Docker** | Container platform |
-| **Docker Compose** | Multi-container orchestration |
-| **GitHub Actions** | CI/CD (TODO) |
+| Component | Model | Purpose |
+|-----------|-------|---------|
+| **ESP32-S3 CAM** | ESP32-S3 | Controller + Camera |
+| **Servo Motor** | SG90 x3 | Lid control |
+| **Ultrasonic** | HC-SR04 | Distance sensor |
+| **LED & Buzzer** | - | Status indicator |
 
 ---
 
-## ✨ Tính năng
+## ✨ Tính năng chính
 
 ### 🌐 Web Application (Next.js)
 
-- ✅ Dashboard thống kê theo thời gian
-- ✅ Quản lý thiết bị (devices)
-- ✅ Xem thông báo (notifications)
+- ✅ Dashboard tổng quan (số thiết bị, thống kê rác)
+- ✅ Quản lý thiết bị Smart Bin
+- ✅ Xem lịch sử phân loại rác
+- ✅ Nhận thông báo (thùng đầy, lỗi thiết bị)
 - ✅ Đăng ký, đăng nhập, xác thực email
-- ✅ Đổi mật khẩu
-- ✅ Responsive design
+- ✅ Quản lý tài khoản (đổi mật khẩu)
+- ✅ Responsive design (mobile-friendly)
 
 ### 📱 Mobile Application (Android)
 
-- ✅ Đăng ký, đăng nhập với Keycloak
-- ✅ Xem danh sách thiết bị
-- ✅ Thêm thiết bị mới qua Bluetooth
-- ✅ Cấu hình WiFi cho ESP32-CAM
+- ✅ Đăng ký & đăng nhập với Keycloak OAuth2
+- ✅ Dashboard thống kê real-time
+- ✅ Quản lý danh sách thiết bị
+- ✅ **Thêm thiết bị mới qua Bluetooth**
+- ✅ **Cấu hình WiFi cho ESP32-CAM qua Bluetooth**
 - ✅ Xem chi tiết thiết bị (fill level, battery, waste stats)
-- ✅ Xem thông báo real-time
-- ✅ Đổi mật khẩu
+- ✅ Nhận thông báo push
 - ✅ Dark/Light mode
-- ✅ Auto-refresh data
+- ✅ Auto-refresh data (mỗi 30s)
 
 ### 🤖 AI Model Service (FastAPI)
 
-- ✅ Nhận diện 10 loại rác
-- ✅ Trả về label, confidence, group
-- ✅ Inference nhanh với ONNX
+- ✅ Nhận diện 10 loại rác (YOLOv11n-cls)
+- ✅ Trả về label, confidence score (> 0.85), category
+- ✅ Fast inference với ONNX (~70ms/image)
 - ✅ RESTful API endpoint
-- ✅ Image preprocessing
+- ✅ Image preprocessing & validation
 
 ### 🔧 Backend Service (Spring Boot)
 
-- ✅ Quản lý user (Keycloak integration)
-- ✅ Quản lý devices
-- ✅ Lưu trữ device data (fill level, waste counts)
-- ✅ Tạo notifications
-- ✅ Gọi FastAPI để classify image
+- ✅ User management (tích hợp Keycloak)
+- ✅ Device management (CRUD operations)
+- ✅ Device data storage (waste counts, fill level)
+- ✅ Notification system
+- ✅ Image classification (gọi FastAPI)
 - ✅ OAuth2 JWT authentication
-- ✅ Email verification
-- ✅ Password management
+- ✅ Email verification & password management
+- ✅ Scheduled tasks (device status check)
 
 ### 🎛️ Hardware (ESP32-CAM)
 
-- ✅ Chụp ảnh rác thải
-- ✅ Gửi ảnh lên server qua WiFi
-- ✅ Nhận kết quả phân loại
-- ✅ Điều khiển 3 servo motor (recyclable, organic, non-recyclable)
-- ✅ Gửi status về server
-- ✅ Bluetooth configuration
+- ✅ Tự động phát hiện rác (ultrasonic sensor)
+- ✅ Chụp ảnh rác thải (camera)
+- ✅ Gửi ảnh lên server qua WiFi/HTTP
+- ✅ Nhận kết quả phân loại từ server
+- ✅ **Điều khiển 3 servo motor** (mở nắp tự động)
+- ✅ Đo mức độ đầy của thùng (fill level %)
+- ✅ Gửi device status định kỳ (10s)
+- ✅ **Bluetooth configuration** (WiFi setup, device pairing)
+- ✅ **Deep sleep mode** (tiết kiệm pin)
+- ✅ LED & Buzzer alerts
 
 ---
 
@@ -246,998 +199,211 @@ smart-bin-system/
 │
 ├── model-fastapi/              # AI Model Service (Python + FastAPI)
 │   ├── server.py               # FastAPI entry point
-│   ├── model.py                # ONNX model loader
-│   ├── best.onnx               # Trained model
-│   ├── requirements.txt
-│   ├── Dockerfile
-│   └── README.md
+│   ├── model.py                # ONNX inference wrapper
+│   ├── best.onnx               # Trained YOLOv11n-cls model
+│   ├── requirements.txt        # Python dependencies
+│   └── README.md               # 📖 Hướng dẫn cài đặt & chạy
 │
-├── backend-springboot/         # Main Backend API (Java + Spring Boot)
-│   ├── src/main/java/
-│   │   └── com/example/smart_bin_server/
-│   │       ├── config/        # Security, Keycloak, Redis config
-│   │       ├── controller/    # REST controllers
-│   │       ├── service/       # Business logic
-│   │       ├── repository/    # JPA repositories
-│   │       ├── model/         # Entity models
-│   │       └── dto/           # Data transfer objects
-│   ├── src/main/resources/
-│   │   └── application.yaml
-│   ├── pom.xml
-│   ├── Dockerfile
-│   └── README.md
+├── backend-springboot/         # Backend API (Spring Boot + Java 21)
+│   ├── src/main/java/          # Source code
+│   ├── src/main/resources/     # Config files
+│   ├── pom.xml                 # Maven dependencies
+│   └── README.md               # 📖 Hướng dẫn cài đặt & chạy
 │
-├── frontend-nextjs/            # Web Frontend (Next.js + TypeScript)
-│   ├── src/
-│   │   ├── app/               # App Router pages
-│   │   ├── components/        # React components
-│   │   ├── lib/               # Utilities & helpers
-│   │   └── types/             # TypeScript types
-│   ├── public/
-│   ├── package.json
-│   ├── Dockerfile
-│   └── README.md
+├── frontend-nextjs/            # Web App (Next.js 16 + React 19)
+│   ├── app/                    # App Router pages
+│   ├── components/             # React components
+│   ├── lib/                    # Utilities
+│   ├── package.json            # NPM dependencies
+│   └── README.md               # 📖 Hướng dẫn cài đặt & chạy
 │
 ├── android-app/                # Mobile App (Android + Java)
-│   ├── app/src/main/java/
-│   │   └── com/example/smart_bin/
-│   │       ├── api/           # API services
-│   │       ├── model/         # Data models
-│   │       ├── fragments/     # UI fragments
-│   │       ├── adapter/       # RecyclerView adapters
-│   │       ├── utils/         # Utilities
-│   │       └── bluetooth/     # BLE manager
-│   ├── app/src/main/res/      # Resources (layouts, drawables)
-│   ├── build.gradle
-│   └── README.md
+│   ├── app/src/main/           # Android source code
+│   ├── build.gradle.kts        # Gradle config
+│   └── README.md               # 📖 Hướng dẫn cài đặt & build
 │
-├── esp32-cam/                  # Firmware cho ESP32-CAM (ESP-IDF C)
-│   ├── main/
-│   │   └── main.c    
-│   ├── components/
-│   │   ├── bluetooth
-│   │   ├── camera  
-│   │   ├── common  
-│   │   ├── gpio          
-│   │   ├── http  
-│   │   ├── ota  
-│   │   ├── sensors  
-│   │   ├── storage
-│   │   ├── waste_manager 
-│   │   └── wifi  
-│   └── README.md
+├── esp32-cam/                  # ESP32-CAM Firmware (C + ESP-IDF)
+│   ├── main/main.c             # Main application
+│   ├── components/             # Hardware modules
+│   ├── CMakeLists.txt          # Build config
+│   └── README.md               # 📖 Hướng dẫn flash & cấu hình
 │
-├── docker-compose.yml          # Multi-container setup
-├── .env.example               # Environment variables template
-├── .gitignore
-└── README.md                  # This file
-```
-
-### Mô tả các thư mục chính
-
-| Thư mục | Mô tả | Port |
-|---------|-------|------|
-| `model-fastapi/` | Service AI inference với YOLOv11n-cls ONNX | 8000 |
-| `backend-springboot/` | API server chính, kết nối DB, Keycloak, FastAPI | 8080 |
-| `frontend-nextjs/` | Web application cho user | 3000 |
-| `android-app/` | Mobile app cho Android | N/A |
-| `esp32-cam/` | Firmware cho hardware ESP32-CAM | N/A |
-
----
-
-## 📡 API Documentation
-
-### Base URLs
-
-| Service | URL | Description |
-|---------|-----|-------------|
-| Spring Boot | `http://localhost:8888` | Main API |
-| FastAPI | `http://localhost:8000` | AI Model API |
-| Keycloak | `http://localhost:8080` | Auth Server |
-
----
-
-### 🔐 Authentication APIs
-
-#### 1. Đăng ký người dùng
-
-```http
-POST /api/v1/auth/register
-```
-
-**Authentication:** Public
-
-**Request Body:**
-```json
-{
-  "email": "user@example.com",
-  "password": "password123",
-  "firstName": "John",
-  "lastName": "Doe"
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "message": "Registration successful. Please check your email to verify your account.",
-  "user": {
-    "id": "uuid",
-    "email": "user@example.com",
-    "firstName": "John",
-    "lastName": "Doe",
-    "emailVerified": false,
-    "createdAt": 1704067200000
-  }
-}
-```
-
-**Error Response (400):**
-```json
-{
-  "error": "Email already registered"
-}
+├── docker/                     # Docker services
+│   ├── docker-compose.yml      # Multi-container setup
+│   └── [data folders]          # Persistent data
+│
+├── docs/                       # Documentation (Vietnamese)
+│   ├── chuong1.md              # Tổng quan hệ thống
+│   ├── chuong2.md              # Phân tích & thiết kế
+│   ├── chuong3.md              # Triển khai
+│   ├── chuong4.md              # Kết quả & đánh giá
+│   └── Use_Case_Chi_Tiet.md   # Use cases
+│
+├── DEPLOYMENT.md               # 🚀 Hướng dẫn deploy production
+└── README.md                   # 📄 File này
 ```
 
 ---
 
-#### 2. Đăng nhập
+## 🚀 Quick Start
 
-```http
-POST /api/v1/auth/login
-```
+### Yêu cầu hệ thống
 
-**Authentication:** Public
+- **Docker** & **Docker Compose** (recommended)
+- **Java 21**, **Node.js 20+**, **Python 3.8+** (nếu chạy native)
+- **ESP-IDF v5.0+** (cho ESP32-CAM)
+- **Android Studio** (cho mobile app)
 
-**Request Body:**
-```json
-{
-  "email": "user@example.com",
-  "password": "password123"
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "accessToken": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "refreshToken": "refresh_token_string",
-  "expiresIn": 300,
-  "tokenType": "Bearer",
-  "user": {
-    "id": "uuid",
-    "email": "user@example.com",
-    "firstName": "John",
-    "lastName": "Doe",
-    "emailVerified": true,
-    "createdAt": 1704067200000
-  }
-}
-```
-
-**Error Response (400):**
-```json
-{
-  "error": "Email not verified. Please check your email for verification link."
-}
-```
-
----
-
-#### 3. Refresh Token
-
-```http
-POST /api/v1/auth/refresh
-```
-
-**Authentication:** Public
-
-**Request Body:**
-```json
-{
-  "refreshToken": "refresh_token_string"
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "accessToken": "new_access_token",
-  "refreshToken": "new_refresh_token",
-  "expiresIn": 300,
-  "tokenType": "Bearer",
-  "user": null
-}
-```
-
----
-
-#### 4. Đăng xuất
-
-```http
-POST /api/v1/auth/logout
-```
-
-**Authentication:** Bearer Token
-
-**Request Headers:**
-```
-Authorization: Bearer {accessToken}
-```
-
-**Request Body:**
-```json
-{
-  "refreshToken": "refresh_token_string"
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "message": "Logged out successfully"
-}
-```
-
----
-
-#### 5. Đổi mật khẩu
-
-```http
-POST /api/v1/auth/change-password
-```
-
-**Authentication:** Bearer Token
-
-**Request Body:**
-```json
-{
-  "currentPassword": "oldpass123",
-  "newPassword": "newpass456",
-  "confirmPassword": "newpass456"
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "message": "Password changed successfully. Please login again with your new password."
-}
-```
-
----
-
-#### 6. Xác thực email
-
-```http
-GET /api/v1/auth/verify-email?token={verificationToken}
-```
-
-**Authentication:** Public
-
-**Response (200 OK):**
-```json
-{
-  "message": "Email verified successfully"
-}
-```
-
----
-
-#### 7. Gửi lại email xác thực
-
-```http
-POST /api/v1/auth/resend-verification
-```
-
-**Authentication:** Public
-
-**Request Body:**
-```json
-{
-  "email": "user@example.com"
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "message": "Verification email sent successfully"
-}
-```
-
----
-
-#### 8. Lấy thông tin user hiện tại
-
-```http
-GET /api/v1/auth/me
-```
-
-**Authentication:** Bearer Token
-
-**Response (200 OK):**
-```json
-{
-  "id": "uuid",
-  "email": "user@example.com",
-  "firstName": "John",
-  "lastName": "Doe",
-  "emailVerified": true,
-  "createdAt": 1704067200000
-}
-```
-
----
-
-### 🎛️ Device Management APIs
-
-#### 1. Tạo device mới
-
-```http
-POST /api/v1/devices
-```
-
-**Authentication:** Bearer Token
-
-**Request Body:**
-```json
-{
-  "macAddress": "AA:BB:CC:DD:EE:FF",
-  "name": "Smart Bin 01"
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "id": "AA_BB_CC_DD_EE_FF",
-  "name": "Smart Bin 01",
-  "status": "OFFLINE",
-  "userId": "user_uuid",
-  "createdAt": 1704067200000,
-  "updatedAt": 1704067200000
-}
-```
-
----
-
-#### 2. Lấy danh sách devices
-
-```http
-GET /api/v1/devices
-```
-
-**Authentication:** Bearer Token
-
-**Response (200 OK):**
-```json
-[
-  {
-    "id": "AA_BB_CC_DD_EE_FF",
-    "name": "Smart Bin 01",
-    "status": "ONLINE",
-    "userId": "user_uuid",
-    "createdAt": 1704067200000,
-    "updatedAt": 1704067300000
-  }
-]
-```
-
----
-
-#### 3. Lấy thông tin device theo ID
-
-```http
-GET /api/v1/devices/{deviceId}
-```
-
-**Authentication:** Bearer Token
-
-**Response (200 OK):**
-```json
-{
-  "id": "AA_BB_CC_DD_EE_FF",
-  "name": "Smart Bin 01",
-  "status": "ONLINE"
-}
-```
-
----
-
-#### 4. Cập nhật device
-
-```http
-PUT /api/v1/devices/{deviceId}
-```
-
-**Authentication:** Bearer Token
-
-**Request Body:**
-```json
-{
-  "name": "Smart Bin Living Room",
-  "status": "ONLINE"
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "id": "AA_BB_CC_DD_EE_FF",
-  "name": "Smart Bin Living Room",
-  "status": "ONLINE"
-}
-```
-
----
-
-#### 5. Xóa device
-
-```http
-DELETE /api/v1/devices/{deviceId}
-```
-
-**Authentication:** Bearer Token
-
-**Response (200 OK):**
-```json
-"AA_BB_CC_DD_EE_FF"
-```
-
----
-
-### 📊 Device Data APIs
-
-#### 1. Gửi dữ liệu từ ESP32-CAM
-
-```http
-POST /api/v1/devices/{deviceId}/data
-```
-
-**Authentication:** Public (hoặc API Key cho ESP32)
-
-**Request Body:**
-```json
-{
-  "recycledWasteCount": 5,
-  "nonRecycledWasteCount": 3,
-  "compostableWasteCount": 2,
-  "fillLevel": 45,
-  "isFull": false
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "deviceId": "AA_BB_CC_DD_EE_FF",
-  "statusCode": 200,
-  "message": "Successfully",
-  "timestamp": 1704067200000
-}
-```
-
----
-
-#### 2. Lấy dữ liệu device
-
-```http
-GET /api/v1/devices/{deviceId}/data
-```
-
-**Authentication:** Bearer Token
-
-**Response (200 OK):**
-```json
-{
-  "deviceId": "AA_BB_CC_DD_EE_FF",
-  "recycledWasteCount": 5,
-  "nonRecycledWasteCount": 3,
-  "compostableWasteCount": 2,
-  "fillLevel": 45,
-  "isFull": false,
-  "timestamp": 1704067200000
-}
-```
-
----
-
-### 🔔 Notification APIs
-
-#### 1. Lấy danh sách thông báo
-
-```http
-GET /api/v1/notifications
-```
-
-**Authentication:** Bearer Token
-
-**Response (200 OK):**
-```json
-[
-  {
-    "id": 1,
-    "deviceId": "AA_BB_CC_DD_EE_FF",
-    "deviceName": "Smart Bin 01",
-    "message": "Device connected successfully",
-    "type": "SUCCESS",
-    "timestamp": 1704067200000
-  },
-  {
-    "id": 2,
-    "deviceId": "AA_BB_CC_DD_EE_FF",
-    "deviceName": "Smart Bin 01",
-    "message": "Bin is 80% full",
-    "type": "WARNING",
-    "timestamp": 1704067300000
-  }
-]
-```
-
----
-
-### 🤖 AI Classification API
-
-#### 1. Phân loại rác từ ảnh
-
-```http
-POST /api/v1/classify-image
-```
-
-**Authentication:** Public
-
-**Request:**
-- Content-Type: `multipart/form-data`
-- Body: `image` (file)
-
-**Response (200 OK):**
-```json
-{
-  "label": "plastic",
-  "confidence": 0.95,
-  "category": "recyclable"
-}
-```
-
-**Hoặc gọi trực tiếp FastAPI:**
-
-```http
-POST http://localhost:8000/classify
-```
-
-**Request:**
-- Content-Type: `multipart/form-data`
-- Body: `image` (file)
-
-**Response (200 OK):**
-```json
-{
-  "label": "cardboard",
-  "confidence": 0.92,
-  "category": "recyclable"
-}
-```
-
----
-
-### 🔄 Internal API (Spring Boot ↔ FastAPI)
-
-Spring Boot gọi FastAPI để inference:
-
-```http
-POST http://fastapi-service:8000/classify
-Content-Type: multipart/form-data
-
-image: [binary data]
-```
-
-FastAPI trả về:
-```json
-{
-  "label": "paper",
-  "confidence": 0.88,
-  "category": "recyclable"
-}
-```
-
----
-
-## 🔐 Authentication & Authorization
-
-Hệ thống sử dụng **Keycloak** làm Identity Provider với cơ chế **OAuth2 + JWT**.
-
-### Flow đăng ký & đăng nhập
-
-```
-1. User đăng ký → Spring Boot tạo user trong Keycloak (disabled)
-2. User nhận email verification → Click link xác thực
-3. Spring Boot enable user trong Keycloak
-4. User đăng nhập → Keycloak cấp Access Token (JWT) + Refresh Token
-5. Client lưu token → Gửi kèm request qua header: Authorization: Bearer {token}
-6. Spring Boot verify JWT → Cho phép truy cập resource
-```
-
-### Token Management
-
-- **Access Token**: Hết hạn sau 5 phút (300s)
-- **Refresh Token**: Hết hạn sau 2 giờ (7200s)
-- **Token Refresh**: Client tự động gọi `/api/v1/auth/refresh` khi token hết hạn
-- **Logout**: Revoke refresh token tại Keycloak
-
-### Keycloak Configuration
-
-```yaml
-Realm: smart-bin-realm
-Client ID: smart-bin-client
-Client Secret: [generated by Keycloak]
-Grant Type: password, refresh_token
-```
-
-### Security cho API
-
-| Endpoint | Auth Required |
-|----------|---------------|
-| `/api/v1/auth/**` | ❌ Public |
-| `/api/v1/classify-image/**` | ❌ Public |
-| `/api/v1/devices/**` | ✅ Bearer Token |
-| `/api/v1/notifications/**` | ✅ Bearer Token |
-
----
-
-## 🎛️ Hardware Flow
-
-### Luồng hoạt động ESP32-CAM
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  1. ESP32-CAM khởi động, kết nối WiFi                       │
-└─────────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│  2. Phát hiện rác (trigger sensor hoặc button)              │
-└─────────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│  3. Chụp ảnh bằng camera OV2640                             │
-└─────────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│  4. Gửi ảnh lên server qua HTTP POST                        │
-│     → POST /api/v1/classify-image                           │
-└─────────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│  5. Server phân loại rác (FastAPI + YOLO)                   │
-│     → Trả về: label, confidence, category                   │
-└─────────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│  6. ESP32 nhận kết quả, điều khiển servo motor              │
-│     • recyclable    → Servo 1 (90°)                         │
-│     • organic       → Servo 2 (90°)                         │
-│     • non-recyclable → Servo 3 (90°)                        │
-└─────────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│  7. Gửi device data về server                               │
-│     → POST /api/v1/devices/{deviceId}/data                  │
-│     (update waste count, fill level)                        │
-└─────────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│  8. Server lưu DB, gửi notification (nếu cần)               │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Kết nối phần cứng
-
-```
-ESP32-CAM Pinout:
-├── GPIO 12 → Servo 1 (Recyclable)
-├── GPIO 13 → Servo 2 (Organic)
-├── GPIO 15 → Servo 3 (Non-recyclable)
-├── 5V      → Power supply
-└── GND     → Ground
-```
-
----
-
-## 🛠️ Cài đặt
-
-### 1. Clone repository
+### Option 1: Chạy với Docker (Khuyến nghị)
 
 ```bash
-git clone https://github.com/baokieuv/smart-bin-system.git
-cd smart-bin-system
-```
+# Clone repository
+git clone https://github.com/baokieuv/smart-trash-can-system.git
+cd smart-trash-can-system
 
-### 2. Cài đặt dependencies cho từng module
-
-#### 2.1. FastAPI (AI Model)
-
-```bash
-cd model-fastapi
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-#### 2.2. Spring Boot (Backend)
-
-```bash
-cd backend-springboot
-./mvnw clean install  # Windows: mvnw.cmd clean install
-```
-
-#### 2.3. Next.js (Frontend)
-
-```bash
-cd frontend-nextjs
-npm install
-# hoặc
-yarn install
-```
-
-#### 2.4. Android App
-
-- Mở project trong Android Studio
-- Sync Gradle
-- Build project
-
-#### 2.5. ESP32-CAM
-
-- Cài ESP-IDF
-- Upload code lên ESP32-CAM
-
----
-
-## 🚀 Chạy ứng dụng
-
-### Option 1: Chạy thủ công (Development)
-
-#### 1. Start MariaDB and Keycloak
-
-```bash
-# Docker
+# Start all services
 cd docker
-docker-compose run -d
+docker-compose up -d
+
+# Kiểm tra services
+docker-compose ps
 ```
 
-**Cấu hình Keycloak:**
-- Truy cập: http://localhost:8081
-- Login: admin/admin
-- Tạo realm: `smart-bin`
-- Tạo client: `smart-bin-client`
-- Enable service accounts & authorization
-- Lấy client secret
+**Services sẽ chạy tại:**
+- Web App: http://localhost:3000
+- Backend API: http://localhost:8888
+- FastAPI: http://localhost:8000
+- Keycloak: http://localhost:8080
 
-#### 3. Start FastAPI
+### Option 2: Chạy từng service riêng
 
-```bash
-cd model-fastapi
-source venv/bin/activate
-python server.py
-```
+Chi tiết xem trong README của từng module:
 
-#### 4. Start Spring Boot
+1. **[FastAPI Model](model-fastapi/README.md)** - Chạy trước (port 8000)
+2. **[Spring Boot Backend](backend-springboot/README.md)** - Chạy sau FastAPI (port 8888)
+3. **[Next.js Frontend](frontend-nextjs/README.md)** - Chạy cuối cùng (port 3000)
+4. **[Android App](android-app/README.md)** - Build APK và cài đặt
+5. **[ESP32-CAM](esp32-cam/README.md)** - Flash firmware và cấu hình
 
-```bash
-cd backend-springboot
-./mvnw spring-boot:run
-```
+### Thiết lập ban đầu
 
-#### 5. Start Next.js
+1. **Khởi tạo Keycloak** (lần đầu)
+   - Truy cập http://localhost:8080
+   - Login: admin/admin
+   - Tạo realm: `smart-bin-realm`
+   - Tạo client: `smart-bin-client`
 
-```bash
-cd frontend-nextjs
-npm run dev
-```
+2. **Đăng ký tài khoản**
+   - Truy cập http://localhost:3000/register
+   - Điền thông tin → Nhận email xác thực
+   - Click link xác thực → Đăng nhập
 
-#### 6. Build & Install Android App
-
-- Mở Android Studio
-- Build → Make Project
-- Run app trên emulator hoặc device
-
-#### 7. Upload code lên ESP32-CAM
-
-- Kết nối ESP32-CAM qua FTDI
-- Upload code từ Arduino IDE
-- Monitor Serial để debug
+3. **Thêm thiết bị ESP32-CAM**
+   - Mở Android App → Add Device → Scan Bluetooth
+   - Chọn `SmartBin_XXXXXX` → Nhập WiFi credentials
+   - Thiết bị tự động kết nối và đăng ký với server
 
 ---
 
-## 🐛 Troubleshooting
+## 📖 Documentation
 
-### Lỗi thường gặp
+### Hướng dẫn chi tiết
 
-#### 1. Không kết nối được MariaDB
+| Component | README | Description |
+|-----------|--------|-------------|
+| **AI Model** | [model-fastapi/README.md](model-fastapi/README.md) | Cài đặt Python, chạy FastAPI, test API |
+| **Backend** | [backend-springboot/README.md](backend-springboot/README.md) | Cài đặt Java/Maven, config DB, chạy Spring Boot |
+| **Frontend** | [frontend-nextjs/README.md](frontend-nextjs/README.md) | Cài đặt Node.js, chạy Next.js dev/prod |
+| **Mobile** | [android-app/README.md](android-app/README.md) | Android Studio, build APK, cấu hình |
+| **Hardware** | [esp32-cam/README.md](esp32-cam/README.md) | ESP-IDF setup, flash firmware, pin config |
+| **Deployment** | [DEPLOYMENT.md](DEPLOYMENT.md) | Deploy production với Docker/Cloud |
 
-**Lỗi:**
-```
-Communications link failure
-```
+### API Documentation
 
-**Giải pháp:**
-```bash
-# Kiểm tra MariaDB đang chạy
-docker ps | grep mariadb
+- **Swagger UI**: http://localhost:8888/swagger-ui.html (Spring Boot)
+- **FastAPI Docs**: http://localhost:8000/docs (AI Model)
+- **Keycloak Admin**: http://localhost:8080/admin
 
-# Kiểm tra port 3306
-netstat -an | grep 3306
+### Báo cáo dự án (Vietnamese)
 
-# Restart MariaDB
-docker restart mariadb
-```
-
----
-
-#### 2. Keycloak không trả về token
-
-**Lỗi:**
-```json
-{
-  "error": "invalid_grant"
-}
-```
-
-**Giải pháp:**
-- Kiểm tra user đã được enable trong Keycloak
-- Kiểm tra email đã verified
-- Kiểm tra client secret đúng
-- Clear browser cache & cookies
+Tài liệu chi tiết trong thư mục [docs/](docs/):
+- [Chương 1: Tổng quan](docs/chuong1.md)
+- [Chương 2: Phân tích & Thiết kế](docs/chuong2.md)
+- [Chương 3: Triển khai](docs/chuong3.md)
+- [Chương 4: Kết quả & Đánh giá](docs/chuong4.md)
+- [Use Case Chi tiết](docs/Use_Case_Chi_Tiet.md)
 
 ---
 
-#### 3. FastAPI không inference được
+## 🔧 Troubleshooting
 
-**Lỗi:**
-```
-Model not found
-```
-
-**Giải pháp:**
-```bash
-# Kiểm tra model file tồn tại
-ls -la model-fastapi/models/yolov11n-cls.onnx
-
-# Test FastAPI endpoint
-curl -X POST http://localhost:8000/classify \
-  -F "image=@test.jpg"
-```
-
----
-
-#### 4. ESP32-CAM không kết nối WiFi
-
-**Lỗi:**
-```
-WiFi connection failed
-```
-
-**Giải pháp:**
-- Kiểm tra SSID & password đúng
-- ESP32 chỉ hỗ trợ WiFi 2.4GHz
-- Kiểm tra tường lửa router
-- Reset ESP32 bằng nút RESET
-
----
-
-#### 5. Android app crash khi login
-
-**Lỗi:**
-```
-SecurityException: Permission denied
-```
-
-**Giải pháp:**
-- Cấp quyền INTERNET trong AndroidManifest.xml
-- Cấp quyền BLUETOOTH, LOCATION cho scanning
-- Kiểm tra BASE_URL đúng (dùng IP thật, không dùng localhost)
-
----
-
-### Debug Tips
-
-#### Backend Logs
+### Services không start được
 
 ```bash
-# Spring Boot
-tail -f logs/spring-boot-app.log
+# Kiểm tra logs
+docker-compose logs backend
+docker-compose logs model
 
-# Docker logs
-docker logs -f smart-bin-backend
+# Restart service
+docker-compose restart backend
 ```
 
-#### FastAPI Logs
+### ESP32 không kết nối WiFi
 
-```bash
-docker logs -f smart-bin-fastapi
-```
+- Kiểm tra WiFi 2.4GHz (ESP32 không hỗ trợ 5GHz)
+- Reset device (long press button 3s)
+- Xem serial monitor: `idf.py monitor`
 
-#### Android Logcat
+### Android app không kết nối server
 
-```bash
-adb logcat | grep SmartBin
-```
+- Kiểm tra IP server trong Constants.java
+- Đảm bảo phone và server cùng network
+- Tắt firewall/antivirus tạm thời
+
+### Model inference chậm
+
+- Kiểm tra FastAPI logs: `docker-compose logs model`
+- Nâng cấp lên GPU inference (optional)
+- Giảm resolution ảnh từ ESP32
+
+Chi tiết xem README của từng module!
 
 ---
 
 ## 🤝 Contributing
 
-Chúng tôi hoan nghênh mọi đóng góp! Vui lòng làm theo các bước sau:
+Chúng tôi hoan nghênh mọi đóng góp! Vui lòng:
 
-### 1. Fork repository
-
-### 2. Tạo branch mới
-
-```bash
-git checkout -b feature/amazing-feature
-```
-
-### 3. Commit changes
-
-```bash
-git commit -m "Add some amazing feature"
-```
-
-### 4. Push to branch
-
-```bash
-git push origin feature/amazing-feature
-```
-
-### 5. Tạo Pull Request
-
-### Coding Standards
-
-- **Java**: Follow Google Java Style Guide
-- **Python**: Follow PEP 8
-- **JavaScript/TypeScript**: Follow Airbnb Style Guide
-- **Android**: Follow Android Kotlin Style Guide
+1. Fork repository
+2. Tạo branch mới: `git checkout -b feature/your-feature`
+3. Commit changes: `git commit -m 'Add your feature'`
+4. Push to branch: `git push origin feature/your-feature`
+5. Tạo Pull Request
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - Xem file [LICENSE](LICENSE) để biết thêm chi tiết.
 
 ---
 
-## 👥 Authors
+## 👥 Contributors
 
-- **Your Name** - *Initial work* - [YourGithub](https://github.com/yourusername)
+**HUST - SoICT - Project 3**
 
----
-
-## 🙏 Acknowledgments
-
-- YOLOv11 by Ultralytics
-- Spring Boot community
-- Next.js team
-- Keycloak project
-- ESP32 community
+- **Development Team**: Smart Bin System
+- **Supervisor**: [Tên giảng viên]
+- **Year**: 2024-2026
 
 ---
 
-## 📞 Contact & Support
+## 📧 Contact
 
-- **Email**: support@smartbin.com
-- **Website**: https://smartbin.com
-- **Issues**: [GitHub Issues](https://github.com/your-username/smart-bin-system/issues)
-- **Discord**: [Join our community](https://discord.gg/smartbin)
+- **Repository**: https://github.com/baokieuv/smart-trash-can-system
+- **Issues**: https://github.com/baokieuv/smart-trash-can-system/issues
+- **Email**: [your-email@example.com]
 
 ---
 
-<div align="center">
-  <p>Made with ❤️ by Smart Bin Team</p>
-  <p>⭐ Star us on GitHub — it motivates us a lot!</p>
-</div>
+**Happy Coding! 🚀 Hãy chung tay bảo vệ môi trường! 🌍♻️**

@@ -76,16 +76,34 @@ Smart Bin Android App là ứng dụng di động cho phép người dùng:
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| **Android SDK** | API 24+ (Nougat 7.0+) | Platform |
-| **Java** | 8+ | Programming language |
+| **Android SDK** | API 24-36 (Nougat 7.0 - Android 15) | Platform |
+| **Java** | 11 | Programming language |
 | **Material Design** | 3.x | UI components |
-| **ViewBinding** | - | View access |
-| **Retrofit** | 2.x (optional) | HTTP client |
-| **OkHttp** | 4.x | HTTP/HTTPS requests |
-| **Gson** | 2.x | JSON parsing |
-| **RecyclerView** | - | List rendering |
-| **SwipeRefreshLayout** | - | Pull to refresh |
+| **ViewBinding** | Latest | View access |
+| **DataBinding** | Latest | Data binding |
+| **Gson** | 2.10.1 | JSON parsing |
+| **RecyclerView** | Latest | List rendering |
+| **SwipeRefreshLayout** | Latest | Pull to refresh |
+| **Glide** | 4.16.0 | Image loading |
 | **Bluetooth Classic** | - | Device pairing |
+
+---
+
+## 📱 Yêu cầu
+
+### Development Environment
+- **Android Studio**: Ladybug | 2024.2.1 or newer
+- **JDK**: 11 or higher
+- **Gradle**: 8.x (auto-installed by wrapper)
+- **Min SDK**: 24 (Android 7.0 Nougat)
+- **Target SDK**: 36 (Android 15)
+- **Compile SDK**: 36
+
+### Device/Emulator Requirements
+- Android 7.0 (Nougat) or higher
+- Bluetooth support (for device pairing)
+- Internet connection
+- Camera permission (optional, for future features)
 
 ---
 

@@ -17,7 +17,7 @@ esp_err_t http_client_init(void);
  * @param result Pointer to store classification result
  * @return ESP_OK on success
  */
-esp_err_t http_client_classify_waste(camera_fb_t *fb, classification_result_t *result);
+esp_err_t http_client_classify_waste(camera_fb_t *fb, classification_result_t *result, char *deviceId);
 
 esp_err_t http_client_send_device_data(char *deviceId, waste_stats_t stats);
 

@@ -142,6 +142,12 @@ static void classification_task(void *param) {
     classification_result_t result;
     
     ESP_LOGI(TAG, "Classification task started");
+
+    uint8_t mac[6];
+    char deviceId[32] = { 0 };
+    esp_read_mac(mac, ESP_MAC_BT);
+    sprintf(deviceId, "%02X_%02X_%02X_%02X_%02X_%02X",
+        mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     
     while (1) {
         if (xQueueReceive(g_image_queue, &fb, portMAX_DELAY) == pdTRUE) {
@@ -153,7 +159,7 @@ static void classification_task(void *param) {
             ESP_LOGI(TAG, "Processing image for classification...");
             
             // Send to AI server
-            if (wifi_is_connected() && http_client_classify_waste(fb, &result) == ESP_OK) {
+            if (wifi_is_connected() && http_client_classify_waste(fb, &result, deviceId) == ESP_OK) {
                 ESP_LOGI(TAG, "Classification result: %s (%.1f%% confidence)",
                          result.description, result.confidence);
                 

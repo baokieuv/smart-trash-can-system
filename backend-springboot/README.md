@@ -74,27 +74,29 @@ Spring Boot backend là core API server của Smart Bin System, cung cấp:
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| **Java** | 17+ | Programming language |
-| **Spring Boot** | 3.x | Framework |
+| **Java** | 21 | Programming language |
+| **Spring Boot** | 4.0.0 | Framework |
 | **Spring Security** | 6.x | OAuth2 Resource Server |
-| **Spring Data JPA** | 3.x | Database ORM |
-| **Hibernate** | 6.x | JPA implementation |
+| **Spring Data JPA** | Latest | Database ORM |
+| **Hibernate** | Latest | JPA implementation |
 | **MariaDB** | 10.6+ | Database |
-| **Keycloak Java Client** | 23.x | Keycloak admin API |
+| **Keycloak Java Client** | 23.0.3 | Keycloak admin API |
 | **JavaMail** | - | Email sending |
-| **OkHttp** | 4.x | HTTP client (FastAPI calls) |
-| **Gson** | 2.x | JSON parsing |
-| **Lombok** | - | Boilerplate reduction |
-
----
+| **OkHttp** | 4.12.0 | HTTP client (FastAPI calls) |
+| **Gson** | 2.11.0 | JSON parsing |
+| **Lombok** | Latest | Boilerplate reduction |
+| **MapStruct** | 1.6.3 | DTO mapping |
+| **MinIO** | 8.6.0 | Object storage |
+| **Apache Tika** | 3.2.3 | File type detection |
 
 ## 📱 Yêu cầu
 
-- **Java**: JDK 17+
+- **Java**: JDK 21
 - **Maven**: 3.8+
 - **MariaDB**: 10.6+
-- **Keycloak**: 23.x+ (running)
+- **Keycloak**: 23.0.3+ (running)
 - **FastAPI**: Running on port 8000
+- **MinIO**: Optional (for image storage)
 - **SMTP Server**: Gmail/Mailgun/etc
 
 ---

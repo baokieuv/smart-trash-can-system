@@ -2,6 +2,7 @@
 /temp
 /docker/mariadb_data
 /docker/postgres_data
+/docker/minio_data
 /__pycache__
 /result/
 **/result/
@@ -12,4 +13,7 @@ sdkconfig
 *.map
 *.pyc
 *.log
+*.env
+.env
+docs
 __pycache__/

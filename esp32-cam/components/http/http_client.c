@@ -62,7 +62,7 @@ static esp_err_t parse_waste_json(const char *json_str, classification_result_t 
     return err;
 }
 
-esp_err_t http_client_classify_waste(camera_fb_t *fb, classification_result_t *result) {
+esp_err_t http_client_classify_waste(camera_fb_t *fb, classification_result_t *result, char *deviceId) {
     if (!fb || !result) {
         ESP_LOGE(TAG, "Invalid parameters");
         return ESP_ERR_INVALID_ARG;
@@ -75,10 +75,14 @@ esp_err_t http_client_classify_waste(camera_fb_t *fb, classification_result_t *r
     
     snprintf(content_type, sizeof(content_type), "multipart/form-data; boundary=%s", boundary);
     int header_len = snprintf(header, sizeof(header),
+        "--%s\r\n"                                                  
+        "Content-Disposition: form-data; name=\"deviceId\"\r\n\r\n"
+        "%s\r\n"
+    
         "--%s\r\n"
         "Content-Disposition: form-data; name=\"image\"; filename=\"waste.jpg\"\r\n"
         "Content-Type: image/jpeg\r\n\r\n",
-        boundary);
+        boundary, deviceId, boundary);
     int footer_len = snprintf(footer, sizeof(footer), "\r\n--%s--\r\n", boundary);
 
     int total_len = header_len + fb->len + footer_len;

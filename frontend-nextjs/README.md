@@ -86,18 +86,11 @@ Smart Bin Web Frontend là ứng dụng web responsive cho phép người dùng:
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| **Next.js** | 14.x | React framework với App Router |
-| **React** | 18.x | UI library |
+| **Next.js** | 16.0.7 | React framework với App Router |
+| **React** | 19.2.0 | UI library |
 | **TypeScript** | 5.x | Type safety |
-| **Tailwind CSS** | 3.x | Utility-first CSS |
-| **shadcn/ui** | - | UI components |
-| **Radix UI** | - | Headless UI primitives |
-| **Lucide React** | - | Icon library |
-| **React Hook Form** | 7.x | Form handling |
-| **Zod** | 3.x | Schema validation |
-| **date-fns** | 2.x | Date formatting |
-
----
+| **Tailwind CSS** | 4.x | Utility-first CSS |
+| **Lucide React** | ^0.555.0 | Icon library |
 
 ## 📱 Yêu cầu
 
