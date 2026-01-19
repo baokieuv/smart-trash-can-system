@@ -7,7 +7,8 @@ import jakarta.persistence.Id;
 import lombok.*;
 
 @Entity
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class DeviceData {
@@ -22,68 +23,4 @@ public class DeviceData {
     private int fillLevel;
     private boolean isFull;
     private long timestamp;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getDeviceId() {
-        return deviceId;
-    }
-
-    public void setDeviceId(String deviceId) {
-        this.deviceId = deviceId;
-    }
-
-    public int getRecycledWasteCount() {
-        return recycledWasteCount;
-    }
-
-    public void setRecycledWasteCount(int recycledWasteCount) {
-        this.recycledWasteCount = recycledWasteCount;
-    }
-
-    public int getNonRecycledWasteCount() {
-        return nonRecycledWasteCount;
-    }
-
-    public void setNonRecycledWasteCount(int nonRecycledWasteCount) {
-        this.nonRecycledWasteCount = nonRecycledWasteCount;
-    }
-
-    public int getCompostableWasteCount() {
-        return compostableWasteCount;
-    }
-
-    public void setCompostableWasteCount(int compostableWasteCount) {
-        this.compostableWasteCount = compostableWasteCount;
-    }
-
-    public int getFillLevel() {
-        return fillLevel;
-    }
-
-    public void setFillLevel(int fillLevel) {
-        this.fillLevel = fillLevel;
-    }
-
-    public boolean isFull() {
-        return isFull;
-    }
-
-    public void setFull(boolean full) {
-        isFull = full;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
 }

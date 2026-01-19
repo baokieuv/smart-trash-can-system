@@ -154,13 +154,13 @@ public class DeviceService {
         return deviceId;
     }
 
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(fixedRate = 2 * 60000)
     public void checkDevicesStatus(){
         List<Device> devices = repository.findByStatus(Constants.DeviceStatus.ONLINE.toString());
         long now = System.currentTimeMillis();
 
         for(Device d: devices){
-            DeviceData data = dataRepository.findById(d.getId()).orElse(null);
+            DeviceData data = dataRepository.findFirstByDeviceIdOrderByTimestampDesc(d.getId()).orElse(null);
 
             if(data == null) continue;
 

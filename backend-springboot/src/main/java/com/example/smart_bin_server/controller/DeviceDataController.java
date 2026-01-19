@@ -6,6 +6,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/v1/devices")
 public class DeviceDataController {
@@ -16,12 +18,19 @@ public class DeviceDataController {
         this.deviceDataService = deviceDataService;
     }
 
+    @GetMapping("/{deviceId}/data")
+    public ResponseEntity<Object> getNonce(@PathVariable String deviceId){
+//        String nonce = UUID.randomUUID().toString();
+        return ResponseEntity.ok().body(deviceDataService.getNonce(deviceId));
+    }
+
     @PostMapping("/{deviceId}/data")
     public ResponseEntity<Object> sendData(
             @PathVariable String deviceId,
-            @Valid @RequestBody SendDataRequest request)
+            @RequestHeader("x-signature") String signature,
+            @RequestBody String request)
     {
-        return ResponseEntity.ok().body(deviceDataService.sendData(deviceId, request));
+        return ResponseEntity.ok().body(deviceDataService.sendData(deviceId, request, signature));
     }
 
     @GetMapping("/{deviceId}/data")

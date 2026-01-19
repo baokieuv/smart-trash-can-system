@@ -46,11 +46,16 @@ spring:
           ssl:
             enable: true
           trust: ${SPRING_MAIL_HOST:smtp.gmail.com}
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
 
 server:
   port: ${SERVER_PORT:8888}
 
 app:
+  secret-key: ${SECRET_KEY}
   ai-server:
     # Service AI (FastAPI) cũng cần dynamic host
     url: ${APP_AI_SERVER_URL:http://localhost:8000}
