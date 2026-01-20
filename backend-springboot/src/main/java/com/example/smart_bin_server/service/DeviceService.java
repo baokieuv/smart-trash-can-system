@@ -69,6 +69,7 @@ public class DeviceService {
         dataRepository.save(data);
 
         Notification notification = new Notification();
+        notification.setUserId(userId);
         notification.setDeviceId(device.getId());
         notification.setDeviceName(device.getName());
         notification.setMessage("Create device successfully.");
@@ -122,6 +123,7 @@ public class DeviceService {
         device.setUpdatedAt(System.currentTimeMillis());
 
         Notification notification = new Notification();
+        notification.setUserId(userId);
         notification.setDeviceId(deviceId);
         notification.setDeviceName(device.getName());
         notification.setMessage("Update device successfully.");
@@ -147,6 +149,7 @@ public class DeviceService {
         dataRepository.deleteById(deviceId);
 
         Notification notification = new Notification();
+        notification.setUserId(userId);
         notification.setDeviceId(deviceId);
         notification.setDeviceName(device.getName());
         notification.setMessage("Delete device successfully.");
@@ -170,6 +173,7 @@ public class DeviceService {
             if(now - data.getTimestamp() > Constants.TIMEOUT_MILLIS){
 
                 Notification notification = new Notification();
+                notification.setUserId(d.getUserId());
                 notification.setDeviceId(d.getId());
                 notification.setDeviceName(d.getName());
                 notification.setType(Constants.LogType.WARNING.toString());

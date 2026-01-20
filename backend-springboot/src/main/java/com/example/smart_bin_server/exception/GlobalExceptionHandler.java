@@ -26,7 +26,7 @@ public class GlobalExceptionHandler {
         log.error("An unexpected error occurred: {}", e.getMessage());
 
         Notification notification = new Notification();
-        notification.setDeviceId("");
+        notification.setDeviceId("system");
         notification.setMessage(e.getMessage());
         notification.setType(String.valueOf(Constants.LogType.ERROR));
         notification.setTimestamp(System.currentTimeMillis());

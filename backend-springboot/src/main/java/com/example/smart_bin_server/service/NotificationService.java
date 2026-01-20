@@ -29,29 +29,13 @@ public class NotificationService {
     }
 
     public List<NotificationDto> getNotificationsByUserId(String userId) {
-        // Get all devices owned by user
-        List<Device> userDevices = deviceRepository.findByUserId(userId);
-
-        // Get device IDs
-        List<String> deviceIds = userDevices.stream()
-                .map(Device::getId)
-                .toList();
-
         // Get all notifications
         Pageable pageable = PageRequest.of(
                 0, 50, Sort.by(Sort.Direction.DESC, "id")
         );
-        List<Notification> allNotifications = repository.findAll(pageable).getContent();
+        List<Notification> allNotifications = repository.findNotificationsByUserIdCustom(userId, pageable).getContent();
 
-        // Filter notifications for user's devices or system notifications
         return allNotifications.stream()
-                .filter(notification -> {
-                    String deviceId = notification.getDeviceId();
-                    // Include system notifications or notifications for user's devices
-                    return deviceId == null ||
-                            "system".equals(deviceId) ||
-                            deviceIds.contains(deviceId);
-                })
                 .map(this::parseToDto)
                 .collect(Collectors.toList());
     }
@@ -81,6 +65,7 @@ public class NotificationService {
         String deviceName = notification.getDeviceName() == null ? "Unknown device" : notification.getDeviceName();
         return new NotificationDto(
                 notification.getId(),
+                notification.getUserId(),
                 notification.getDeviceId(),
                 deviceName,
                 notification.getMessage(),

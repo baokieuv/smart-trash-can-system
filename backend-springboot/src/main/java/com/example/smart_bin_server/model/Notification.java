@@ -16,6 +16,8 @@ public class Notification {
 
     private String deviceId;
 
+    private String userId;
+
     private String deviceName;
 
     private String message;
