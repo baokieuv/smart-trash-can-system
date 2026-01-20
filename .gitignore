@@ -3,6 +3,7 @@
 /docker/mariadb_data
 /docker/postgres_data
 /docker/minio_data
+/docker/redis-data
 /__pycache__
 /result/
 **/result/

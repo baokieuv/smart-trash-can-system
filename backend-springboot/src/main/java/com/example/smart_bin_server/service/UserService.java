@@ -1,5 +1,7 @@
 package com.example.smart_bin_server.service;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.example.smart_bin_server.dto.*;
 import com.example.smart_bin_server.model.User;
 import com.example.smart_bin_server.repository.UserRepository;
@@ -109,12 +111,18 @@ public class UserService {
         // Refresh token through Keycloak
         TokenResponse tokens = keycloakService.refreshAccessToken(refreshToken);
 
+        DecodedJWT jwt = JWT.decode(tokens.accessToken());
+
+        String userId = jwt.getSubject();
+
+        UserDto user = getCurrentUser(userId);
+
         return new AuthResponse(
                 tokens.accessToken(),
                 tokens.refreshToken(),
                 tokens.expiresIn(),
                 tokens.tokenType(),
-                null // You can decode JWT to get userId and fetch user if needed
+                user
         );
     }
 

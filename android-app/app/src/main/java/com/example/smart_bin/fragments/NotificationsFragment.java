@@ -122,7 +122,8 @@ public class NotificationsFragment extends Fragment implements NotificationAdapt
 
     @SuppressLint("SetTextI18n")
     private void updateUI(List<Notification> notifications) {
-        binding.setHasNotifications(notifications != null && !notifications.isEmpty());
+        boolean hasNotification = notifications != null && !notifications.isEmpty();
+        binding.setHasNotifications(hasNotification);
 
         if (notifications != null && !notifications.isEmpty()) {
             int count = notifications.size();

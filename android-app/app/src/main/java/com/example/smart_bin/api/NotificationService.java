@@ -32,6 +32,10 @@ public class NotificationService {
     private final Context context;
     private final AtomicBoolean isRefreshing = new AtomicBoolean(false);
 
+    private final List<Runnable> pendingSuccessCallbacks = new ArrayList<>();
+    private final List<Runnable> pendingFailureCallbacks = new ArrayList<>();
+
+
     public interface NotificationCallback {
         void onSuccess(List<Notification> notifications);
         void onError(String error);
@@ -65,36 +69,57 @@ public class NotificationService {
             return;
         }
 
-        if (isRefreshing.get()) {
-            // Wait for ongoing refresh
-            mainHandler.postDelayed(() -> {
-                if (tokenManager.isTokenValid()) {
-                    onSuccess.run();
-                } else {
-                    onFailure.run();
-                }
-            }, 1000);
-            return;
+        synchronized (this){
+            if (isRefreshing.get()) {
+                pendingSuccessCallbacks.add(onSuccess);
+                pendingFailureCallbacks.add(onFailure);
+                return;
+            }
+
+            isRefreshing.set(true);
+            pendingSuccessCallbacks.add(onSuccess);
+            pendingFailureCallbacks.add(onFailure);
         }
+//        if (isRefreshing.get()) {
+//            // Wait for ongoing refresh
+//            mainHandler.postDelayed(() -> {
+//                if (tokenManager.isTokenValid()) {
+//                    onSuccess.run();
+//                } else {
+//                    onFailure.run();
+//                }
+//            }, 1000);
+//            return;
+//        }
 
         isRefreshing.set(true);
         AuthService.getInstance(context).refreshToken(new AuthService.RefreshCallback() {
             @Override
             public void onSuccess() {
                 isRefreshing.set(false);
-                onSuccess.run();
+//                onSuccess.run();
+                for (Runnable callback : pendingSuccessCallbacks) {
+                    if (callback != null) callback.run();
+                }
+                pendingFailureCallbacks.clear();
+                pendingSuccessCallbacks.clear();
             }
 
             @Override
             public void onError(String error) {
+                Log.e(TAG, "Error: " + error);
                 isRefreshing.set(false);
                 tokenManager.clearTokens();
 
                 Intent intent = new Intent(context, LoginActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 context.startActivity(intent);
-
-                onFailure.run();
+//                onFailure.run();
+                for (Runnable callback : pendingFailureCallbacks) {
+                    if (callback != null) callback.run();
+                }
+                pendingFailureCallbacks.clear();
+                pendingSuccessCallbacks.clear();
             }
         });
     }

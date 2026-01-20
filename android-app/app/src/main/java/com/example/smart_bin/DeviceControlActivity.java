@@ -54,7 +54,7 @@ public class DeviceControlActivity extends AppCompatActivity {
         autoRefresh = SettingsFragment.isAutoRefreshEnabled(preferences);
 
         Log.i(TAG, "Device ID: " + deviceId);
-        if (deviceId != null && deviceName != null) {
+        if (deviceId != null) {
             setupToolbar();
             updateHeaderStatus();
             setupAutoRefresh();
@@ -108,6 +108,7 @@ public class DeviceControlActivity extends AppCompatActivity {
                 status = device.getStatus();
                 deviceName = device.getName();
                 updateHeaderStatus();
+                setupToolbar();
             }
 
             @Override
