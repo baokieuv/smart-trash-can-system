@@ -15,7 +15,7 @@
 #define NVS_KEY_COMPOSTABLE_COUNT       "composable"
 #define NVS_KEY_NON_RECYCLABLE_COUNT    "non_recyclable"
 
-#define HTTP_SERVER_URL         "http://kvbhust.site/api/v1"  // AI Server
+#define HTTP_SERVER_URL         "http://www.kvbhust.site/api/v1"  // AI Server
 #define HTTP_TIMEOUT_MS         10000
 
 #define TELEMETRY_INTERVAL_MS   5000  // Send telemetry every 1 minute
@@ -72,7 +72,7 @@
 #define CAMERA_TASK_STACK_SIZE      (5 * 1024)
 #define HTTP_TASK_STACK_SIZE        (4 * 1024)
 #define SENSOR_TASK_STACK_SIZE      (4 * 1024)
-#define HEARTBEAT_TASK_STACK_SIZE   (3 * 1024)
+#define HEARTBEAT_TASK_STACK_SIZE   (4 * 1024)
 #define LED_STATUS_TASK_STACK_SIZE  (1 * 1024)
 
 #define IMAGE_QUEUE_LENGTH          2
@@ -93,6 +93,8 @@
 #define LED_INDICATION_DURATION_MS  3000
 #define CAMERA_WARMUP_SHOTS         3
 #define CAMERA_SHOT_DELAY_MS        100
+
+#define SECRET_KEY      "MY_SUPER_SECRET_KEY_1234"
 
 typedef enum {
     WASTE_RECYCLABLE = 0,   // Inorganic - recyclable

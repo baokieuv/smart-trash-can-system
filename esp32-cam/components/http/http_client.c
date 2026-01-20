@@ -3,9 +3,12 @@
 #include "esp_http_client.h"
 #include "esp_log.h"
 #include "cJSON.h"
+#include "mbedtls/md.h"
 #include <string.h>
 
 static const char *TAG = "HTTP_CLIENT";
+
+char global_nonce[64] = { 0 };
 
 esp_err_t http_client_init(void) {
     ESP_LOGI(TAG, "HTTP client initialized");
@@ -27,7 +30,12 @@ static esp_err_t http_event_handler(esp_http_client_event_t *evt) {
             ESP_LOGD(TAG, "HTTP_EVENT_ON_HEADER: %s: %s", evt->header_key, evt->header_value);
             break;
         case HTTP_EVENT_ON_DATA:
-            ESP_LOGD(TAG, "HTTP_EVENT_ON_DATA: %d bytes", evt->data_len);
+            ESP_LOGI(TAG, "HTTP_EVENT_ON_DATA: %d bytes", evt->data_len);
+            if(!esp_http_client_is_chunked_response(evt->client)){
+                uint8_t len = evt->data_len >= 64 ? 63 : evt->data_len;
+                strncpy(global_nonce, (char*)evt->data, len);
+                global_nonce[len] = '\0';
+            }
             break;
         case HTTP_EVENT_ON_FINISH:
             ESP_LOGD(TAG, "HTTP_EVENT_ON_FINISH");
@@ -39,6 +47,53 @@ static esp_err_t http_event_handler(esp_http_client_event_t *evt) {
             break;
     }
     return ESP_OK;
+}
+
+void get_server_nonce(char *deviceId){
+    memset(global_nonce, 0, sizeof(global_nonce));
+    char url[128];
+    if(HTTP_SERVER_URL == NULL){
+        ESP_LOGE(TAG, "URL NULL.");
+    }
+    if(deviceId == NULL){
+        ESP_LOGE(TAG, "device id null");
+    }
+    snprintf(url, sizeof(url), "%s/devices/%s/nonce", HTTP_SERVER_URL, deviceId);
+
+    esp_http_client_config_t config = {
+        .url = url,
+        .event_handler = http_event_handler,
+        .timeout_ms = HTTP_TIMEOUT_MS,
+        .method = HTTP_METHOD_GET,
+    };
+
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+    esp_http_client_set_header(client, "Connection", "close");
+    esp_err_t err = esp_http_client_perform(client);
+
+    if (err == ESP_OK) {
+        ESP_LOGI(TAG, "Got Nonce: %s", global_nonce);
+    } else {
+        ESP_LOGE(TAG, "Failed to get nonce");
+    }
+    esp_http_client_cleanup(client);
+}
+
+static void create_hmac_sha256(const char *key, const char *data, char *output){
+    uint8_t hmac_result[32];
+
+    mbedtls_md_context_t ctx;
+    mbedtls_md_init(&ctx);
+    mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
+    mbedtls_md_hmac_starts(&ctx, (const unsigned char *)key, strlen(key));
+    mbedtls_md_hmac_update(&ctx, (const unsigned char *)data, strlen(data));
+    mbedtls_md_hmac_finish(&ctx, hmac_result);
+    mbedtls_md_free(&ctx);
+
+    for (int i = 0; i < 32; i++) {
+        sprintf(output + (i * 2), "%02x", hmac_result[i]);
+    }
+    output[64] = 0;
 }
 
 static esp_err_t parse_waste_json(const char *json_str, classification_result_t *result){
@@ -88,13 +143,13 @@ esp_err_t http_client_classify_waste(camera_fb_t *fb, classification_result_t *r
     int total_len = header_len + fb->len + footer_len;
 
     char _url[64] = { 0 };
-    sprintf(_url, "%s/classify-image", HTTP_SERVER_URL);
+    snprintf(_url, sizeof(_url), "%s/classify-image", HTTP_SERVER_URL);
     // Configure HTTP client
     esp_http_client_config_t config = {
         .url = _url,
         .method = HTTP_METHOD_POST,
         .timeout_ms = HTTP_TIMEOUT_MS,
-        .event_handler = http_event_handler,
+        .event_handler = NULL,
         .buffer_size = 2048,
         .buffer_size_tx = 2048,
     };
@@ -106,7 +161,7 @@ esp_err_t http_client_classify_waste(camera_fb_t *fb, classification_result_t *r
     }
 
     esp_http_client_set_header(client, "Content-Type", content_type);
-
+    esp_http_client_set_header(client, "Connection", "close");
     esp_err_t err = esp_http_client_open(client, total_len);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
@@ -152,14 +207,20 @@ esp_err_t http_client_classify_waste(camera_fb_t *fb, classification_result_t *r
 }
 
 esp_err_t http_client_send_device_data(char *deviceId, waste_stats_t stats){
-    char _url[64] = { 0 };
-    sprintf(_url, "%s/devices/%s/data", HTTP_SERVER_URL, deviceId);
+    get_server_nonce(deviceId);
+    if(strlen(global_nonce) == 0) {
+        ESP_LOGE(TAG, "Failed to get nonce from server");
+        return ESP_FAIL;
+    }
+    
+    char _url[128] = { 0 };
+    snprintf(_url, sizeof(_url), "%s/devices/%s/data", HTTP_SERVER_URL, deviceId);
 
     esp_http_client_config_t conf = {
         .url = _url,
         .method = HTTP_METHOD_POST,
         .timeout_ms = HTTP_TIMEOUT_MS,
-        .event_handler = http_event_handler,
+        .event_handler = NULL,
         .buffer_size = 2048,
         .buffer_size_tx = 2048,
     };
@@ -177,9 +238,19 @@ esp_err_t http_client_send_device_data(char *deviceId, waste_stats_t stats){
 
     char *payload = cJSON_Print(root);
     cJSON_Delete(root);
+
+    char data_to_sign[256];
+    snprintf(data_to_sign, sizeof(data_to_sign), "%s.%s", global_nonce, payload);
+
+    char signature[65];
+    create_hmac_sha256(SECRET_KEY, data_to_sign, signature);
+    ESP_LOGI(TAG, "Signature: %s", signature);
+
     esp_http_client_handle_t client = esp_http_client_init(&conf);
 
     esp_http_client_set_header(client, "Content-Type", "application/json");
+    esp_http_client_set_header(client, "Connection", "close");
+    esp_http_client_set_header(client, "x-signature", signature);
     esp_http_client_set_post_field(client, payload, strlen(payload));
 
     esp_err_t err = esp_http_client_perform(client);
@@ -192,6 +263,8 @@ esp_err_t http_client_send_device_data(char *deviceId, waste_stats_t stats){
         ESP_LOGE(TAG, "HTTP POST request failed: %s", esp_err_to_name(err));
     }
 
+    free(payload);
+    memset(global_nonce, 0, sizeof(global_nonce));
     esp_http_client_cleanup(client);
    
     return ESP_OK;

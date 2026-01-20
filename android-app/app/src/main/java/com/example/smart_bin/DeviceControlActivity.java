@@ -106,6 +106,7 @@ public class DeviceControlActivity extends AppCompatActivity {
             @Override
             public void onSuccess(Device device) {
                 status = device.getStatus();
+                deviceName = device.getName();
                 updateHeaderStatus();
             }
 

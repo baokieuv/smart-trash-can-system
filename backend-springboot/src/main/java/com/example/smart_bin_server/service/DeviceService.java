@@ -70,6 +70,7 @@ public class DeviceService {
 
         Notification notification = new Notification();
         notification.setDeviceId(device.getId());
+        notification.setDeviceName(device.getName());
         notification.setMessage("Create device successfully.");
         notification.setType(Constants.LogType.SUCCESS.toString());
         notification.setTimestamp(System.currentTimeMillis());
@@ -122,6 +123,7 @@ public class DeviceService {
 
         Notification notification = new Notification();
         notification.setDeviceId(deviceId);
+        notification.setDeviceName(device.getName());
         notification.setMessage("Update device successfully.");
         notification.setType(Constants.LogType.SUCCESS.toString());
         notification.setTimestamp(System.currentTimeMillis());
@@ -146,6 +148,7 @@ public class DeviceService {
 
         Notification notification = new Notification();
         notification.setDeviceId(deviceId);
+        notification.setDeviceName(device.getName());
         notification.setMessage("Delete device successfully.");
         notification.setType(Constants.LogType.SUCCESS.toString());
         notification.setTimestamp(System.currentTimeMillis());
@@ -168,6 +171,7 @@ public class DeviceService {
 
                 Notification notification = new Notification();
                 notification.setDeviceId(d.getId());
+                notification.setDeviceName(d.getName());
                 notification.setType(Constants.LogType.WARNING.toString());
                 notification.setMessage("Device disconnected.");
                 notification.setTimestamp(System.currentTimeMillis());
