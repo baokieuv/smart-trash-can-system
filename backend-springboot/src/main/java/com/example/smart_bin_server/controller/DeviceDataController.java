@@ -18,7 +18,7 @@ public class DeviceDataController {
         this.deviceDataService = deviceDataService;
     }
 
-    @GetMapping("/{deviceId}/data")
+    @GetMapping("/{deviceId}/nonce")
     public ResponseEntity<Object> getNonce(@PathVariable String deviceId){
 //        String nonce = UUID.randomUUID().toString();
         return ResponseEntity.ok().body(deviceDataService.getNonce(deviceId));

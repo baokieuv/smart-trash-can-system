@@ -48,7 +48,7 @@ public class DeviceDataService {
 
     public SendDataResponse sendData(String deviceId, String rawJson, String signature) {
 
-        validateSignature(deviceId, rawJson, signature);
+        validateSignature(deviceId, signature, rawJson);
 
         Device device = repository.findById(deviceId).orElse(null);
 
@@ -115,6 +115,8 @@ public class DeviceDataService {
 
         String dataToSign = cachedNonce + "." + payload;
         String serverSignature = new HmacUtils("HmacSHA256", secretKey).hmacHex(dataToSign);
+
+        System.out.println(payload);
 
         if(!serverSignature.equalsIgnoreCase(signature)){
             throw new RuntimeException("Invalid Signature! Data tampered.");
