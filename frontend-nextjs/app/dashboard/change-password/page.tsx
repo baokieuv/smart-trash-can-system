@@ -152,7 +152,7 @@ export default function ChangePasswordPage() {
                 name="currentPassword"
                 value={formData.currentPassword}
                 onChange={handleChange}
-                className="w-full pl-11 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                className="w-full pl-11 pr-4 py-3 border-2 border-slate-300 rounded-xl text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none transition-colors font-medium"
                 placeholder="Enter current password"
                 required
                 disabled={loading}
@@ -172,7 +172,7 @@ export default function ChangePasswordPage() {
                 name="newPassword"
                 value={formData.newPassword}
                 onChange={handleChange}
-                className="w-full pl-11 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                className="w-full pl-11 pr-4 py-3 border-2 border-slate-300 rounded-xl text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none transition-colors font-medium"
                 placeholder="Enter new password"
                 required
                 disabled={loading}
@@ -193,7 +193,7 @@ export default function ChangePasswordPage() {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="w-full pl-11 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                className="w-full pl-11 pr-4 py-3 border-2 border-slate-300 rounded-xl text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none transition-colors font-medium"
                 placeholder="Confirm new password"
                 required
                 disabled={loading}
