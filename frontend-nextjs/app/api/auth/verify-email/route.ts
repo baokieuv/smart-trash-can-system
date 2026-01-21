@@ -3,18 +3,30 @@ import { BACKEND_API_BASE } from '../../config';
 
 export async function GET(req: Request) {
   try {
-    const body = await req.json();
-    const { email } = body;
+    
+    const { searchParams } = new URL(req.url);
 
-    const response = await fetch(`${BACKEND_API_BASE}/auth/verify-email`, {
+    const token = searchParams.get('token');
+
+    if(!token){
+      return NextResponse.json(
+        { error: 'Token is missing' },
+        { status: 400 }
+      );
+    }
+
+    const response = await fetch(`${BACKEND_API_BASE}/auth/verify-email?token=${token}`, {
       method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
 
     const data = await response.json();
 
     if (!response.ok) {
       return NextResponse.json(
-        { error: data.error || 'Failed to resend verification' },
+        { error: data.error || 'Failed to verify email' },
         { status: response.status }
       );
     }
