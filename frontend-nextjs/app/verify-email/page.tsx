@@ -1,11 +1,11 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle, XCircle, Loader2, Mail, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -203,5 +203,38 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="flex flex-col items-center mb-8">
+            <div className="bg-blue-600 p-4 rounded-2xl mb-4">
+              <Trash2 className="text-white" size={48} />
+            </div>
+            <h1 className="text-3xl font-bold text-slate-800">Smart Bin IoT</h1>
+            <p className="text-slate-600 mt-2">Email Verification</p>
+          </div>
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <div className="flex flex-col items-center">
+              <div className="bg-blue-100 p-4 rounded-full mb-6">
+                <Loader2 className="text-blue-600 animate-spin" size={48} />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                Loading...
+              </h2>
+              <p className="text-slate-600 text-center">
+                Please wait...
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

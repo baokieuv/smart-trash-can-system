@@ -33,7 +33,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
-    console.error('Change password API error:', error);
+    console.error('Verify email API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
