@@ -1,5 +1,5 @@
-import React from 'react';
-import { Activity, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Activity, Clock, ChevronDown } from 'lucide-react';
 import { ActivityLog } from '@/types';
 import { getLogIcon } from '@/lib/utils';
 
@@ -8,6 +8,10 @@ interface ActivityFeedProps {
 }
 
 export default function ActivityFeed({ logs }: ActivityFeedProps) {
+  const [showAll, setShowAll] = useState(false);
+  const displayedLogs = showAll ? logs : logs.slice(0, 5);
+  const hasMore = logs.length > 5;
+
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-24">
       <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
@@ -15,7 +19,7 @@ export default function ActivityFeed({ logs }: ActivityFeedProps) {
         Activity Feed
       </h2>
       <div className="space-y-3">
-        {logs.map(log => (
+        {displayedLogs.map(log => (
           <div key={log.id} className="flex gap-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
             <div className="text-xl">{getLogIcon(log.type)}</div>
             <div className="flex-1 min-w-0">
@@ -29,6 +33,19 @@ export default function ActivityFeed({ logs }: ActivityFeedProps) {
           </div>
         ))}
       </div>
+      
+      {hasMore && (
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="w-full mt-4 py-2 text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center justify-center gap-1 hover:bg-blue-50 rounded-lg transition-colors"
+        >
+          {showAll ? 'View less' : 'View more'}
+          <ChevronDown 
+            size={16} 
+            className={`transition-transform ${showAll ? 'rotate-180' : ''}`}
+          />
+        </button>
+      )}
     </div>
   );
 }
