@@ -5,6 +5,8 @@ import static androidx.core.content.ContentProviderCompat.requireContext;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -34,6 +36,9 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private TokenManager tokenManager;
+    private Handler notificationHandler;
+    private Runnable notificationRunnable;
+    private static final long NOTIFICATION_REFRESH_INTERVAL = 30 * 1000;
 
     private int selectedItemId = R.id.navigation_home;
 
@@ -63,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
             selectedItemId = savedInstanceState.getInt(SELECTED_ITEM_ID, R.id.navigation_home);
         }
 
+        setupNotificationAutoRefresh();
         setupBottomNavigation();
         setupFab();
 
@@ -71,6 +77,36 @@ public class MainActivity extends AppCompatActivity {
             loadFragment(new HomeFragment());
         }
     }
+
+    private void setupNotificationAutoRefresh(){
+        notificationHandler = new Handler(Looper.getMainLooper());
+        notificationRunnable = new Runnable()  {
+            @Override
+            public void run() {
+                updateNotification();
+                notificationHandler.postDelayed(this, NOTIFICATION_REFRESH_INTERVAL);
+            }
+        };
+    }
+
+    private void startNotificationAutoRefresh() {
+        if(notificationHandler != null && notificationRunnable != null){
+            notificationHandler.removeCallbacks(notificationRunnable);
+
+            notificationHandler.post(notificationRunnable);
+
+            Log.d(TAG, "Notification auto refresh started");
+
+        }
+    }
+
+    private void stopNotificationAutoRefresh() {
+        if(notificationHandler != null && notificationRunnable != null) {
+            notificationHandler.removeCallbacks(notificationRunnable);
+            Log.d(TAG, "Notification auto refresh stopped");
+        }
+    }
+
 
     private void setupBottomNavigation() {
         binding.bottomNavigation.setOnItemSelectedListener(item -> {
@@ -100,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Setup notification badge (example)
 //        updateNotificationBadge(5); // Mock 5 unread notifications
-        getNumOfNoti();
+        updateNotification();
     }
 
     private void setupFab() {
@@ -138,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
         finish();
     }
 
-    public void getNumOfNoti(){
+    public void updateNotification(){
         NotificationService.getInstance().getNotifications(new NotificationService.NotificationCallback() {
             @Override
             public void onSuccess(List<Notification> notifications) {
@@ -148,7 +184,6 @@ public class MainActivity extends AppCompatActivity {
                             .mapToInt(item -> 1)
                             .sum();
                     updateNotificationBadge(count);
-//                    updateNotificationBadge(notifications.stream().filter())
                 });
             }
 
@@ -171,6 +206,20 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         if (!tokenManager.isLoggedIn()) {
             navigateToLogin();
+        } else {
+            startNotificationAutoRefresh();
         }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopNotificationAutoRefresh();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopNotificationAutoRefresh();
     }
 }
