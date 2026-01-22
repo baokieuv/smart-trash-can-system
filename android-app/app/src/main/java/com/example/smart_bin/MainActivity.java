@@ -23,6 +23,7 @@ import com.example.smart_bin.fragments.HomeFragment;
 import com.example.smart_bin.fragments.NotificationsFragment;
 import com.example.smart_bin.fragments.SettingsFragment;
 import com.example.smart_bin.model.Notification;
+import com.example.smart_bin.utils.Constants;
 import com.example.smart_bin.utils.TokenManager;
 import com.google.android.material.badge.BadgeDrawable;
 
@@ -36,7 +37,6 @@ public class MainActivity extends AppCompatActivity {
     private TokenManager tokenManager;
     private Handler notificationHandler;
     private Runnable notificationRunnable;
-    private static final long NOTIFICATION_REFRESH_INTERVAL = 30 * 1000;
 
     private int selectedItemId = R.id.navigation_home;
 
@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 updateNotification();
-                notificationHandler.postDelayed(this, NOTIFICATION_REFRESH_INTERVAL);
+                notificationHandler.postDelayed(this, Constants.REFRESH_INTERVAL);
             }
         };
     }

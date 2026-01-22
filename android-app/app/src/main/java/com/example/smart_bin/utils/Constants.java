@@ -2,13 +2,12 @@ package com.example.smart_bin.utils;
 
 public class Constants {
     // API Configuration
-    // TODO: Replace with your actual IP address
     public static final String BASE_URL = "http://www.kvbhust.site";
     public static final String API_VERSION = "/api/v1";
     public static final String DEVICES_ENDPOINT = BASE_URL + API_VERSION + "/devices";
 
     // Timing Configuration
-    public static final int REFRESH_INTERVAL = 10000; // 30 seconds in milliseconds
+    public static final int REFRESH_INTERVAL = 10000; // 10 seconds in milliseconds
     public static final int CONNECTION_TIMEOUT = 5000; // 5 seconds
     public static final int READ_TIMEOUT = 5000; // 5 seconds
 
