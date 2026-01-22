@@ -22,7 +22,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleGenericException(Exception e){
-        e.printStackTrace();
         log.error("An unexpected error occurred: {}", e.getMessage());
 
         Notification notification = new Notification();

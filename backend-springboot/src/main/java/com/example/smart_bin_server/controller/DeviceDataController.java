@@ -1,12 +1,8 @@
 package com.example.smart_bin_server.controller;
 
-import com.example.smart_bin_server.dto.SendDataRequest;
 import com.example.smart_bin_server.service.DeviceDataService;
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/devices")

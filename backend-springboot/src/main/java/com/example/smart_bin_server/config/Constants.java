@@ -13,5 +13,5 @@ public class Constants {
         INFO
     }
 
-    public static final long TIMEOUT_MILLIS = 60 * 1000; //60s
+    public static final long TIMEOUT_MILLIS = 60L * 1000L; //60s
 }

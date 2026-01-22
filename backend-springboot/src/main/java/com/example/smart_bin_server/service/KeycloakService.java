@@ -54,8 +54,8 @@ public class KeycloakService {
 
         user.setCredentials(Collections.singletonList(credential));
 
-        try {
-            var response = keycloak.realm(realm).users().create(user);
+        try (jakarta.ws.rs.core.Response response =
+                     keycloak.realm(realm).users().create(user)) {
 
             if (response.getStatus() == 201) {
                 String locationHeader = response.getHeaderString("Location");

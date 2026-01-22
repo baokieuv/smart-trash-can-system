@@ -109,7 +109,7 @@ public class MinioService {
                 throw new RuntimeException("File too large");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error: {}", e.getMessage(), e);
         }
     }
 

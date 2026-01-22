@@ -1,7 +1,6 @@
 package com.example.smart_bin_server.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 

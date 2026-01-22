@@ -1,7 +1,6 @@
 package com.example.smart_bin_server.controller;
 
 import com.example.smart_bin_server.dto.CreateDeviceRequest;
-import com.example.smart_bin_server.dto.DeviceDto;
 import com.example.smart_bin_server.dto.UpdateDeviceRequest;
 import com.example.smart_bin_server.service.DeviceService;
 import jakarta.validation.Valid;

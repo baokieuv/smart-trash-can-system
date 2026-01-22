@@ -2,7 +2,6 @@ package com.example.smart_bin_server.controller;
 
 import com.example.smart_bin_server.dto.*;
 import com.example.smart_bin_server.service.UserService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

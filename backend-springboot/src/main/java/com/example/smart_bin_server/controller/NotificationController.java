@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/notifications")
 public class NotificationController {
-    private NotificationService service;
+    private final NotificationService service;
 
     public NotificationController(NotificationService service){
         this.service = service;
@@ -29,8 +29,4 @@ public class NotificationController {
             @Valid @RequestBody UpdateNotiStatus request){
         return ResponseEntity.ok().body(service.changeStatusNotification(notiId, request));
     }
-//    @GetMapping
-//    public ResponseEntity<Object> getLogs(){
-//        return ResponseEntity.ok().body(service.getNotifications());
-//    }
 }

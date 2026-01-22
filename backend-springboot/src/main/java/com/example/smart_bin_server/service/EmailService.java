@@ -52,7 +52,7 @@ public class EmailService {
                     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
                     .header { background-color: #4CAF50; color: white; padding: 20px; text-align: center; }
                     .content { background-color: #f9f9f9; padding: 20px; }
-                    .button { display: inline-block; padding: 12px 24px; background-color: #4CAF50; 
+                    .button { display: inline-block; padding: 12px 24px; background-color: #4CAF50;\s
                              color: white; text-decoration: none; border-radius: 4px; margin: 20px 0; }
                     .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
                 </style>
@@ -80,7 +80,7 @@ public class EmailService {
                 </div>
             </body>
             </html>
-            """.formatted(firstName, verifyLink, verifyLink);
+           \s""".formatted(firstName, verifyLink, verifyLink);
     }
 
     public void sendWelcomeEmail(String toEmail, String firstName) {
@@ -170,23 +170,23 @@ public class EmailService {
                         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
                         .header { background-color: #EF4444; color: white; padding: 20px; text-align: center; }
                         .content { background-color: #f9f9f9; padding: 20px; }
-                        .password-box { 
-                            background-color: #FEF2F2; 
-                            border: 2px solid #EF4444; 
+                        .password-box {\s
+                            background-color: #FEF2F2;\s
+                            border: 2px solid #EF4444;\s
                             border-radius: 8px;
-                            padding: 20px; 
+                            padding: 20px;\s
                             text-align: center;
                             margin: 20px 0;
                         }
-                        .password-text { 
-                            font-size: 24px; 
-                            font-weight: bold; 
+                        .password-text {\s
+                            font-size: 24px;\s
+                            font-weight: bold;\s
                             color: #EF4444;
                             letter-spacing: 2px;
                             font-family: 'Courier New', monospace;
                         }
-                        .warning { 
-                            background-color: #FEF3C7; 
+                        .warning {\s
+                            background-color: #FEF3C7;\s
                             border-left: 4px solid #F59E0B;
                             padding: 12px;
                             margin: 20px 0;
@@ -202,13 +202,13 @@ public class EmailService {
                         <div class="content">
                             <h2>Hello %s,</h2>
                             <p>You requested to reset your password for your Smart Bin account.</p>
-                            
+                           \s
                             <p>Your new temporary password is:</p>
-                            
+                           \s
                             <div class="password-box">
                                 <p class="password-text">%s</p>
                             </div>
-                            
+                           \s
                             <div class="warning">
                                 <strong>⚠️ Important Security Notice:</strong>
                                 <ul style="margin: 10px 0; padding-left: 20px;">
@@ -218,7 +218,7 @@ public class EmailService {
                                     <li>This password was generated automatically</li>
                                 </ul>
                             </div>
-                            
+                           \s
                             <p><strong>Steps to login:</strong></p>
                             <ol>
                                 <li>Go to the Smart Bin login page</li>
@@ -227,7 +227,7 @@ public class EmailService {
                                 <li>Go to Settings → Change Password</li>
                                 <li>Set a new secure password</li>
                             </ol>
-                            
+                           \s
                             <p style="color: #EF4444; font-weight: bold;">
                                 If you didn't request this password reset, please contact us immediately.
                             </p>
@@ -239,7 +239,7 @@ public class EmailService {
                     </div>
                 </body>
                 </html>
-                """.formatted(firstName, newPassword, toEmail);
+               \s""".formatted(firstName, newPassword, toEmail);
     }
 
 }

@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -59,7 +58,7 @@ public class DeviceDataService {
         device.setStatus(String.valueOf(Constants.DeviceStatus.ONLINE));
         repository.save(device);
 
-        SendDataRequest request = null;
+        SendDataRequest request;
         try {
             request = objectMapper.readValue(rawJson, SendDataRequest.class);
         } catch (JsonProcessingException e) {
@@ -105,7 +104,7 @@ public class DeviceDataService {
         return nonce;
     }
 
-    private boolean validateSignature(String deviceId, String signature, String payload){
+    private void validateSignature(String deviceId, String signature, String payload){
         String key = NONCE_CACHE_PREFIX + deviceId;
         String cachedNonce = redisTemplate.opsForValue().get(key);
 
@@ -124,6 +123,5 @@ public class DeviceDataService {
 
         redisTemplate.opsForValue().getAndDelete(key);
 
-        return true;
     }
 }

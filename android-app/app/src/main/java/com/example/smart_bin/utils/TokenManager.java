@@ -18,7 +18,7 @@ public class TokenManager {
     private final SharedPreferences prefs;
 
     // Buffer time before actual expiry to refresh token (1 minute)
-    private static final long REFRESH_BUFFER_TIME = 60 * 1000;
+    private static final long REFRESH_BUFFER_TIME = 60L * 1000L;
 
     private TokenManager(Context context) {
         prefs = context.getApplicationContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);

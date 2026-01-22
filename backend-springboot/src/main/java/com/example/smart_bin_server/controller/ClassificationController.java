@@ -1,6 +1,5 @@
 package com.example.smart_bin_server.controller;
 
-import com.example.smart_bin_server.dto.ClassificationResponse;
 import com.example.smart_bin_server.service.ClassificationService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,11 +15,6 @@ public class ClassificationController {
     public ClassificationController(ClassificationService service){
         this.service = service;
     }
-
-//    @PostMapping
-//    public ResponseEntity<Object> classify(@RequestBody MultipartFile image){
-//        return ResponseEntity.ok().body(service.classify(image));
-//    }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Object> classify(

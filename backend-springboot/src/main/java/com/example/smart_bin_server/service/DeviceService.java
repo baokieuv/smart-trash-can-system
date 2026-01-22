@@ -10,7 +10,6 @@ import com.example.smart_bin_server.model.DeviceData;
 import com.example.smart_bin_server.model.Notification;
 import com.example.smart_bin_server.repository.DeviceDataRepository;
 import com.example.smart_bin_server.repository.DeviceRepository;
-import okhttp3.*;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -26,8 +25,6 @@ public class DeviceService {
     private final DeviceMapper deviceMapper;
     private final DeviceDataRepository dataRepository;
     private final NotificationService notificationService;
-
-    private final OkHttpClient client = new OkHttpClient();
 
     public DeviceService(DeviceRepository repository, DeviceMapper deviceMapper, DeviceDataRepository dataRepository, NotificationService notificationService){
         this.repository = repository;

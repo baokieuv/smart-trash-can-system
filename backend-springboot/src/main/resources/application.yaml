@@ -38,7 +38,7 @@ spring:
     host: ${SPRING_MAIL_HOST:smtp.gmail.com}
     port: ${SPRING_MAIL_PORT:465}
     username: ${SPRING_MAIL_USERNAME:kieubao2k4@gmail.com}
-    password: ${SPRING_MAIL_PASSWORD} 
+    password: ${SPRING_MAIL_PASSWORD:srmg hvpl rebq hrpn}
     properties:
       mail:
         smtp:
@@ -55,7 +55,7 @@ server:
   port: ${SERVER_PORT:8888}
 
 app:
-  secret-key: ${SECRET_KEY}
+  secret-key: ${SECRET_KEY:MY_SUPER_SECRET_KEY_1234}
   ai-server:
     # Service AI (FastAPI) cũng cần dynamic host
     url: ${APP_AI_SERVER_URL:http://localhost:8000}
@@ -69,12 +69,12 @@ keycloak:
   server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8080}
   realm: ${KEYCLOAK_REALM:smart-bin}
   client-id: ${KEYCLOAK_CLIENT_ID:smart-bin-client}
-  client-secret: ${KEYCLOAK_CLIENT_SECRET} # Ẩn secret
+  client-secret: ${KEYCLOAK_CLIENT_SECRET:wYhiGkc0Pgw1vrS6HRcuZ6ChzH9GmT3Y} # Ẩn secret
   admin-username: ${KEYCLOAK_ADMIN_USERNAME:admin}
   admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
 
 minio:
   url: ${MINIO_SERVER_URL:http://localhost:9000}
   bucket: ${MINIO_BUCKET:smart-bin}
-  access_key: ${MINIO_ACCESS_KEY}
-  secret_key: ${MINIO_SECRET_KEY}
+  access_key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret_key: ${MINIO_SECRET_KEY:minioadmin}

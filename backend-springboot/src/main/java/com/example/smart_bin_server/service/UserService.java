@@ -18,7 +18,7 @@ public class UserService {
     private final KeycloakService keycloakService;
     private final EmailService emailService;
 
-    private static final long VERIFICATION_TOKEN_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
+    private static final long VERIFICATION_TOKEN_EXPIRY = 24 * 60 * 60 * 1000L; // 24 hours
 
     private static final String CHARACTERS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%";
     private static final int PASSWORD_LENGTH = 12;

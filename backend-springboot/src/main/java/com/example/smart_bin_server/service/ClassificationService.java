@@ -1,17 +1,14 @@
 package com.example.smart_bin_server.service;
 
 import com.example.smart_bin_server.dto.ClassificationResponse;
-import com.example.smart_bin_server.dto.SendDataResponse;
 import com.example.smart_bin_server.model.ClassificationLogs;
 import com.example.smart_bin_server.model.Device;
 import com.example.smart_bin_server.repository.ClassificationLogsRepository;
 import com.example.smart_bin_server.repository.DeviceRepository;
-import com.example.smart_bin_server.repository.UserRepository;
 import com.google.gson.Gson;
 import okhttp3.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
