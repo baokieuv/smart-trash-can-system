@@ -1,7 +1,5 @@
 package com.example.smart_bin;
 
-import static androidx.core.content.ContentProviderCompat.requireContext;
-
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -153,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
                 .commit();
     }
 
-    public void updateNotificationBadge(int count) {
+    private void updateNotificationBadge(int count) {
         if (count > 0) {
             BadgeDrawable badge = binding.bottomNavigation.getOrCreateBadge(R.id.navigation_noti);
             badge.setNumber(count);

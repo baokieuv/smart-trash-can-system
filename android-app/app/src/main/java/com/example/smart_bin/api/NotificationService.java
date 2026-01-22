@@ -80,17 +80,6 @@ public class NotificationService {
             pendingSuccessCallbacks.add(onSuccess);
             pendingFailureCallbacks.add(onFailure);
         }
-//        if (isRefreshing.get()) {
-//            // Wait for ongoing refresh
-//            mainHandler.postDelayed(() -> {
-//                if (tokenManager.isTokenValid()) {
-//                    onSuccess.run();
-//                } else {
-//                    onFailure.run();
-//                }
-//            }, 1000);
-//            return;
-//        }
 
         isRefreshing.set(true);
         AuthService.getInstance(context).refreshToken(new AuthService.RefreshCallback() {

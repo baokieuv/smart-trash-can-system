@@ -140,7 +140,6 @@ public class DeviceControlActivity extends AppCompatActivity {
 
     private void updateHeaderStatus() {
         boolean isOnline = Constants.STATUS_ONLINE.equalsIgnoreCase(status);
-// Cập nhật status badge với thiết kế mới
         if (isOnline) {
             // Online status - màu xanh lá
             binding.statusBadgeHeader.setBackgroundResource(R.drawable.rounded_background);
@@ -181,28 +180,6 @@ public class DeviceControlActivity extends AppCompatActivity {
             binding.offlineWarningCard.setVisibility(View.VISIBLE);
             binding.statsCard.setAlpha(0.6f);
         }
-
-//        if (isOnline) {
-//            binding.statusBadgeHeader.setBackgroundColor(Color.parseColor("#D1FAE5")); // green-100
-//            binding.statusIconHeader.setImageResource(android.R.drawable.presence_online);
-//            binding.statusIconHeader.setImageTintList(
-//                    android.content.res.ColorStateList.valueOf(Color.parseColor("#10B981"))
-//            );
-//            binding.tvIsOnline.setText(Constants.STATUS_ONLINE);
-//            binding.tvIsOnline.setTextColor(Color.parseColor("#10B981"));
-//            binding.offlineWarningCard.setVisibility(View.GONE);
-//            binding.statsCard.setAlpha(1.0f);
-//        } else {
-//            binding.statusBadgeHeader.setBackgroundColor(Color.parseColor("#F1F5F9")); // slate-100
-//            binding.statusIconHeader.setImageResource(android.R.drawable.presence_offline);
-//            binding.statusIconHeader.setImageTintList(
-//                    android.content.res.ColorStateList.valueOf(Color.parseColor("#94A3B8"))
-//            );
-//            binding.tvIsOnline.setText(Constants.STATUS_OFFLINE);
-//            binding.tvIsOnline.setTextColor(Color.parseColor("#94A3B8"));
-//            binding.offlineWarningCard.setVisibility(View.VISIBLE);
-//            binding.statsCard.setAlpha(0.6f); // Dim stats when offline
-//        }
     }
 
     private void setupSwipeRefresh(){

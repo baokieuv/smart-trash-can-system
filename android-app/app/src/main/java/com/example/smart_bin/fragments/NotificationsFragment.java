@@ -150,7 +150,7 @@ public class NotificationsFragment extends Fragment implements NotificationAdapt
                 @Override
                 public void onSuccess(List<Notification> notifications) {
                     if (getActivity() instanceof MainActivity){
-                        ((MainActivity) getActivity()).getNumOfNoti();
+                        ((MainActivity) getActivity()).updateNotification();
                     }
                 }
 

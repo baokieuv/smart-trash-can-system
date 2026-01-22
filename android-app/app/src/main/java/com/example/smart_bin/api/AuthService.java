@@ -119,14 +119,6 @@ public class AuthService {
 
                 int responseCode = connection.getResponseCode();
 
-//                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
-//                StringBuilder response = new StringBuilder();
-//                String line;
-//                while ((line = reader.readLine()) != null) {
-//                    response.append(line);
-//                }
-//                reader.close();
-
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     StringBuilder response = getMessage(connection.getInputStream());
 
@@ -173,13 +165,6 @@ public class AuthService {
 
                 int responseCode = connection.getResponseCode();
                 if (responseCode == HttpURLConnection.HTTP_OK) {
-//                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-//                    StringBuilder response = new StringBuilder();
-//                    String line;
-//                    while ((line = reader.readLine()) != null) {
-//                        response.append(line);
-//                    }
-//                    reader.close();
                     StringBuilder response = getMessage(connection.getInputStream());
 
                     AuthResponse authResponse = parseAuthResponse(response.toString());
@@ -318,13 +303,6 @@ public class AuthService {
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     mainHandler.post(() -> callback.onSuccess("Password changed successfully"));
                 } else {
-//                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
-//                    StringBuilder response = new StringBuilder();
-//                    String line;
-//                    while ((line = reader.readLine()) != null) {
-//                        response.append(line);
-//                    }
-//                    reader.close();
                     StringBuilder response = getMessage(connection.getErrorStream());
 
                     JSONObject errorResponse = new JSONObject(response.toString());

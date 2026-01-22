@@ -53,8 +53,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void handleLogin(){
-        String email = Objects.requireNonNull(binding.etEmail.getText().toString());
-        String password = Objects.requireNonNull(binding.etPassword.getText().toString());
+        String email = Objects.requireNonNull(binding.etEmail.getText()).toString();
+        String password = Objects.requireNonNull(binding.etPassword.getText()).toString();
 
         if(email.isEmpty()){
             binding.etEmail.setError("Email is required");

@@ -2,7 +2,6 @@ package com.example.smart_bin.adapter;
 
 import android.graphics.Color;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -54,7 +53,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
     class NotificationViewHolder extends RecyclerView.ViewHolder {
 
-        private ItemNotificationBinding binding;
+        private final ItemNotificationBinding binding;
         public NotificationViewHolder(ItemNotificationBinding binding) {
             super(binding.getRoot());
             this.binding = binding;

@@ -8,7 +8,6 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
-import android.bluetooth.le.BluetoothLeScanner;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
@@ -28,7 +27,6 @@ public class BLEManager {
     private static final UUID CHAR_UUID_PASS = UUID.fromString("0000ff02-0000-1000-8000-00805f9b34fb");
 
     private final BluetoothAdapter bluetoothAdapter;
-    private BluetoothLeScanner bluetoothLeScanner;
     private BluetoothGatt bluetoothGatt;
     private final Handler handler;
     private final Context context;

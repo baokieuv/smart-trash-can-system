@@ -15,7 +15,7 @@ public class TokenManager {
     private static final String KEY_EMAIL_VERIFIED = "email_verified";
 
     private static TokenManager instance;
-    private SharedPreferences prefs;
+    private final SharedPreferences prefs;
 
     // Buffer time before actual expiry to refresh token (1 minute)
     private static final long REFRESH_BUFFER_TIME = 60 * 1000;
