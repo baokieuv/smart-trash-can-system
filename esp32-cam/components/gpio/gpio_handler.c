@@ -10,6 +10,7 @@ ESP_EVENT_DEFINE_BASE(APP_BUTTON_EVENT);
 
 extern EventGroupHandle_t g_event_group;
 static volatile int64_t g_button_press_time = 0;
+static uint8_t is_blink = 0;
 
 static void button_signle_click_cb(void *args, void *data){
     ESP_LOGI(TAG, "Handle single click");
@@ -90,17 +91,19 @@ void beep_pattern(int count, int duration){
 }
 
 void blink_led(int times) {
+    is_blink = 1;
     for (int i = 0; i < times; i++) {
         gpio_set_level(LED_STATUS_PIN, 1);
         vTaskDelay(pdMS_TO_TICKS(200));
         gpio_set_level(LED_STATUS_PIN, 0);
         vTaskDelay(pdMS_TO_TICKS(200));
     }
+    is_blink = 0;
 }
 
 void led_status(void *param){
     while(1){
-        if(xEventGroupGetBits(g_event_group) & WIFI_CONNECTED_BIT){
+        if(is_blink != 0 && (xEventGroupGetBits(g_event_group) & WIFI_CONNECTED_BIT)){
             gpio_set_level(LED_STATUS_PIN, 1);
         }else{
             gpio_set_level(LED_STATUS_PIN, 0);
@@ -108,37 +111,3 @@ void led_status(void *param){
         vTaskDelay(pdMS_TO_TICKS(200));
     }
 }
-
-// void indicate_waste_category(waste_category_t category) {
-    // Turn off all LEDs first
-//     gpio_set_level(LED_RECYCLABLE_PIN, 0);
-//     gpio_set_level(LED_COMPOSTABLE_PIN, 0);
-//     gpio_set_level(LED_HAZARDOUS_PIN, 0);
-    
-//     // Turn on appropriate LED
-//     switch (category) {
-//         case WASTE_RECYCLABLE:
-//             ESP_LOGI(TAG, "Indicating RECYCLABLE waste");
-//             gpio_set_level(LED_RECYCLABLE_PIN, 1);
-//             break;
-//         case WASTE_COMPOSTABLE:
-//             ESP_LOGI(TAG, "Indicating COMPOSTABLE waste");
-//             gpio_set_level(LED_COMPOSTABLE_PIN, 1);
-//             break;
-//         case WASTE_HAZARDOUS:
-//             ESP_LOGI(TAG, "Indicating HAZARDOUS waste");
-//             gpio_set_level(LED_HAZARDOUS_PIN, 1);
-//             break;
-//         default:
-//             ESP_LOGW(TAG, "Unknown waste category");
-//             break;
-//     }
-    
-//     // Keep LED on for indication duration
-//     vTaskDelay(pdMS_TO_TICKS(LED_INDICATION_DURATION_MS));
-    
-//     // Turn off LED
-//     gpio_set_level(LED_RECYCLABLE_PIN, 0);
-//     gpio_set_level(LED_COMPOSTABLE_PIN, 0);
-//     gpio_set_level(LED_HAZARDOUS_PIN, 0);
-// }

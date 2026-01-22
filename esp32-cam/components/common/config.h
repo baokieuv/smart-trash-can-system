@@ -48,8 +48,8 @@
 // #define ULTRASONIC3_TRIG_PIN        GPIO_NUM_48
 // #define ULTRASONIC4_TRIG_PIN        GPIO_NUM_39
 
-#define DISTANCE_THRESHOLD_CM   5   // Waste detected if distance < 15cm
-#define BIN_HEIGHT_CM           20   // Total bin height
+#define DISTANCE_THRESHOLD_CM   15   // Waste detected if distance < 15cm
+#define BIN_HEIGHT_CM           100   // Total bin height
 #define BIN_FULL_THRESHOLD      80   // Alert when 80% full
 
 #define CAM_PIN_PWDN            -1

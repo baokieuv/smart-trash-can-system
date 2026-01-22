@@ -39,7 +39,7 @@ esp_err_t camera_handler_init(void) {
         .ledc_channel = LEDC_CHANNEL_0,
 
         .pixel_format = PIXFORMAT_JPEG,
-        .frame_size = FRAMESIZE_VGA,  // 320x240
+        .frame_size = FRAMESIZE_UXGA,  // 320x240
 
         .jpeg_quality = 12,
         .fb_count = 1,
